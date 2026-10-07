@@ -199,10 +199,10 @@ def parse_raw_taf(icao, raw, ref):
     return dict(icaoId=icao, issueTime=issue.strftime('%Y-%m-%dT%H:%M:%S.000Z'), validTimeFrom=int(vfrom.timestamp()),
                 validTimeTo=int(vto.timestamp()), rawTAF=' '.join(raw.split()), fcsts=fc)
 
-def _noaa(kind):
+def _noaa(kind, only=None):
     """Backup for airport reports/forecasts: the US weather service file server, one small text file per airport."""
     out = []; reached = False
-    for a in APTS:
+    for a in (APTS if only is None else [x for x in APTS if x[1] in only]):
         sub = 'observations/metar/stations' if kind == 'metar' else 'forecasts/taf/stations'
         body = fetch(f'https://tgftp.nws.noaa.gov/data/{sub}/{a[1]}.TXT', tries=1, text=True, timeout=20)
         if body is None: continue
@@ -805,11 +805,41 @@ elif SIGMET is not None: src.append(f"Typhoon watch is from aviation storm warni
 else: src.append(f"Typhoon watch is from the backup source GDACS, checked {clock_plain(NOW)}; it shows storm positions only.")
 src.append(f"Earthquakes are from {QSRC} (magnitude 4.5 and stronger), data as of {day(asof)}, {clock_plain(asof)}." if asof else "Earthquake data could not be reached at this check.")
 src.append("Accuracy ranking, highest first: 1) official airport report, 2) official airport forecast, 3) official aviation area warning, 4) computer forecast estimate. The moving rain layer on the map is a MET Norway forecast, rebuilt every few hours; it is a picture of the forecast and plays no part in the alert levels. When sources differ the higher-ranked one is used, and each airport's details show its confidence. If a source cannot be reached, its backup is used automatically and the Data sources table shows which one supplied the data. Times are Philippine time.")
+# ---------- backup self-test ----------
+# Backups are rarely used, so a broken one could go unnoticed until the day it is needed.
+# Every few hours each idle backup is tried once with a small request and the result is kept
+# in data.json (shown in the Help window). This never changes which source the dashboard uses.
+TEST_EVERY_HOURS = 6
+try:
+    with open(OUT, encoding='utf-8') as _f: _prev_tests = json.load(_f).get('backup_tests', {}) or {}
+except Exception:
+    _prev_tests = {}
+def _probe(group, key):
+    if group == 'reports': return _noaa('metar', only=['RPLL']) if key == 'noaa' else load_reports(key)
+    if group == 'forecasts': return _noaa('taf', only=['RPLL']) if key == 'noaa' else load_forecasts(key)
+    if group == 'estimates': return EST_LOADERS[key]([a for a in APTS if a[1] == 'RPLL'])
+    if group == 'storms': return load_storms(key)
+    if group == 'quakes': return load_quakes(key)
+BACKUP_TESTS = {}
+for _g in SOURCE_ORDER:
+    for (_k, _st, _note) in STATUS[_g]:
+        if _st != 'standby': continue
+        _tid = _g + ':' + _k; _old = _prev_tests.get(_tid)
+        if _old and NOW.timestamp() * 1000 - _old.get('ms', 0) < TEST_EVERY_HOURS * 3.6e6: BACKUP_TESTS[_tid] = _old; continue
+        try: _ok = bool(_probe(_g, _k))
+        except Exception as _e:
+            print('BACKUP TEST ERROR', _tid, _e, file=sys.stderr); _ok = False
+        BACKUP_TESTS[_tid] = dict(ok=_ok, ms=int(NOW.timestamp() * 1000), when=f"{day(NOW)}, {clock_plain(NOW)}")
+        print('Backup test', _tid, 'OK' if _ok else 'FAILED')
+def _chain_entry(g, i, k, st, note):
+    t = BACKUP_TESTS.get(g + ':' + k) if st == 'standby' else None
+    if t: note = ('Backup, last tested OK ' if t['ok'] else 'Backup, last test failed ') + t['when']
+    return dict(name=SOURCE_NAMES[k], role=ROLE[min(i, 3)], state=st, note=note, tested=(None if not t else ('ok' if t['ok'] else 'failed')))
 ROLE=['First choice','Backup','Second backup','Third backup']
 SRC_STATUS=[]
 for g in SOURCE_ORDER:
     SRC_STATUS.append(dict(what=GROUP_LABEL[g], used=(SOURCE_NAMES[USED[g]] if USED[g] else 'None reached'), ok=bool(USED[g]), first=(USED[g]==SOURCE_ORDER[g][0]),
-        chain=[dict(name=SOURCE_NAMES[k], role=ROLE[min(i,3)], state=st, note=note) for i,(k,st,note) in enumerate(STATUS[g])]))
+        chain=[_chain_entry(g,i,k,st,note) for i,(k,st,note) in enumerate(STATUS[g])]))
 KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test')
 QKEEP=('id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
 data=dict(
@@ -821,7 +851,7 @@ data=dict(
     quake_asof=(f"{day(asof)}, {clock_plain(asof)}" if asof else ''),
     quake_count=(f"{len(quakes)} earthquake{'' if len(quakes)==1 else 's'} of magnitude 4.5+ in the past 7 days (purple rings, tap one for details)." if asof else ''),
     ty_text=ty_main, ty_banner=ty_banner, ty_asof=(f"{'Aviation storm warnings' if SIGMET is not None else 'GDACS (backup source)'}, {day(NOW)}, {clock_plain(NOW)}" if tyok else ''),
-    quake_src=QSRC, source_status=SRC_STATUS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
+    quake_src=QSRC, source_status=SRC_STATUS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
     sources=' '.join(src),
 )
@@ -844,12 +874,14 @@ for p in PROBLEMS: print('PROBLEM:',p)
 RAIN_OUT = os.path.join(os.path.dirname(OUT), 'rain.json')
 RAIN_EVERY_HOURS = 3          # how often to rebuild the animation
 RAIN_HOURS = 30               # how many hours ahead to store
-GRID = dict(lat0=21.0, lon0=116.0, step=0.75, rows=23, cols=16)     # top-left point, spacing in degrees
+# The grid is wider than the map image so the rain layer fills the whole map panel on wide screens.
+GRID = dict(lat0=22.5, lon0=109.25, step=0.75, rows=26, cols=34)    # top-left point, spacing in degrees
 
 def build_rain():
     try:
         with open(RAIN_OUT, encoding='utf-8') as f: old = json.load(f)
         age = (NOW.timestamp() * 1000 - old['generated_ms']) / 3.6e6
+        if old.get('grid') != GRID: age = 1e9          # the grid was changed: rebuild now
     except Exception:
         age = 1e9
     if age < RAIN_EVERY_HOURS:
@@ -871,7 +903,7 @@ def build_rain():
         except Exception:
             return None
         return out
-    with ThreadPoolExecutor(max_workers=4) as ex: res = list(ex.map(one, pts))
+    with ThreadPoolExecutor(max_workers=6) as ex: res = list(ex.map(one, pts))
     ok = sum(1 for r in res if r)
     if ok < 0.8 * len(pts):
         print(f'Rain animation: only {ok} of {len(pts)} grid points answered, keeping the previous animation.', file=sys.stderr); return

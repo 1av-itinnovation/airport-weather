@@ -726,7 +726,6 @@ header.top,.filters,.cols{width:100%}
 .col.map{align-items:stretch}
 .vp{flex:1 1 auto;min-height:0;width:auto;height:auto;max-width:none;margin:0;aspect-ratio:auto}
 .stage{position:absolute;left:0;top:0;width:100%;height:100%}
-.layer canvas{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 6%,#000 94%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 6%,#000 94%,transparent 100%)}
 .rainbar{align-items:center}
 @media (min-width:1101px){
   .cols{grid-template-columns:minmax(0,2fr) minmax(270px,.95fr) minmax(290px,1.05fr)}
@@ -908,11 +907,9 @@ header.top{padding:10px 16px;border-radius:10px}
   <section class="col map show" data-pane="map" id="mapCol">
     <div class="vp" id="vp">
       <div class="layer" id="layer">
-        <div class="stage" id="stage">
-          <img src="assets/map.svg" alt="Map of the Philippines">
-          <canvas id="rainCv" width="480" height="723" aria-hidden="true"></canvas>
-          <div id="pins"></div>
-        </div>
+        <div class="stage" id="stage"><img src="assets/map.svg" alt="Map of the Philippines"></div>
+        <canvas id="rainCv" width="480" height="723" aria-hidden="true"></canvas>
+        <div class="stage" id="pins"></div>
       </div>
       <div class="banner" id="banner"></div>
       <div class="zoom">
@@ -1025,7 +1022,7 @@ header.top{padding:10px 16px;border-radius:10px}
         <div class="help-data-copy">
           <p id="hChecked"></p>
           <p id="hRain"></p>
-          <p>The boxes below show which source supplied each kind of data at this check. A first-choice source that could not be reached is marked, and its backup is used instead.</p>
+          <p>The boxes below show which source supplied each kind of data at this check. A first-choice source that could not be reached is marked, and its backup is used instead. Idle backups are tested every few hours so a broken one is noticed before it is needed.</p>
         </div>
         <div class="srcgrid" id="srcGrid"></div>
       </div>
@@ -1113,9 +1110,10 @@ function renderData() {
   $('tyText').textContent = D.ty_text;
   $('sources').textContent = D.sources;
   var TAG = { used: 'USED NOW', standby: 'BACKUP READY', failed: 'NOT REACHED' }, sg = '';
+  var tagOf = function (c) { return (c.state === 'standby' && c.tested === 'failed') ? '<span class="tag failed">TEST FAILED</span>' : '<span class="tag ' + esc(c.state) + '">' + (TAG[c.state] || '') + '</span>'; };
   (D.source_status || []).forEach(function (g) {
     sg += '<div class="srcbox' + (!g.ok ? ' bad' : (!g.first ? ' warn' : '')) + '"><span class="w">' + esc(g.what) + '</span><span class="u">' + esc(g.used) + '</span><div class="c">';
-    g.chain.forEach(function (c, i) { sg += '<div><span>' + (i + 1) + '. ' + esc(c.name) + '<br><span style="color:#3F5563">' + esc(c.role) + (c.state === 'used' && c.note !== 'Used' ? '. ' + esc(c.note) : '') + '</span></span><span class="tag ' + esc(c.state) + '">' + (TAG[c.state] || '') + '</span></div>'; });
+    g.chain.forEach(function (c, i) { sg += '<div><span>' + (i + 1) + '. ' + esc(c.name) + '<br><span style="color:#3F5563">' + esc((c.state === 'standby' && c.tested) ? c.note : c.role) + (c.state === 'used' && c.note !== 'Used' ? '. ' + esc(c.note) : '') + '</span></span>' + tagOf(c) + '</div>'; });
     sg += '</div></div>';
   });
   $('srcGrid').innerHTML = sg;
@@ -1281,11 +1279,16 @@ $('modalBack').addEventListener('click', closeHelp); $('modalClose').addEventLis
 document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (modal.classList.contains('open')) closeHelp(); else if (WX.open) wxOpen(false); });
 
 /* fit the map to the space available so the whole dashboard stays on one screen */
-var FITX = 1, FITY = 1;
+var FITX = 1, FITY = 1, GEO = { sl: 0, st: 0, sw: 480, sh: 723 };
 function fit() {
   var v = $('vp'), st = $('stage'); if (!v || !st || !v.clientHeight || !v.clientWidth) return;
   var W = v.clientWidth, H = v.clientHeight, sw = Math.min(W, H * 1000 / 1506), sh = sw * 1506 / 1000;
-  st.style.width = sw + 'px'; st.style.height = sh + 'px'; st.style.left = ((W - sw) / 2) + 'px'; st.style.top = ((H - sh) / 2) + 'px';
+  [st, $('pins')].forEach(function (el) { el.style.width = sw + 'px'; el.style.height = sh + 'px'; el.style.left = ((W - sw) / 2) + 'px'; el.style.top = ((H - sh) / 2) + 'px'; });
+  // the rain canvas covers the whole panel; GEO says where the map image sits inside it, in canvas pixels
+  var cw = Math.min(1600, Math.round(480 * W / sw)), ch = Math.round(cw * H / W), sc = cw / W, c = $('rainCv');
+  if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
+  GEO = { sl: (W - sw) / 2 * sc, st: (H - sh) / 2 * sc, sw: sw * sc, sh: sh * sc };
+  if (typeof rainDraw === 'function' && typeof R !== 'undefined' && R) rainDraw();
   var fx = sw / W, fy = sh / H, changed = Math.abs(fx - FITX) > 0.001 || Math.abs(fy - FITY) > 0.001;
   FITX = fx; FITY = fy;
   if (changed && D) applyView();
@@ -1352,6 +1355,7 @@ layer.addEventListener('click', function (e) {
 
 /* ---------- rain and thunder timeline on the airport map ---------- */
 var RAIN = null, R = { playing: !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches), show: true, pos: 0, n: 0, i0: 0, last: 0, hold: 0, lab: -1 };
+var BOLTW = 2.5;
 var HOUR_MS = 800;                        // how long each forecast hour stays on screen while playing
 var cv = $('rainCv'), cx2 = cv.getContext('2d'), small = document.createElement('canvas'), sctx = small.getContext('2d');
 function rainColor(v) {
@@ -1366,7 +1370,7 @@ function rainColor(v) {
 function bolt(x, y, s) {
   var p = [[.56, 0], [.1, .58], [.44, .58], [.32, 1], [.9, .38], [.56, .38]];
   cx2.beginPath(); p.forEach(function (q, i) { var px = x + (q[0] - .5) * s * .8, py = y + (q[1] - .5) * s; if (i) cx2.lineTo(px, py); else cx2.moveTo(px, py); });
-  cx2.closePath(); cx2.lineWidth = 2.5; cx2.strokeStyle = '#12303F'; cx2.lineJoin = 'round'; cx2.stroke(); cx2.fillStyle = '#FFD600'; cx2.fill();
+  cx2.closePath(); cx2.lineWidth = BOLTW; cx2.strokeStyle = '#12303F'; cx2.lineJoin = 'round'; cx2.stroke(); cx2.fillStyle = '#FFD600'; cx2.fill();
 }
 function rainSetup() {
   R.n = 0;
@@ -1390,25 +1394,27 @@ function rainDraw() {
   var img = sctx.createImageData(g.cols, g.rows), d = img.data;
   for (var i = 0; i < A.length; i++) { var c = rainColor(A[i] + (B[i] - A[i]) * f); d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = c[3]; }
   sctx.putImageData(img, 0, 0);
-  var W = cv.width, H = cv.height, X = function (lon) { return (P.cx[0] * lon + P.cx[1]) / 100 * W; }, Y = function (lat) { return (P.cy[0] * lat + P.cy[1]) / 100 * H; };
+  var W = cv.width, H = cv.height, KS = GEO.sw / 480;
+  var PX = function (xp) { return GEO.sl + xp / 100 * GEO.sw; }, PY = function (yp) { return GEO.st + yp / 100 * GEO.sh; };
+  var X = function (lon) { return PX(P.cx[0] * lon + P.cx[1]); }, Y = function (lat) { return PY(P.cy[0] * lat + P.cy[1]); };
   var x0 = X(g.lon0 - g.step / 2), x1 = X(g.lon0 + (g.cols - .5) * g.step), y0 = Y(g.lat0 + g.step / 2), y1 = Y(g.lat0 - (g.rows - .5) * g.step);
   cx2.clearRect(0, 0, W, H); cx2.imageSmoothingEnabled = true; cx2.imageSmoothingQuality = 'high';
   cx2.drawImage(small, x0, y0, x1 - x0, y1 - y0);
-  var inv = Math.min(1, 1.35 / viewNow().z);
+  var inv = Math.min(1, 1.35 / viewNow().z) * KS; BOLTW = 2.5 * KS;
   var T = RAIN.times[R.i0 + k] + f * 3600000, th = (D && D.thunder) || { areas: [], airports: [] };
   (th.areas || []).forEach(function (a) {
     if (!(a.a <= T + 1800000 && T < a.b) || !a.p || a.p.length < 3) return;
     var sx = 0, sy = 0; cx2.beginPath();
-    a.p.forEach(function (q, i) { var px = q[0] / 100 * W, py = q[1] / 100 * H; sx += px; sy += py; if (i) cx2.lineTo(px, py); else cx2.moveTo(px, py); });
-    cx2.closePath(); cx2.fillStyle = 'rgba(255,214,0,.16)'; cx2.fill(); cx2.setLineDash([6, 4]); cx2.lineWidth = 2; cx2.strokeStyle = '#B8860B'; cx2.stroke(); cx2.setLineDash([]);
+    a.p.forEach(function (q, i) { var px = PX(q[0]), py = PY(q[1]); sx += px; sy += py; if (i) cx2.lineTo(px, py); else cx2.moveTo(px, py); });
+    cx2.closePath(); cx2.fillStyle = 'rgba(255,214,0,.16)'; cx2.fill(); cx2.setLineDash([6 * KS, 4 * KS]); cx2.lineWidth = 2 * KS; cx2.strokeStyle = '#B8860B'; cx2.stroke(); cx2.setLineDash([]);
     var mx = sx / a.p.length, my = sy / a.p.length; bolt(mx, my, 20 * inv);
-    a.p.forEach(function (q) { bolt(mx + (q[0] / 100 * W - mx) * .55, my + (q[1] / 100 * H - my) * .55, 15 * inv); });
+    a.p.forEach(function (q) { bolt(mx + (PX(q[0]) - mx) * .55, my + (PY(q[1]) - my) * .55, 15 * inv); });
   });
   var seen = {};
   (th.airports || []).forEach(function (t) {
     if (!(t.a <= T + 1800000 && T < t.b) || seen[t.id] || !D) return;
     var ap = byId(t.id); if (!ap || !inRegion(ap)) return; seen[t.id] = 1;
-    bolt(ap.x / 100 * W - 12 * inv, ap.y / 100 * H - 14 * inv, 18 * inv);
+    bolt(PX(ap.x) - 12 * inv, PY(ap.y) - 14 * inv, 18 * inv);
   });
   var hk = Math.round(R.pos);
   if (hk !== R.lab) {
