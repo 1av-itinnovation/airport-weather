@@ -462,7 +462,13 @@ def met_parse(ic):
                 fr=(b-a)/dt.timedelta(hours=6); tot+=n6['details'].get('precipitation_amount',0.0)*fr; cov+=(b-a)
                 wmax=max(wmax,round(e['data']['instant']['details']['wind_speed']*3.6))
         if cov>=dt.timedelta(hours=18): days.append((D0,tot,wmax))
-    return dict(upd=upd,cur=hrs[0],runs=runs,later=later,truns=truns,tsum=tsum,days=days,src=m.get('_src','metno'))
+    # hour-by-hour strip for the details panel: [time, temperature, rain mm, wind km/h, picture code]
+    def pic(h):
+        night=not (6<=ph(h['t']).hour<18)
+        sky='h' if h['p']>=7.6 else 'r' if h['p']>=2.5 else 'l' if h['p']>=0.2 else ('c' if h['cloud']<25 else 'p' if h['cloud']<75 else 'o')
+        return sky+('n' if night else 'd')
+    hourly=[[int(h['t'].timestamp()*1000),round(h['temp']),round(h['p'],1),round(h['w']),pic(h)] for h in hrs[:12]]
+    return dict(upd=upd,cur=hrs[0],runs=runs,later=later,truns=truns,tsum=tsum,days=days,src=m.get('_src','metno'),hourly=hourly)
 def met(ic):
     try: return met_parse(ic)
     except Exception as e:
@@ -517,6 +523,7 @@ def rename_est(r,m):
         for k,v in list(r.items()):
             if isinstance(v,str): r[k]=v.replace('MET Norway',nm)
     r['estsrc']=nm if m else ''
+    r['hours']=m['hourly'] if m else []
     return r
 
 # ---------- official ----------
@@ -851,7 +858,7 @@ try:
 except Exception:
     RECENT = []
 RECENT = sorted(set(RECENT + [int(NOW.timestamp()*1000)]))[-13:]
-KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test')
+KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc')
 QKEEP=('id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
 data=dict(
     generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000), recent=RECENT,
