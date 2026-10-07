@@ -1,38 +1,75 @@
-name: Refresh dashboard data
+name: Refresh Airport Weather Data
 
 on:
   schedule:
-    - cron: "*/10 * * * *"      # every 10 minutes (GitHub may run it a few minutes late)
-  workflow_dispatch:             # lets you press "Run workflow" by hand
-  push:
-    branches: [main]
-    paths: ["build.py", ".github/workflows/refresh.yml"]
+    # Run every 10 minutes
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: refresh-data
-  cancel-in-progress: false
+  group: airport-weather-refresh
+  cancel-in-progress: true
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
 
-      - name: Pull the data and apply the alert rules
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build latest weather data
         run: python3 build.py
 
-      - name: Save the new data
+      - name: Check generated data
         run: |
-          git config user.name "dashboard-bot"
-          git config user.email "dashboard-bot@users.noreply.github.com"
+          test -f docs/data.json
+          python3 - <<'PY'
+          import json
+          from datetime import datetime, timezone
+
+          with open("docs/data.json", encoding="utf-8") as f:
+              data = json.load(f)
+
+          generated_ms = data.get("generated_ms")
+          if not generated_ms:
+              raise SystemExit("ERROR: docs/data.json has no generated_ms")
+
+          generated = datetime.fromtimestamp(
+              generated_ms / 1000, tz=timezone.utc
+          )
+          age = (datetime.now(timezone.utc) - generated).total_seconds() / 60
+
+          print(f"data generated: {generated.isoformat()}")
+          print(f"data age: {age:.1f} minutes")
+
+          if age > 15:
+              raise SystemExit(
+                  f"ERROR: generated data is already {age:.1f} minutes old."
+              )
+          PY
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add docs/data.json docs/rain.json
+
           if git diff --cached --quiet; then
-            echo "No change in data."
+            echo "No generated data changes to commit."
           else
-            git commit -m "Refresh data"
-            git push || (git pull --rebase && git push)
+            git commit -m "chore: refresh airport weather data"
+            git push
           fi
