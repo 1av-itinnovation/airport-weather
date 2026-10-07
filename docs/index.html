@@ -418,8 +418,103 @@ h2{font-size:18px;font-weight:900;color:#005687}
 }
 
 /* Windy modal remains compact */
-.modal .box.wide{
-  max-width:1000px;
+/* =========================================================
+   WINDY DETAIL MAP MODAL
+   Full-viewport working area — no unused white space
+   ========================================================= */
+
+#wxModal .box.wide{
+  width:min(1400px, calc(100vw - 24px));
+  max-width:1400px;
+  height:calc(100vh - 24px);
+  max-height:calc(100vh - 24px);
+  padding:0;
+  overflow:hidden;
+
+  display:flex;
+  flex-direction:column;
+}
+
+#wxModal .mh{
+  flex:0 0 auto;
+  padding:14px 20px 12px;
+}
+
+#wxModal .mh h2{
+  font-size:20px;
+}
+
+#wxModal .wxbar{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:8px 10px;
+  background:#fff;
+  border-bottom:1px solid #dfe8ec;
+}
+
+#wxModal .wxframe{
+  flex:1 1 auto;
+  width:100%;
+  height:auto;
+  min-height:0;
+  border:0;
+  border-radius:0 0 10px 10px;
+  display:block;
+  background:#DDEEF3;
+}
+
+#wxModal .seg{
+  min-height:42px;
+  padding:0 14px;
+}
+
+#wxModal .wxwhere{
+  margin-left:0;
+  font-size:14px;
+  font-weight:800;
+  color:#234;
+}
+
+@media (max-width:900px){
+  #wxModal{
+    padding:8px;
+  }
+
+  #wxModal .box.wide{
+    width:100%;
+    max-width:none;
+    height:calc(100vh - 16px);
+    max-height:calc(100vh - 16px);
+    border-radius:10px;
+  }
+
+  #wxModal .mh{
+    padding:12px 14px 10px;
+  }
+
+  #wxModal .mh h2{
+    font-size:17px;
+  }
+
+  #wxModal .wxbar{
+    padding:7px;
+    gap:6px;
+  }
+
+  #wxModal .seg{
+    min-height:38px;
+    padding:0 10px;
+    font-size:13px;
+  }
+
+  #wxModal .wxwhere{
+    width:100%;
+    font-size:12px;
+    padding:2px 4px 0;
+  }
 }
 
 /* =========================================================
