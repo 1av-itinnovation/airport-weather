@@ -1,894 +1,880 @@
-#!/usr/bin/env python3
-"""
-1AV Airport Weather Monitoring - data builder.
-
-Copyright (c) 2026 1Aviation Groundhandling Services, Corp. All rights reserved.
-Created under 1AV IT Innovation by Jake V Borras.
-
-Pulls public weather and earthquake data, applies the dashboard's alert rules,
-and writes docs/data.json, which docs/index.html reads.
-
-Sources (all public, no key needed). For each kind of data the first source that answers is used;
-the others are backups. The order is set in SOURCE_ORDER below.
-  Airport reports and forecasts   1) aviationweather.gov   2) NOAA data server (tgftp.nws.noaa.gov)
-  Estimates (no official report)  1) MET Norway (api.met.no)   2) Open-Meteo (api.open-meteo.com)
-  Typhoon watch                   1) Aviation storm warnings (aviationweather.gov)   2) GDACS (gdacs.org)
-  Earthquakes                     1) PHIVOLCS   2) USGS   3) EMSC
-
-Uses only the Python standard library. Run:  python3 build.py
-"""
-import json, re, math, os, sys, time, datetime as dt
-import urllib.request, ssl
-from collections import Counter
-
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', 'data.json')
-CONTACT = os.environ.get('GITHUB_REPOSITORY', 'airport-weather-dashboard')
-UA = f'1AV-AirportWeatherDashboard/1.0 (https://github.com/{CONTACT})'
-
-# id, ICAO code, display name, region, latitude, longitude, map x %, map y %
-APTS = [
-    ('bacolod', 'RPVB', 'Bacolod', 'visayas', 10.7764, 123.015, 61.0, 61.7),
-    ('boholpanglao', 'RPSP', 'Bohol (Panglao)', 'visayas', 9.573, 123.77, 67.6, 68.8),
-    ('busuangacoron', 'RPVV', 'Busuanga (Coron)', 'luzon', 12.1215, 120.1, 35.7, 53.7),
-    ('butuan', 'RPME', 'Butuan', 'mindanao', 8.9515, 125.4788, 82.4, 72.5),
-    ('cagayandeoro', 'RPMY', 'Cagayan de Oro', 'mindanao', 8.6122, 124.4565, 73.5, 74.5),
-    ('calbayog', 'RPVC', 'Calbayog', 'visayas', 12.0727, 124.545, 74.3, 54.0),
-    ('camiguin', 'RPMH', 'Camiguin', 'mindanao', 9.2535, 124.707, 75.7, 70.7),
-    ('caticlanboracay', 'RPVE', 'Caticlan (Boracay)', 'visayas', 11.9245, 121.954, 51.8, 54.9),
-    ('cauayan', 'RPUY', 'Cauayan', 'luzon', 16.9299, 121.753, 50.0, 25.3),
-    ('cebumactan', 'RPVM', 'Cebu (Mactan)', 'visayas', 10.3075, 123.9783, 69.4, 64.4),
-    ('clark', 'RPLC', 'Clark', 'luzon', 15.1872, 120.5623, 39.7, 35.6),
-    ('davao', 'RPMD', 'Davao', 'mindanao', 7.1261, 125.6454, 83.9, 83.3),
-    ('dipolog', 'RPMG', 'Dipolog', 'mindanao', 8.602, 123.342, 63.8, 74.6),
-    ('dumaguete', 'RPVD', 'Dumaguete', 'visayas', 9.3343, 123.2985, 63.5, 70.2),
-    ('elnido', 'RPEN', 'El Nido', 'luzon', 11.2025, 119.417, 29.7, 59.2),
-    ('generalsantos', 'RPMR', 'General Santos', 'mindanao', 6.0569, 125.0965, 79.1, 89.6),
-    ('iloilo', 'RPVI', 'Iloilo', 'visayas', 10.833, 122.4934, 56.5, 61.3),
-    ('kalibo', 'RPVK', 'Kalibo', 'visayas', 11.6833, 122.3835, 55.4, 56.3),
-    ('laoag', 'RPLI', 'Laoag', 'luzon', 18.1786, 120.5312, 39.4, 17.9),
-    ('legazpibicol', 'RPLK', 'Legazpi (Bicol)', 'luzon', 13.1113, 123.677, 66.8, 47.9),
-    ('manilanaia', 'RPLL', 'Manila (NAIA)', 'luzon', 14.5078, 121.0156, 43.7, 39.6),
-    ('masbate', 'RPVJ', 'Masbate', 'luzon', 12.3694, 123.629, 66.3, 52.3),
-    ('naga', 'RPUN', 'Naga', 'luzon', 13.5849, 123.27, 63.2, 45.1),
-    ('ozamiz', 'RPMO', 'Ozamiz', 'mindanao', 8.1785, 123.842, 68.2, 77.1),
-    ('pagadian', 'RPMP', 'Pagadian', 'mindanao', 7.8307, 123.4612, 64.9, 79.1),
-    ('puertoprincesa', 'RPVP', 'Puerto Princesa', 'luzon', 9.7421, 118.7567, 24.0, 67.8),
-    ('roxas', 'RPVR', 'Roxas', 'visayas', 11.5977, 122.752, 58.7, 56.8),
-    ('sanjosemindoro', 'RPUH', 'San Jose (Mindoro)', 'luzon', 12.3615, 121.047, 43.9, 52.3),
-    ('sanvicente', 'RPSV', 'San Vicente', 'luzon', 10.525, 119.274, 28.5, 63.2),
-    ('siargao', 'RPNS', 'Siargao', 'mindanao', 9.8591, 126.014, 87.1, 67.1),
-    ('surigao', 'RPMS', 'Surigao', 'mindanao', 9.7558, 125.481, 82.4, 67.7),
-    ('tacloban', 'RPVA', 'Tacloban', 'visayas', 11.2276, 125.0278, 78.5, 59.0),
-    ('tawitawi', 'RPMN', 'Tawi-Tawi', 'mindanao', 5.047, 119.743, 32.5, 95.6),
-    ('tuguegarao', 'RPUT', 'Tuguegarao', 'luzon', 17.6434, 121.733, 49.9, 21.0),
-    ('virac', 'RPUV', 'Virac', 'luzon', 13.5764, 124.206, 71.4, 45.1),
-    ('zamboanga', 'RPMZ', 'Zamboanga', 'mindanao', 6.922, 122.0622, 52.7, 84.5),
-]
-
-# Map projection (longitude -> x %, latitude -> y %) for placing earthquakes on the map image.
-P = {"cx": [8.69278161, -1008.33883896], "cy": [-5.91775171, 125.45788502]}
-
-# =====================================================================================
-# SOURCES AND FALLBACK ORDER
-# For each kind of data the script tries the sources below from left to right and uses
-# the first one that answers with usable data. Change the order here to change priority.
-# =====================================================================================
-SOURCE_ORDER = {
-    'reports':   ['aviationweather', 'noaa'],        # official airport weather reports (METAR)
-    'forecasts': ['aviationweather', 'noaa'],        # official airport forecasts (TAF)
-    'estimates': ['metno', 'openmeteo'],             # computer forecast where no official report exists
-    'storms':    ['sigmet', 'gdacs'],                # tropical cyclones (typhoons)
-    'quakes':    ['phivolcs', 'usgs', 'emsc'],       # earthquakes
+<!doctype html>
+<!-- 1AV Airport Weather Monitoring. Copyright (c) 2026 1Aviation Groundhandling Services, Corp. All rights reserved. Created under 1AV IT Innovation by Jake V Borras. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Airport Weather Monitoring | 1Aviation</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%85%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Lato,"Segoe UI",Tahoma,sans-serif;background:#F1F7F9;color:#12303F}
+button,select{font-family:inherit}
+h1,h2,h3,p{margin:0}
+.page{max-width:1360px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:#005687;color:#FFFFFF;border-radius:12px;padding:20px 24px}
+.brand{display:flex;align-items:center;gap:16px;min-width:0}
+.brand img{height:44px;width:auto;flex:none;display:block}
+.brand .who{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#CAE2E7}
+.brand h1{font-size:28px;font-weight:900;line-height:1.2}
+.brand .checked{font-size:15px;color:#CAE2E7;margin-top:4px}
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.helpbtn{width:44px;height:44px;padding:0;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.helpbtn span{width:28px;height:28px;border-radius:50%;border:2px solid #FFFFFF;color:#FFFFFF;font-size:16px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center}
+.chip{background:#FFFFFF;color:#005687;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;padding:8px 12px;border-radius:6px}
+.chip.stale{background:#FFD600;color:#12303F}
+.tools label{font-size:12px;font-weight:700;color:#CAE2E7}
+select{min-height:44px;padding:0 12px;font-size:15px;border-radius:8px;border:1px solid #CAE2E7;background:#FFFFFF;color:#12303F}
+.notice{background:#FFF4CC;border:2px solid #FFD600;border-radius:12px;padding:14px 18px;font-size:15px;line-height:1.45}
+.notice strong{display:block;margin-bottom:4px}
+h2{font-size:18px;font-weight:900;color:#005687}
+.muted{font-size:14px;color:#3F5563}
+.rowhead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.stat{min-height:104px;border:2px solid transparent;border-radius:12px;padding:16px 18px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.stat .l{font-size:15px;font-weight:700}.stat .n{font-size:40px;font-weight:900;line-height:1}.stat .s{font-size:13px}
+.stat.on{outline:3px solid #12303F;outline-offset:2px}
+.stat.all{background:#FFFFFF;color:#005687;border-color:#0077C8}
+.stat.advisory{background:#FFD600;color:#12303F}.stat.warning{background:#F57C00;color:#12303F}.stat.danger{background:#C62828;color:#FFFFFF}
+.two{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.card{background:#FFFFFF;border:1px solid #CAE2E7;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card.map{flex:1 1 560px}.card.side{flex:1 1 340px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px}
+.legend span.i{display:inline-flex;align-items:center;gap:6px}
+.legend .d{width:12px;height:12px;border-radius:50%;display:inline-block}
+.narrow{width:100%;max-width:560px;margin:0 auto}
+.find{display:flex;flex-direction:column;gap:4px}
+.find label{font-size:13px;font-weight:700;color:#005687}
+.find select{border-color:#0077C8}
+.vp{position:relative;aspect-ratio:1000/1506;border-radius:10px;border:1px solid #CAE2E7;overflow:hidden;background:#DDEEF3}
+.layer{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0;user-select:none;-webkit-user-select:none;transition:transform .6s ease}
+.layer.nodrag{transition:none}
+.layer img{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
+.pin{position:absolute;width:0;height:0;transform:scale(var(--inv,1));transition:transform .6s ease}
+.pin button{position:absolute;left:-16px;top:-16px;width:32px;height:32px;border:none;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pin .dot{display:block;border-radius:50%}
+.pin .lab{position:absolute;left:18px;top:-11px;white-space:nowrap;font-size:13px;font-weight:700;background:#FFFFFF;border:1px solid #CAE2E7;padding:1px 7px;border-radius:6px;pointer-events:none}
+.pin .selring{position:absolute;left:-19px;top:-19px;width:38px;height:38px;border-radius:50%;border:3px solid #005687;background:rgba(0,119,200,.18);display:none;pointer-events:none}
+.pin.sel .selring{display:block}
+.pin .qring{display:block;flex:none;border-radius:50%;border:2px solid #6A1B9A;background:rgba(106,27,154,.18)}
+.pin .qsel{position:absolute;border-radius:50%;border:3px solid #6A1B9A;background:rgba(106,27,154,.25);display:none;pointer-events:none}
+.pin.sel .qsel{display:block}
+.pin .qlab{position:absolute;left:-16px;width:32px;text-align:center;font-size:10px;font-weight:900;color:#6A1B9A;text-shadow:0 0 2px #FFFFFF,0 0 2px #FFFFFF;pointer-events:none}
+.banner{position:absolute;right:10px;top:10px;max-width:190px;font-size:12px;line-height:1.35;font-weight:700;color:#FFFFFF;background:#005687;padding:8px 10px;border-radius:8px}
+.zoom{position:absolute;left:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:44px;height:44px;padding:0;border:1px solid #0060A7;border-radius:8px;background:#FFFFFF;color:#005687;font-size:24px;font-weight:900;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.zoom button.all{font-size:12px}
+.detail{border:2px solid #0077C8;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;background:#F1F7F9}
+.detail.quake{border-color:#6A1B9A}
+.detail .hd{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.detail .ttl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.detail h3{font-size:20px;font-weight:900}
+.detail .f{display:flex;flex-direction:column;gap:2px}
+.detail .f .k{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#005687}
+.detail.quake .f .k{color:#6A1B9A}
+.detail .f .v{font-size:15px;line-height:1.45}
+.btn{min-height:44px;padding:0 16px;border:1px solid #0060A7;border-radius:8px;background:#FFFFFF;color:#0060A7;font-size:14px;font-weight:700;cursor:pointer}
+.hint{border:1px dashed #0077C8;border-radius:10px;padding:14px 16px;font-size:15px;background:#F1F7F9}
+.pill{font-size:12px;font-weight:900;padding:4px 10px;border-radius:999px;white-space:nowrap;display:inline-block}
+.pill.danger{background:#C62828;color:#FFFFFF}.pill.warning{background:#F57C00;color:#12303F}.pill.advisory{background:#FFD600;color:#12303F}
+.pill.normal{background:#CAE2E7;color:#12303F}.pill.nodata,.pill.est{background:#FFFFFF;color:#0060A7;border:1px solid #0060A7;padding:3px 9px}
+.pill.quake{background:#6A1B9A;color:#FFFFFF}.pill.blue{background:#005687;color:#FFFFFF}
+.alerts{max-height:760px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-right:8px}
+.alert{display:flex;flex-direction:column;gap:6px;padding:0 0 12px 0;border:none;border-bottom:1px solid #CAE2E7;background:transparent;text-align:left;color:inherit;cursor:pointer;width:100%}
+.alert .a1{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.alert .nm{font-size:15px;font-weight:900}
+.alert .a2{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;font-size:15px;line-height:1.4}
+.alert .wh{font-weight:900;color:#005687}
+.block{display:flex;flex-direction:column;gap:6px;padding-bottom:14px;border-bottom:1px solid #CAE2E7}
+.block:last-child{border-bottom:none;padding-bottom:0}
+.block .bh{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.block .bh .asof{font-size:13px;color:#3F5563}
+.block .strong{font-size:15px;line-height:1.45;font-weight:700}
+.block .txt{font-size:15px;line-height:1.45}
+.qline{font-size:14px;line-height:1.4;border:none;background:transparent;padding:2px 0;text-align:left;color:inherit;cursor:pointer;width:100%}
+.qline b{font-weight:900;color:#6A1B9A}
+.small{font-size:13px;color:#3F5563;line-height:1.5}
+.scroll{overflow-x:auto}
+.tbl{min-width:640px;font-size:15px;line-height:1.4;display:flex;flex-direction:column}
+.tr{display:grid;grid-template-columns:1.2fr 1.3fr 1.8fr 1.7fr}
+.tr.h{font-weight:900;color:#005687;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.tr.h>div{padding:10px 12px;border-bottom:2px solid #CAE2E7}
+.tr>div{padding:12px;border-bottom:1px solid #CAE2E7}
+.tr .nm{font-weight:900}.tr .wh{font-weight:700;color:#005687}
+.tr .pl{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start}
+.srcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.srcbox{border:1px solid #CAE2E7;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;background:#F1F7F9}
+.srcbox.warn{border:2px solid #FFD600}.srcbox.bad{border:2px solid #C62828}
+.srcbox .w{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#005687}
+.srcbox .u{font-size:16px;font-weight:900;line-height:1.3}
+.srcbox .c{display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.35}
+.srcbox .c div{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.srcbox .c div>span:first-child{min-width:0;overflow-wrap:anywhere}
+.srcbox .u{overflow-wrap:anywhere}
+.tag{font-size:11px;font-weight:900;padding:3px 8px;border-radius:999px;white-space:nowrap;flex:none}
+.tag.used{background:#005687;color:#FFFFFF}.tag.standby{background:#FFFFFF;color:#0060A7;border:1px solid #0060A7}.tag.failed{background:#C62828;color:#FFFFFF}
+.layer canvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;opacity:.85}
+.rainbar{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;border:1px solid #CAE2E7;border-radius:10px;padding:10px 12px;background:#F1F7F9}
+.rainbar .info{display:flex;flex-direction:column;gap:1px;min-width:150px;flex:1 1 150px}
+.rainbar .info .k{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#005687}
+.rainbar .info .v{font-size:16px;font-weight:900}
+.rainbar input[type=range]{flex:1 1 100%;min-height:32px;accent-color:#005687;margin:0}
+.rainbar .keys{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;flex:1 1 100%;align-items:center}
+.rainbar .keys i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.rainbar .keys .bolt{display:inline-block;width:8px;height:11px;margin-right:4px;vertical-align:middle;filter:drop-shadow(0 0 1px #12303F)}
+.wxbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{min-height:44px;padding:0 14px;border:1px solid #0060A7;border-radius:8px;background:#FFFFFF;color:#0060A7;font-size:14px;font-weight:900;cursor:pointer}
+.seg.on{background:#005687;color:#FFFFFF;border-color:#005687}
+.wxframe{width:100%;height:560px;border:1px solid #CAE2E7;border-radius:10px;display:block;background:#DDEEF3}
+.wxwhere{font-size:15px;font-weight:700}
+@media (max-width:640px){.wxframe{height:440px}}
+.empty{font-size:15px;color:#3F5563;padding:8px 0}
+.modal{position:fixed;left:0;top:0;right:0;bottom:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal .back{position:absolute;left:0;top:0;width:100%;height:100%;border:none;padding:0;background:rgba(18,48,63,.6);cursor:pointer}
+.modal .box{position:relative;width:calc(100vw - 40px);max-width:1180px;max-height:90vh;overflow-y:auto;background:#FFFFFF;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+/* Help modal: landscape desktop layout instead of a tall portrait panel */
+.modal#modal .box{width:min(1180px,calc(100vw - 40px));max-height:90vh}
+.modal#modal .box .mh{position:sticky;top:-24px;z-index:2;background:#FFFFFF;padding:2px 0 10px}
+@media (min-width:901px){
+  .modal#modal .box{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px;row-gap:16px;align-content:start}
+  .modal#modal .box>.mh,
+  .modal#modal .box>p:first-of-type,
+  .modal#modal .box>.sec:first-of-type{grid-column:1/-1}
+  .modal#modal .box>.sec{min-width:0}
 }
-SOURCE_NAMES = {
-    'aviationweather': 'aviationweather.gov (US Aviation Weather Center)',
-    'noaa':            'NOAA data server (tgftp.nws.noaa.gov)',
-    'metno':           'MET Norway (api.met.no)',
-    'openmeteo':       'Open-Meteo (api.open-meteo.com)',
-    'sigmet':          'Aviation storm warnings (aviationweather.gov)',
-    'gdacs':           'GDACS, UN and EU disaster alert system (gdacs.org)',
-    'phivolcs':        'PHIVOLCS (earthquake.phivolcs.dost.gov.ph)',
-    'usgs':            'USGS (earthquake.usgs.gov)',
-    'emsc':            'EMSC (seismicportal.eu)',
+@media (max-width:900px){
+  .modal#modal .box{width:calc(100vw - 20px);max-height:92vh;padding:16px;gap:14px}
+  .modal#modal .box .mh{top:-16px}
 }
-SHORT = {'aviationweather': 'aviationweather.gov', 'noaa': 'NOAA data server', 'metno': 'MET Norway', 'openmeteo': 'Open-Meteo',
-         'sigmet': 'aviationweather.gov', 'gdacs': 'GDACS', 'phivolcs': 'PHIVOLCS', 'usgs': 'USGS', 'emsc': 'EMSC'}
-GROUP_LABEL = {'reports': 'Airport weather reports', 'forecasts': 'Airport forecasts', 'estimates': 'Estimates (no official report)',
-               'storms': 'Typhoon watch', 'quakes': 'Earthquakes'}
-STATUS = {g: [] for g in SOURCE_ORDER}      # filled in as sources are tried: (key, 'used' | 'failed' | 'standby', note)
-USED = {g: None for g in SOURCE_ORDER}
+.modal .mh{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal h2{font-size:20px}.modal h3{font-size:17px;font-weight:900;color:#005687}
+.modal p,.modal li,.modal .t{font-size:15px;line-height:1.5}
+.modal .sec{display:flex;flex-direction:column;gap:8px}
+.modal ul{margin:0;padding-left:20px}.modal li{margin:0 0 4px 0}
+.modal .lv{display:flex;gap:10px;align-items:flex-start}.modal .lv .c{width:96px;flex:none;display:flex}
+.modal .src{display:flex;flex-direction:column;gap:2px}.modal .src b{font-size:15px;font-weight:900}
+@keyframes wxRing{0%{transform:scale(.5);opacity:.95}100%{transform:scale(2.8);opacity:0}}
+@keyframes wxBolt{0%,26%,100%{opacity:0}3%{opacity:1}7%{opacity:.15}11%{opacity:1}16%{opacity:.4}20%{opacity:1}}
+@keyframes wxFlash{0%,28%,100%{opacity:0}3%{opacity:.9}7%{opacity:.1}11%{opacity:.75}20%{opacity:.5}}
+.wx-flash{position:absolute;left:-34px;top:-34px;width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,rgba(255,214,0,.95) 0%,rgba(255,214,0,0) 70%);pointer-events:none;animation:wxFlash 2.6s linear infinite}
+.wx-ring{position:absolute;left:-16px;top:-16px;width:32px;height:32px;border-radius:50%;border:2px solid #C62828;pointer-events:none;animation:wxRing 1.8s ease-out infinite}
+.wx-ring2{animation-delay:.9s}
+.wx-bolt{position:absolute;left:-12px;top:-44px;width:24px;height:30px;filter:drop-shadow(0 0 1.5px #12303F) drop-shadow(0 0 1.5px #12303F);pointer-events:none;animation:wxBolt 2.6s linear infinite}
+.wx-bolt i,.bolt{display:block;background:#FFD600;clip-path:polygon(56% 0,10% 58%,44% 58%,32% 100%,90% 38%,56% 38%)}
+.wx-bolt i{width:100%;height:100%}
+@media (prefers-reduced-motion:reduce){.wx-flash,.wx-ring,.wx-bolt{animation:none}.wx-flash,.wx-ring2{opacity:0}.wx-ring{transform:scale(1.4)}.layer,.pin{transition:none}}
+@media (max-width:640px){.page{padding:12px;gap:14px}header.top{padding:16px}.brand h1{font-size:22px}.card{padding:14px}}
 
-def fetch(url, tries=2, text=False, insecure_ok=False, timeout=40):
-    """Download a URL. Returns parsed JSON (or text), or None if it could not be reached."""
-    last = None
-    for k in range(tries):
-        try:
-            req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': '*/*'})
-            try:
-                r = urllib.request.urlopen(req, timeout=timeout)
-            except Exception as e:
-                # Some government sites publish an incomplete security certificate chain.
-                # Only for sources flagged insecure_ok do we retry without certificate checking.
-                if insecure_ok and 'CERTIFICATE' in str(e).upper():
-                    r = urllib.request.urlopen(req, timeout=timeout, context=ssl._create_unverified_context())
-                else:
-                    raise
-            with r:
-                body = r.read().decode('utf-8', 'replace')
-            if text: return body
-            return json.loads(body) if body.strip() else []
-        except Exception as e:
-            last = e; time.sleep(1 + 2 * k)
-    print('FETCH FAILED', url[:100], last, file=sys.stderr)
-    return None
+/* ---------- one-screen layout ---------- */
+[hidden]{display:none !important}
+html,body{height:100%}
+body{overflow:hidden}
+.app{height:100vh;height:100dvh;display:flex;flex-direction:column;gap:8px;padding:10px 12px;max-width:1600px;margin:0 auto}
+header.top{padding:8px 14px;border-radius:10px;gap:10px;flex:none}
+.brand{gap:12px}.brand img{height:30px}
+.brand .who{display:none}
+.brand h1{font-size:19px}
+.brand .checked{font-size:12px;margin-top:1px}
+.tools{gap:8px}
+.chip{font-size:11px;padding:6px 9px}
+.helpbtn{width:40px;height:40px}
+.notice{padding:6px 12px;font-size:13px;border-radius:8px;flex:none;max-height:64px;overflow-y:auto}
+.notice strong{display:inline;margin-right:6px}
+.filters{display:flex;gap:8px;align-items:center;flex:none;overflow-x:auto;padding-bottom:2px}
+.filters>*{flex:none}
+.stat{min-height:0;height:44px;flex-direction:row;align-items:center;gap:8px;padding:0 12px;border-radius:10px;white-space:nowrap}
+.stat .l{font-size:13px;font-weight:900}.stat .n{font-size:20px}
+.stat.on{outline-offset:1px}
+.stat.normal{background:#CAE2E7;color:#12303F}
+.daysw{display:flex;border:1px solid #0060A7;border-radius:8px;overflow:hidden;height:44px}
+.daysw button{border:none;background:#FFFFFF;color:#0060A7;font-size:13px;font-weight:900;padding:0 14px;cursor:pointer}
+.daysw button.on{background:#005687;color:#FFFFFF}
+.filters select{min-height:44px;font-size:14px;border-color:#0077C8;max-width:190px}
+.spacer{flex:1 1 auto !important}
+.ptabs{display:none;flex:none;border:1px solid #0060A7;border-radius:8px;overflow:hidden}
+.ptabs button{flex:1;border:none;background:#FFFFFF;color:#0060A7;font-size:14px;font-weight:900;height:44px;cursor:pointer}
+.ptabs button.on{background:#005687;color:#FFFFFF}
+.cols{flex:1;min-height:0;display:grid;grid-template-columns:360px 1fr 1fr;gap:10px}
+.col{background:#FFFFFF;border:1px solid #CAE2E7;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0}
+.col h2{font-size:15px}
+.col.map{align-items:center}
+.vp{flex:none;aspect-ratio:auto}
+.pin .lab{font-size:11px;left:14px;top:-9px;padding:0 5px}
+.pin .selring{left:-15px;top:-15px;width:30px;height:30px}
+.banner{right:6px;top:6px;max-width:150px;font-size:11px;padding:5px 8px}
+.zoom{left:6px;bottom:6px;gap:4px}
+.zoom button{width:40px;height:40px;font-size:22px}
+.zoom button.all{font-size:11px}
+.rainbar{width:100%;padding:6px 8px;gap:6px 8px;flex:none}
+.rainbar .btn{min-height:36px;padding:0 10px;font-size:13px}
+.rainbar .info{min-width:0;flex:1 1 90px}
+.rainbar .info .k{font-size:10px}.rainbar .info .v{font-size:13px}
+.rainbar input[type=range]{min-height:24px}
+.rainbar .keys{font-size:11px;gap:3px 9px}
+.selbar{display:none;width:100%;border:2px solid #0077C8;border-radius:10px;background:#F1F7F9;padding:6px 8px;align-items:center;gap:8px;flex:none}
+.selbar .nm{font-weight:900;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.colhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
+.colhead .sub{font-size:12px;color:#3F5563}
+.scrolly{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+.alert{border:1px solid #CAE2E7;border-radius:10px;padding:8px 10px;gap:3px;flex:none}
+.alert.on{border:2px solid #0077C8;background:#F1F7F9}
+.alert .nm{font-size:14px}.alert .a2{font-size:13px}
+.stabs{display:flex;gap:6px;flex:none;flex-wrap:wrap}
+.stabs button{height:40px;padding:0 12px;border:1px solid #0060A7;border-radius:8px;background:#FFFFFF;color:#0060A7;font-size:13px;font-weight:900;cursor:pointer}
+.stabs button.on{background:#005687;color:#FFFFFF;border-color:#005687}
+.stabs .flagdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#C62828;margin-left:6px;vertical-align:middle}
+.detail{padding:12px;gap:9px}
+.detail h3{font-size:17px}
+.detail .f .v{font-size:14px;line-height:1.4}
+.detail .f .k{font-size:11px}
+.sum{border:1px solid #CAE2E7;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;background:#FFFFFF;text-align:left;cursor:pointer;color:inherit;width:100%;flex:none}
+.sum .k{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#005687}
+.sum .v{font-size:14px;line-height:1.4}
+.hint{padding:10px 12px;font-size:14px;flex:none}
+.block{border-bottom:none;padding-bottom:0}
+.block .strong,.block .txt{font-size:14px}
+.qline{font-size:13px;padding:5px 0;border-bottom:1px solid #CAE2E7}
+.modal .box.wide{max-width:1000px}
+.wxframe{height:min(62vh,600px)}
+@media (max-width:1100px){.cols{grid-template-columns:320px 1fr 1fr}}
+@media (max-width:900px){
+  .app{padding:8px;gap:6px}
+  .brand h1{font-size:16px}.chip{display:none}
+  .ptabs{display:flex}
+  .cols{display:block;position:relative}
+  .col{position:absolute;left:0;top:0;right:0;bottom:0;display:none}
+  .col.show{display:flex}
+  .selbar.has{display:flex}
+  .stat .l{font-size:12px}.stat{padding:0 9px;height:40px}
+  .daysw,.filters select{height:40px;min-height:40px}
+}
 
-IDS = ','.join(a[1] for a in APTS)
-NOW = dt.datetime.now(dt.timezone.utc)
-PROBLEMS = []
-BBOX = dict(minlat=3, maxlat=22, minlon=114, maxlon=130)     # "Philippine area" for earthquakes
-_start = (NOW - dt.timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%S')
+/* ---------- responsive full-width layout patch ---------- */
+.app{
+  width:100%;
+  max-width:none;
+  min-width:0;
+}
+header.top,.filters,.cols{width:100%}
+.cols{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+}
+.col{min-width:0;overflow:hidden}
+.col.map{align-items:center}
+.vp{max-width:100%;margin-inline:auto}
+.scrolly{min-width:0}
+@media (min-width:901px){
+  .app{padding-inline:clamp(8px,1vw,20px)}
+  .cols{grid-template-columns:minmax(360px,1.05fr) minmax(320px,1fr) minmax(320px,1fr)}
+}
+@media (min-width:1500px){
+  .cols{grid-template-columns:minmax(460px,1.05fr) minmax(420px,1fr) minmax(420px,1fr)}
+}
+@media (max-width:1200px) and (min-width:901px){
+  .cols{grid-template-columns:minmax(330px,1fr) minmax(300px,1fr) minmax(300px,1fr)}
+  .stabs{gap:4px}
+  .stabs button{padding-inline:9px}
+}
+@media (max-width:900px){
+  .app{width:100%;max-width:none}
+  .cols{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
 
-# ---------- official airport reports and forecasts ----------
-_WIND = re.compile(r'\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b')
-_WX = re.compile(r'^(\+|-|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)*(DZ|RA|SN|SG|PL|GR|GS|BR|FG|FU|VA|DU|SA|HZ|SQ|FC|SS|DS)*$')
+<header class="top">
+  <div class="brand">
+    <img src="assets/logo.png" alt="1Aviation logo">
+    <div>
+      <h1>Airport Weather Monitoring</h1>
+      <div class="checked" id="checked">Loading the latest data…</div>
+    </div>
+  </div>
+  <div class="tools">
+    <div class="chip" id="chip">Live, updates about every 10 minutes</div>
+    <button class="helpbtn" id="helpBtn" aria-label="How this dashboard works" title="How this dashboard works"><span>?</span></button>
+  </div>
+</header>
 
-def _ddhh(day, hour, ref):
-    """Turn a day-of-month and hour from a report into a full UTC time near the reference time."""
-    day, hour = int(day), int(hour); add = 0
-    if hour == 24: hour = 0; add = 1
-    best = None
-    for mo in (-1, 0, 1):
-        y, m = ref.year, ref.month + mo
-        if m < 1: y, m = y - 1, 12
-        if m > 12: y, m = y + 1, 1
-        try: t = dt.datetime(y, m, day, hour, tzinfo=dt.timezone.utc) + dt.timedelta(days=add)
-        except ValueError: continue
-        if best is None or abs((t - ref).total_seconds()) < abs((best - ref).total_seconds()): best = t
-    return best
+<div class="notice" id="notice" hidden></div>
 
-def parse_raw_metar(icao, raw, ref):
-    raw = ' '.join(raw.split())
-    m = re.search(r'\b(\d{2})(\d{2})(\d{2})Z\b', raw)
-    if not m: return None
-    obs = _ddhh(m.group(1), m.group(2), ref) + dt.timedelta(minutes=int(m.group(3)))
-    w = _WIND.search(raw); t = re.search(r'\s(M?\d{2})/(M?\d{2})?(\s|$)', raw)
-    if not t: return None
-    temp = int(t.group(1).replace('M', '-'))
-    return dict(icaoId=icao, obsTime=int(obs.timestamp()), rawOb=raw, wspd=int(w.group(2)) if w else 0,
-                wgst=int(w.group(3)) if (w and w.group(3)) else None, temp=temp)
+<div class="filters" role="group" aria-label="Filters">
+  <button class="stat all" data-f="alerts"><span class="l">Needs attention</span><span class="n" id="nAll">0</span></button>
+  <button class="stat danger" data-f="danger"><span class="l">Danger</span><span class="n" id="nDanger">0</span></button>
+  <button class="stat warning" data-f="warning"><span class="l">Warning</span><span class="n" id="nWarn">0</span></button>
+  <button class="stat advisory" data-f="advisory"><span class="l">Advisory</span><span class="n" id="nAdv">0</span></button>
+  <button class="stat normal" data-f="normal"><span class="l">Normal</span><span class="n" id="nNormal">0</span></button>
+  <span class="spacer"></span>
+  <div class="daysw" role="group" aria-label="Day"><button data-day="today" class="on">Today</button><button data-day="tmr">Tomorrow</button></div>
+  <select id="region" aria-label="Region">
+    <option value="">All regions</option>
+    <option value="luzon">Luzon</option>
+    <option value="visayas">Visayas</option>
+    <option value="mindanao">Mindanao</option>
+  </select>
+  <select id="airportPick" aria-label="Find an airport"><option value="">Find an airport</option></select>
+</div>
 
-def parse_raw_taf(icao, raw, ref):
-    toks = raw.replace('=', ' ').split()
-    while toks and toks[0] in ('TAF', 'AMD', 'COR'): toks.pop(0)
-    if not toks or toks[0] != icao: return None
-    toks.pop(0)
-    while toks and toks[0] in ('TAF', 'AMD', 'COR'): toks.pop(0)
-    mi = re.match(r'^(\d{2})(\d{2})(\d{2})Z$', toks[0]) if toks else None
-    if not mi: return None
-    issue = _ddhh(mi.group(1), mi.group(2), ref) + dt.timedelta(minutes=int(mi.group(3))); toks.pop(0)
-    mv = re.match(r'^(\d{2})(\d{2})/(\d{2})(\d{2})$', toks[0]) if toks else None
-    if not mv: return None
-    vfrom = _ddhh(mv.group(1), mv.group(2), issue); vto = _ddhh(mv.group(3), mv.group(4), issue); toks.pop(0)
-    groups = [dict(change=None, prob=None, a=vfrom, b=vto, toks=[])]
-    i = 0
-    while i < len(toks):
-        t = toks[i]
-        fm = re.match(r'^FM(\d{2})(\d{2})(\d{2})$', t)
-        if fm:
-            a = _ddhh(fm.group(1), fm.group(2), issue) + dt.timedelta(minutes=int(fm.group(3)))
-            for g in groups:
-                if g['change'] in (None, 'FM') and g['b'] > a: g['b'] = a
-            groups.append(dict(change='FM', prob=None, a=a, b=vto, toks=[])); i += 1; continue
-        if t in ('TEMPO', 'BECMG') or re.match(r'^PROB\d{2}$', t):
-            prob = int(t[4:]) if t.startswith('PROB') else None; change = 'PROB' if prob else t
-            if prob and i + 1 < len(toks) and toks[i + 1] == 'TEMPO': change = 'TEMPO'; i += 1
-            p = re.match(r'^(\d{2})(\d{2})/(\d{2})(\d{2})$', toks[i + 1]) if i + 1 < len(toks) else None
-            if p:
-                a = _ddhh(p.group(1), p.group(2), issue); b = _ddhh(p.group(3), p.group(4), issue)
-                if change == 'BECMG': b = vto
-                groups.append(dict(change=change, prob=prob, a=a, b=b, toks=[])); i += 2; continue
-        groups[-1]['toks'].append(t); i += 1
-    fc = []
-    for g in groups:
-        w = None
-        for t in g['toks']:
-            w = _WIND.match(t) or w
-        wx = [t for t in g['toks'] if _WX.match(t) and re.search(r'TS|SH|DZ|RA|FG|GR|SQ|FC|BR|HZ', t)]
-        fc.append(dict(timeFrom=int(g['a'].timestamp()), timeTo=int(g['b'].timestamp()), fcstChange=g['change'], probability=g['prob'],
-                       wxString=' '.join(wx) or None, wspd=int(w.group(2)) if w else None, wgst=int(w.group(3)) if (w and w.group(3)) else None))
-    return dict(icaoId=icao, issueTime=issue.strftime('%Y-%m-%dT%H:%M:%S.000Z'), validTimeFrom=int(vfrom.timestamp()),
-                validTimeTo=int(vto.timestamp()), rawTAF=' '.join(raw.split()), fcsts=fc)
+<div class="ptabs" role="tablist"><button data-pane="map" class="on">Map</button><button data-pane="list">Airports</button><button data-pane="side">Details</button></div>
 
-def _noaa(kind):
-    """Backup for airport reports/forecasts: the US weather service file server, one small text file per airport."""
-    out = []; reached = False
-    for a in APTS:
-        sub = 'observations/metar/stations' if kind == 'metar' else 'forecasts/taf/stations'
-        body = fetch(f'https://tgftp.nws.noaa.gov/data/{sub}/{a[1]}.TXT', tries=1, text=True, timeout=20)
-        if body is None: continue
-        reached = True
-        try:
-            lines = [l for l in body.strip().splitlines() if l.strip()]
-            ref = dt.datetime.strptime(lines[0].strip(), '%Y/%m/%d %H:%M').replace(tzinfo=dt.timezone.utc)
-            rec = parse_raw_metar(a[1], ' '.join(lines[1:]), ref) if kind == 'metar' else parse_raw_taf(a[1], ' '.join(lines[1:]), ref)
-            if rec: out.append(rec)
-        except Exception as e:
-            print('NOAA PARSE ERROR', a[1], e, file=sys.stderr)
-    return out if (reached and out) else None
+<main class="cols" id="cols">
+  <section class="col map show" data-pane="map" id="mapCol">
+    <div class="vp" id="vp">
+      <div class="layer" id="layer">
+        <img src="assets/map.svg" alt="Map of the Philippines">
+        <canvas id="rainCv" width="480" height="723" aria-hidden="true"></canvas>
+        <div id="pins"></div>
+      </div>
+      <div class="banner" id="banner"></div>
+      <div class="zoom">
+        <button id="zIn" aria-label="Zoom in" title="Zoom in">+</button>
+        <button id="zOut" aria-label="Zoom out" title="Zoom out">−</button>
+        <button id="zAll" class="all" aria-label="Show whole map" title="Show whole map">ALL</button>
+      </div>
+    </div>
+    <div class="selbar" id="selBar"><span class="nm" id="selName"></span><span id="selPill"></span><button class="btn" id="selGo" style="min-height:36px;padding:0 10px">Details</button></div>
+    <div class="rainbar" id="rainBar" hidden>
+      <button class="btn" id="rainPlay">Stop</button>
+      <div class="info"><span class="k">Forecast rain</span><span class="v" id="rainTime"></span></div>
+      <button class="btn" id="rainShow" aria-pressed="true">Hide rain</button>
+      <input type="range" id="rainSlider" min="0" max="23" step="1" value="0" aria-label="Forecast hour">
+      <div class="keys"><span><i style="background:rgba(90,160,235,.7)"></i>Light</span><span><i style="background:rgba(0,170,150,.8)"></i>Moderate</span><span><i style="background:rgba(255,190,0,.9)"></i>Heavy</span><span><i style="background:rgba(230,60,60,.9)"></i>Very heavy</span><span><span class="bolt"></span>Thunder</span></div>
+    </div>
+  </section>
 
-def load_reports(key):
-    if key == 'aviationweather':
-        d = fetch(f'https://aviationweather.gov/api/data/metar?ids={IDS}&format=json&hours=3')
-        return d if d else None
-    if key == 'noaa': return _noaa('metar')
-def load_forecasts(key):
-    if key == 'aviationweather':
-        d = fetch(f'https://aviationweather.gov/api/data/taf?ids={IDS}&format=json')
-        return d if d else None
-    if key == 'noaa': return _noaa('taf')
+  <section class="col list" data-pane="list">
+    <div class="colhead"><h2 id="listTitle">Airports</h2><span class="sub" id="listSub"></span></div>
+    <div class="scrolly" id="list"></div>
+  </section>
 
-# ---------- estimates ----------
-def load_metno(wanted):
-    out = {}
-    for a in wanted:
-        m = fetch(f'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={a[4]:.4f}&lon={a[5]:.4f}', tries=2)
-        if m and m.get('properties', {}).get('timeseries'): m['_src'] = 'metno'; out[a[1]] = m
-        time.sleep(0.2)
-    return out
-def openmeteo_to_met(j):
-    """Reshape one Open-Meteo answer into the same layout as a MET Norway answer."""
-    h = j['hourly']; ts = []
-    for i, t in enumerate(h['time']):
-        nxt = h['precipitation'][i + 1] if i + 1 < len(h['time']) else None      # Open-Meteo rain is for the hour that just ended
-        e = {'time': t + ':00Z', 'data': {'instant': {'details': {'air_temperature': h['temperature_2m'][i],
-             'wind_speed': (h['wind_speed_10m'][i] or 0) / 3.6, 'cloud_area_fraction': h['cloud_cover'][i] or 0}}}}
-        if nxt is not None: e['data']['next_1_hours'] = {'details': {'precipitation_amount': nxt or 0.0}}
-        ts.append(e)
-    upd = NOW.replace(minute=0, second=0, microsecond=0)
-    return {'properties': {'meta': {'updated_at': upd.strftime('%Y-%m-%dT%H:%M:%SZ')}, 'timeseries': ts}, '_src': 'openmeteo'}
-def load_openmeteo(wanted):
-    out = {}
-    if not wanted: return out
-    url = ('https://api.open-meteo.com/v1/forecast?latitude=' + ','.join(f'{a[4]:.4f}' for a in wanted) + '&longitude=' + ','.join(f'{a[5]:.4f}' for a in wanted) +
-           '&hourly=temperature_2m,precipitation,wind_speed_10m,cloud_cover&wind_speed_unit=kmh&timezone=UTC&past_hours=2&forecast_days=5')
-    d = fetch(url, tries=2)
-    if d is None: return out
-    if isinstance(d, dict): d = [d]
-    for a, j in zip(wanted, d):
-        try: out[a[1]] = openmeteo_to_met(j)
-        except Exception as e: print('OPEN-METEO PARSE ERROR', a[1], e, file=sys.stderr)
-    return out
-EST_LOADERS = {'metno': load_metno, 'openmeteo': load_openmeteo}
+  <section class="col side" data-pane="side">
+    <div class="stabs">
+      <button data-tab="details" class="on">Details</button>
+      <button data-tab="quakes">Earthquakes<span class="flagdot" id="qDot" hidden></span></button>
+      <button data-tab="typhoon">Typhoon</button>
+      <button id="wxToggle">Windy map</button>
+    </div>
+    <div class="scrolly" id="paneDetails"><div id="detail"></div><div id="summary" style="display:flex;flex-direction:column;gap:8px"></div></div>
+    <div class="scrolly" id="paneQuakes" hidden>
+      <div class="block">
+        <div class="bh"><span class="pill quake">EARTHQUAKES</span><span class="asof" id="qAsof"></span></div>
+        <div class="strong" id="qFlag"></div>
+        <div class="txt" id="qCount" style="font-size:13px"></div>
+        <div id="qList"></div>
+      </div>
+    </div>
+    <div class="scrolly" id="paneTyphoon" hidden>
+      <div class="block">
+        <div class="bh"><span class="pill blue">TYPHOON WATCH</span><span class="asof" id="tyAsof"></span></div>
+        <div class="txt" id="tyText"></div>
+      </div>
+    </div>
+  </section>
+</main>
 
-# ---------- earthquakes: every source is reshaped into the same layout ----------
-def _feat(t, lat, lon, depth, mag, place, tsunami=None, felt=None, types=''):
-    return {'properties': {'mag': mag, 'place': place, 'time': int(t.timestamp() * 1000), 'tsunami': tsunami, 'felt': felt, 'types': types},
-            'geometry': {'coordinates': [lon, lat, depth]}}
-def _inbox(lat, lon): return BBOX['minlat'] <= lat <= BBOX['maxlat'] and BBOX['minlon'] <= lon <= BBOX['maxlon']
-_C16 = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
-def _phiv_place(s):
-    """'051 km S 71° W of Palimbang (Sultan Kudarat)' -> '51 km WSW of Palimbang (Sultan Kudarat)'"""
-    s = ' '.join(s.split())
-    m = re.match(r'^(\d+)\s*km\s+([NS])\s*(\d{1,2})\s*°?\s*([EW])\s+of\s+(.+)$', s)
-    if m:
-        ang = int(m.group(3)); b = {('N', 'E'): ang, ('N', 'W'): 360 - ang, ('S', 'E'): 180 - ang, ('S', 'W'): 180 + ang}[(m.group(2), m.group(4))]
-        return f"{int(m.group(1))} km {_C16[int((b % 360 + 11.25) // 22.5) % 16]} of {m.group(5)}"
-    m = re.match(r'^(\d+)\s*km\s+(North|South|East|West)\s+of\s+(.+)$', s)
-    if m: return f"{int(m.group(1))} km {m.group(2)[0]} of {m.group(3)}"
-    return s
-def parse_phivolcs(html):
-    """Read the earthquake table on the PHIVOLCS page. Returns (all rows found, rows that pass our filters)."""
-    txt = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', html, flags=re.S | re.I)
-    txt = re.sub(r'<[^>]+>', ' ', txt); txt = txt.replace('&nbsp;', ' ').replace('&deg;', '°').replace('&#176;', '°')
-    txt = re.sub(r'&[a-z#0-9]+;', ' ', txt); txt = ' '.join(txt.split())
-    pat = re.compile(r'(\d{1,2}) ([A-Z][a-z]+) (\d{4}) - (\d{1,2}):(\d{2}) ([AP]M) (\d{1,2}\.\d+) (\d{2,3}\.\d+) (\d{1,3}) (\d\.\d) (.*?)(?= \d{1,2} [A-Z][a-z]+ \d{4} - \d{1,2}:\d{2} [AP]M |$)')
-    rows = []; pht = dt.timezone(dt.timedelta(hours=8))
-    for m in pat.finditer(txt):
-        try:
-            hh = int(m.group(4)) % 12 + (12 if m.group(6) == 'PM' else 0)
-            t = dt.datetime.strptime(f"{m.group(1)} {m.group(2)} {m.group(3)}", '%d %B %Y').replace(hour=hh, minute=int(m.group(5)), tzinfo=pht)
-            place = m.group(11).strip()
-            if ')' in place: place = place[:place.rindex(')') + 1]       # drop any page text after the last row
-            if len(place) > 120: place = place[:120].rsplit(' ', 1)[0]
-            rows.append((t.astimezone(dt.timezone.utc), float(m.group(7)), float(m.group(8)), int(m.group(9)), float(m.group(10)), _phiv_place(place)))
-        except Exception: continue
-    return rows
-def load_quakes(key):
-    since = NOW - dt.timedelta(days=7)
-    if key == 'phivolcs':
-        html = fetch('https://earthquake.phivolcs.dost.gov.ph/', tries=2, text=True, insecure_ok=True, timeout=60)
-        if not html: return None
-        rows = parse_phivolcs(html)
-        # Safety check: the page normally lists hundreds of events, the newest only hours old. Otherwise do not trust the reading.
-        if len(rows) < 30 or max(r[0] for r in rows) < NOW - dt.timedelta(hours=36) or min(r[0] for r in rows) > since + dt.timedelta(days=1):
-            print('PHIVOLCS page did not pass the safety check; rows read:', len(rows), file=sys.stderr); return None
-        feats = [_feat(t, la, lo, dep, mag, pl) for (t, la, lo, dep, mag, pl) in rows if mag >= 4.5 and since <= t <= NOW + dt.timedelta(minutes=10) and _inbox(la, lo)]
-        return {'features': feats, 'metadata': {'generated': int(NOW.timestamp() * 1000)}}
-    if key == 'usgs':
-        d = fetch('https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=' + _start +
-                  f"&minmagnitude=4.5&minlatitude={BBOX['minlat']}&maxlatitude={BBOX['maxlat']}&minlongitude={BBOX['minlon']}&maxlongitude={BBOX['maxlon']}")
-        if not isinstance(d, dict) or 'features' not in d: return None
-        for f in d['features']: f['properties']['tsunami'] = bool(f['properties'].get('tsunami'))
-        return d
-    if key == 'emsc':
-        d = fetch('https://www.seismicportal.eu/fdsnws/event/1/query?format=json&limit=300&start=' + _start +
-                  f"&minmag=4.5&minlat={BBOX['minlat']}&maxlat={BBOX['maxlat']}&minlon={BBOX['minlon']}&maxlon={BBOX['maxlon']}")
-        if not isinstance(d, dict) or 'features' not in d: return None
-        feats = []
-        for f in d['features']:
-            p = f['properties']
-            try:
-                t = dt.datetime.fromisoformat(p['time'].replace('Z', '+00:00'))
-                if t.tzinfo is None: t = t.replace(tzinfo=dt.timezone.utc)
-                feats.append(_feat(t, float(p['lat']), float(p['lon']), abs(float(p.get('depth') or 0)), float(p['mag']), (p.get('flynn_region') or 'Philippine area').title()))
-            except Exception: continue
-        return {'features': feats, 'metadata': {'generated': int(NOW.timestamp() * 1000)}}
+</div>
 
-# ---------- tropical cyclones ----------
-def load_storms(key):
-    if key == 'sigmet':
-        d = fetch('https://aviationweather.gov/api/data/isigmet?format=json')
-        return {'sigmet': d} if isinstance(d, list) and d else None
-    if key == 'gdacs':
-        found = {}; reached = False
-        a = (NOW - dt.timedelta(days=4)).strftime('%Y-%m-%d'); b = (NOW + dt.timedelta(days=1)).strftime('%Y-%m-%d')
-        for level in ('Green', 'Orange', 'Red'):
-            d = fetch(f'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=TC&fromdate={a}&todate={b}&alertlevel={level}', tries=1)
-            if not isinstance(d, dict): continue
-            reached = True
-            for f in d.get('features', []):
-                p = f.get('properties', {})
-                try:
-                    if p.get('eventtype') != 'TC': continue
-                    td = dt.datetime.fromisoformat(p['todate']).replace(tzinfo=dt.timezone.utc)
-                    if str(p.get('iscurrent')).lower() != 'true' and td < NOW - dt.timedelta(hours=18): continue
-                    lon, lat = f['geometry']['coordinates'][:2]
-                    name = re.sub(r'-\d{2}$', '', p.get('eventname') or p.get('name') or 'Unnamed')
-                    found[p.get('eventid')] = dict(name='-'.join(w.capitalize() for w in name.split('-')), la=float(lat), lo=float(lon))
-                except Exception: continue
-        return {'gdacs': list(found.values())} if reached else None
+<div class="modal" id="wxModal">
+  <button class="back" id="wxBack" aria-label="Close Windy map"></button>
+  <div class="box wide" role="dialog" aria-modal="true" aria-label="Detailed rain map from Windy.com">
+    <div class="mh"><h2>Detailed rain map (Windy.com)</h2><button class="btn" id="wxClose">Close</button></div>
+    <div class="wxbar">
+      <button class="seg on" data-layer="rain">Rain and thunder</button>
+      <button class="seg" data-layer="thunder">Thunderstorms only</button>
+      <button class="seg" id="wxAll">Whole Philippines</button>
+      <span class="wxwhere" id="wxWhere"></span>
+    </div>
+    <iframe class="wxframe" id="wxFrame" title="Rain and thunder forecast animation from Windy.com" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+  </div>
+</div>
 
-def run_chain(group, loader):
-    """Try each source for this kind of data in priority order; keep the first that works."""
-    result = None
-    for key in SOURCE_ORDER[group]:
-        if result is not None: STATUS[group].append((key, 'standby', 'Backup, not needed this time')); continue
-        try: r = loader(key)
-        except Exception as e:
-            print('SOURCE ERROR', group, key, e, file=sys.stderr); r = None
-        if r is None: STATUS[group].append((key, 'failed', 'Could not be reached or read'))
-        else: result = r; USED[group] = key; STATUS[group].append((key, 'used', 'Used'))
-    return result
+<div class="modal" id="modal">
+  <button class="back" id="modalBack" aria-label="Close help"></button>
+  <div class="box" role="dialog" aria-modal="true" aria-label="How this dashboard works">
+    <div class="mh"><h2>How this dashboard works</h2><button class="btn" id="modalClose">Close</button></div>
+    <p>This dashboard watches the weather at the 36 Philippine airports served by Cebu Pacific and Cebgo, plus earthquakes and typhoons nearby. It tells you which airports need attention and why.</p>
+    <div class="sec">
+      <h3>1. How to read it</h3>
+      <div class="lv"><span class="c"><span class="pill normal">NORMAL</span></span><span class="t">No bad weather expected today. Shown on the map only.</span></div>
+      <div class="lv"><span class="c"><span class="pill advisory">ADVISORY</span></span><span class="t">Bad weather is expected later today. Plan around it.</span></div>
+      <div class="lv"><span class="c"><span class="pill warning">WARNING</span></span><span class="t">Bad weather is expected within 1 hour, or is already happening. Prepare to pause ramp work.</span></div>
+      <div class="lv"><span class="c"><span class="pill danger">DANGER</span></span><span class="t">A thunderstorm is at the airport right now. Stop outdoor ramp work.</span></div>
+      <ul>
+        <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. Purple rings are earthquakes.</li>
+        <li><strong>Tap for details.</strong> Tap any airport dot or earthquake ring to see the full report. Use the + and − buttons, pinch, or double-tap to zoom. The ALL button shows the whole map again.</li>
+        <li><strong>Estimate.</strong> A reading marked Estimate comes from a computer forecast for that location, because the airport has no official weather report. Airports with normal weather appear on the map only, not in the lists.</li>
+        <li><strong>Filters.</strong> The coloured boxes at the top filter the map and the airport list by level, and show how many airports are at each level. Today and Tomorrow switch the list between today's alerts and airports with bad weather forecast for tomorrow. Region narrows everything to Luzon, Visayas or Mindanao.</li>
+        <li><strong>Earthquakes and Typhoon tabs.</strong> The panel on the right has tabs for airport details, recent earthquakes and the typhoon watch.</li>
+        <li><strong>Rain and thunder animation.</strong> The airport map plays the forecast rain for the next 24 hours by itself, with lightning marks where an official thunderstorm warning or airport forecast applies. Use Stop and Play, or drag the slider to any hour. It is a computer forecast, so the alert levels take priority when the two differ. Lightning marks come from official thunderstorm area warnings and official airport forecasts, so they cover the next few hours and the larger airports only; rain with no lightning mark does not mean no thunder. A more detailed Windy.com map can be opened with the Windy map button: it is a different forecast, so the two can differ, and inside it you press its own play button to step through the hours.</li>
+        <li><strong>Earthquakes and typhoons.</strong> Earthquakes cannot be forecast; the list shows what has already happened. The typhoon watch uses storm warnings that look 6 hours ahead only, so it is not a multi-day track. It is a computer forecast, so the alert levels take priority when the two differ.</li>
+        <li><strong>The time at the top.</strong> It shows when the data was last checked. The page updates itself about every 10 minutes; you do not need to reload it.</li>
+      </ul>
+    </div>
+    <div class="sec">
+      <h3>2. Where the data comes from</h3>
+      <p>Each kind of data has a first-choice source and one or more backups. If the first choice cannot be reached, the dashboard switches to the backup by itself. Section 4 below shows which source supplied the data on screen right now.</p>
+      <div class="src"><b>Official airport reports and forecasts</b><span class="t">Issued for the airport itself by aviation weather staff. This is the most reliable weather source. First choice: aviationweather.gov, the United States government aviation weather service. Backup: the NOAA data server, which carries the same official reports.</span></div>
+      <div class="src"><b>Estimates</b><span class="t">For airports with no official report, a computer weather forecast for that exact location. These are marked Estimate. They show rain and wind only and cannot confirm a thunderstorm. First choice: MET Norway, the Norwegian national weather institute. Backup: Open-Meteo.</span></div>
+      <div class="src"><b>Storm and typhoon warnings</b><span class="t">First choice: official aviation storm warnings from aviationweather.gov, which show where a tropical cyclone is, how it is moving and where it will be in the next 6 hours. Backup: GDACS, the United Nations and European Union disaster alert system, which shows position only.</span></div>
+      <div class="src"><b>Earthquakes</b><span class="t">First choice: PHIVOLCS, the Philippine government agency with the most earthquake sensors inside the country. Backups: USGS (United States Geological Survey), then EMSC (European seismological centre). Different agencies can report slightly different magnitudes for the same earthquake.</span></div>
+    </div>
+    <div class="sec">
+      <h3>3. The rules it follows</h3>
+      <ul>
+        <li><strong>Danger</strong> is only given when an official airport report says a thunderstorm is at the airport now. An Estimate can never be Danger.</li>
+        <li><strong>Bad weather</strong> in an official report or forecast means a thunderstorm, rain or rain showers, or strong winds.</li>
+        <li><strong>Bad weather in an Estimate</strong> means 2.5 mm or more of rain in an hour, or winds of 39 km/h or more.</li>
+        <li><strong>Earthquakes shown</strong> are magnitude 4.5 or stronger in the Philippine area over the past 7 days.</li>
+        <li><strong>Earthquake flag.</strong> An airport is flagged when a magnitude 5.0 or stronger earthquake happened within 100 km of it in the last 24 hours.</li>
+        <li><strong>Which source wins.</strong> When sources differ, the dashboard uses the more reliable one, in this order: official airport report, official airport forecast, official area warning, then Estimate. Each airport shows its Confidence in its details.</li>
+        <li><strong>Backups.</strong> If a first-choice source cannot be reached, its backup is used and a yellow notice at the top of the page says so.</li>
+      </ul>
+    </div>
+    <div class="sec">
+      <h3>4. About the data on screen now</h3>
+      <p id="hChecked"></p>
+      <p id="hRain"></p>
+      <p>The boxes below show which source supplied each kind of data at this check. A first-choice source that could not be reached is marked, and its backup is used instead.</p>
+      <div class="srcgrid" id="srcGrid"></div>
+      <p class="small" id="sources"></p>
+    </div>
+    <div class="sec">
+      <h3>5. What it cannot do</h3>
+      <ul>
+        <li>Earthquakes cannot be predicted. The dashboard only shows ones that have already happened.</li>
+        <li>Forecasts for tomorrow and the days ahead are less certain than today.</li>
+        <li>It supports decisions but does not replace official bulletins or the judgment of staff at the airport.</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
-METAR = run_chain('reports', load_reports)
-TAF = run_chain('forecasts', load_forecasts)
-QUAKES = run_chain('quakes', load_quakes)
-_st = run_chain('storms', load_storms) or {}
-SIGMET = _st.get('sigmet'); GDACS = _st.get('gdacs')
-MET = {}
-for _k in SOURCE_ORDER['estimates']:
-    _want = [a for a in APTS if a[1] not in MET]
-    if not _want: STATUS['estimates'].append((_k, 'standby', 'Backup, not needed this time')); continue
-    _got = EST_LOADERS[_k](_want); MET.update(_got)
-    if _got:
-        if USED['estimates'] is None: USED['estimates'] = _k
-        STATUS['estimates'].append((_k, 'used', 'Used' if len(_got) == len(APTS) else f'Used for {len(_got)} of {len(APTS)} airports'))
-    else: STATUS['estimates'].append((_k, 'failed', 'Could not be reached or read'))
+<script>
+(function () {
+'use strict';
+var REFRESH_MS = 5 * 60 * 1000;      // how often the page looks for new data
+var STALE_MIN = 60;                  // warn when the data is older than this
+var D = null;
+var S = { filter: 'alerts', region: '', sel: '', qk: '', view: null, drag: false, day: 'today', tab: 'details', pane: 'map' };
+var LABELS = { alerts: 'Needs attention today', advisory: 'Advisory today', warning: 'Warning today', danger: 'Danger today', normal: 'Normal today' };
+var PILL = { danger: 'DANGER', warning: 'WARNING', advisory: 'ADVISORY', normal: 'NORMAL', nodata: 'NO DATA' };
+var ORDER = ['danger', 'warning', 'advisory'];
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function pill(lv) { return '<span class="pill ' + lv + '">' + PILL[lv] + '</span>'; }
+var EST = '<span class="pill est">ESTIMATE</span>';
 
-def _names(group): return ' and '.join(SHORT[k] for k in SOURCE_ORDER[group])
-if METAR is None: PROBLEMS.append(f"Official airport reports could not be reached ({_names('reports')}), so every airport is shown as an Estimate."); METAR = []
-elif USED['reports'] != SOURCE_ORDER['reports'][0]: PROBLEMS.append(f"Airport reports: {SHORT[SOURCE_ORDER['reports'][0]]} could not be reached, so the backup source ({SHORT[USED['reports']]}) is being used.")
-if TAF is None: PROBLEMS.append(f"Official airport forecasts could not be reached ({_names('forecasts')})."); TAF = []
-elif USED['forecasts'] != SOURCE_ORDER['forecasts'][0]: PROBLEMS.append(f"Airport forecasts: {SHORT[SOURCE_ORDER['forecasts'][0]]} could not be reached, so the backup source ({SHORT[USED['forecasts']]}) is being used.")
-if len(MET) < len(APTS): PROBLEMS.append(f"Estimates could not be reached for {len(APTS) - len(MET)} of {len(APTS)} airports ({_names('estimates')}).")
-elif any(m['_src'] != SOURCE_ORDER['estimates'][0] for m in MET.values()): PROBLEMS.append(f"Estimates: {SHORT[SOURCE_ORDER['estimates'][0]]} could not be reached for some airports, so the backup source is being used for those.")
-if SIGMET is None and GDACS is None: PROBLEMS.append(f"Typhoon data could not be reached ({_names('storms')}), so the typhoon watch is not available.")
-elif USED['storms'] != SOURCE_ORDER['storms'][0]: PROBLEMS.append(f"Typhoon watch: {SHORT[SOURCE_ORDER['storms'][0]]} could not be reached, so the backup source ({SHORT[USED['storms']]}) is being used. It shows where each storm is, but not its movement or area warnings.")
-if QUAKES is None: PROBLEMS.append(f"Earthquake data could not be reached ({_names('quakes')}).")
-elif USED['quakes'] != SOURCE_ORDER['quakes'][0]: PROBLEMS.append(f"Earthquakes: {SHORT[SOURCE_ORDER['quakes'][0]]} could not be reached, so the backup source ({SHORT[USED['quakes']]}) is being used.")
-if not METAR and not MET:
-    print('No weather source could be reached. Keeping the previous data.json.', file=sys.stderr); sys.exit(1)
-QSRC = SHORT[USED['quakes']] if USED['quakes'] else 'USGS'
+function dotStyle(a) {
+  var lv = a.level, e = a.est;
+  if (lv === 'normal') return 'width:13px;height:13px;background:#CAE2E7;border:' + (e ? '2px dashed #005687' : '2px solid #005687');
+  if (lv === 'nodata') return 'width:13px;height:13px;background:#FFFFFF;border:2px solid #0060A7;border-radius:3px';
+  if (lv === 'advisory') return 'width:16px;height:16px;background:#FFD600;border:' + (e ? '2px dashed #12303F' : '2px solid #12303F');
+  if (lv === 'warning') return 'width:18px;height:18px;background:#F57C00;border:' + (e ? '2px dashed #FFFFFF' : '3px solid #FFFFFF');
+  return 'width:20px;height:20px;background:#C62828;border:3px solid #FFFFFF';
+}
+function byId(id) { for (var i = 0; i < D.airports.length; i++) { if (D.airports[i].id === id) return D.airports[i]; } return null; }
+function quakeById(id) { for (var i = 0; i < D.quakes.length; i++) { if (D.quakes[i].id === id) return D.quakes[i]; } return null; }
+function inRegion(a) { return !S.region || a.region === S.region; }
+function levelShown(lv, forMap) {
+  if (S.filter === 'alerts') return forMap ? true : ORDER.indexOf(lv) >= 0;
+  return lv === S.filter;
+}
+function sorted(list) { return list.slice().sort(function (a, b) { return (a.sort - b.sort) || (a.est - b.est) || a.name.localeCompare(b.name); }); }
 
-PHT=dt.timezone(dt.timedelta(hours=8))
-def ph(t): return t.astimezone(PHT)
-def clock(t):
-    t=ph(t); h=t.hour%12 or 12
-    if t.hour==0 and t.minute==0: return '12:00 midnight'
-    if t.hour==12 and t.minute==0: return '12:00 noon'
-    return f"{h}:{t.minute:02d} {'AM' if t.hour<12 else 'PM'}"
-def clock_plain(t):
-    t=ph(t); h=t.hour%12 or 12; return f"{h}:{t.minute:02d} {'AM' if t.hour<12 else 'PM'}"
-def day(t): t=ph(t); return f"{t.strftime('%b')} {t.day}"
-MIDNIGHT=(ph(NOW)+dt.timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
-SOON=NOW+dt.timedelta(hours=1)
-def windword(k): return 'Strong wind' if k>=39 else ('Breezy' if k>=20 else 'Light wind')
-TODO={'normal':'No action needed.','advisory':'Bad weather is expected later today. Plan ramp work around it and keep watching for updates.',
-      'warning':'Prepare to pause ramp work. Watch for heavy rain and lightning.','danger':'Stop outdoor ramp work now. Keep everyone under shelter until the thunderstorm passes.'}
-SRC_OFF='Official airport weather report and forecast (aviationweather.gov).'
-SRC_EST='Estimate from the MET Norway forecast for this location. No official airport report is available. Estimates show rain and wind only and cannot confirm thunderstorms.'
+/* ---------- build the parts that depend only on the data ---------- */
+function renderData() {
+  $('checked').textContent = D.checked.split('. ')[0].replace(/\.$/, '') + ' (Philippine time)';
+  $('hChecked').textContent = D.checked;
+  var opts = '<option value="">Find an airport</option>';
+  D.airports.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) { opts += '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>'; });
+  $('airportPick').innerHTML = opts;
 
-# ---------- MET Norway ----------
-def met_parse(ic):
-    m=MET.get(ic)
-    if not m: return None
-    upd=dt.datetime.fromisoformat(m['properties']['meta']['updated_at'].replace('Z','+00:00'))
-    hrs=[]
-    for e in m['properties']['timeseries']:
-        t=dt.datetime.fromisoformat(e['time'].replace('Z','+00:00'))
-        n1=e['data'].get('next_1_hours')
-        if not n1: continue
-        d=e['data']['instant']['details']
-        hrs.append(dict(t=t,p=n1['details'].get('precipitation_amount',0.0),w=d['wind_speed']*3.6,temp=d['air_temperature'],cloud=d.get('cloud_area_fraction',0)))
-    cur=[h for h in hrs if h['t']<=NOW<h['t']+dt.timedelta(hours=1)]
-    if not cur: return None
-    i0=hrs.index(cur[0]); hrs=hrs[i0:]
-    def bad(h): return h['p']>=2.5 or round(h['w'])>=39
-    runs=[]; i=0
-    while i<len(hrs) and hrs[i]['t']<MIDNIGHT:
-        if bad(hrs[i]):
-            j=i
-            while j+1<len(hrs) and bad(hrs[j+1]) and hrs[j+1]['t']-hrs[j]['t']==dt.timedelta(hours=1): j+=1
-            seg=hrs[i:j+1]; pm=max(h['p'] for h in seg); wm=max(round(h['w']) for h in seg)
-            kind=('heavy rain' if pm>=7.6 else 'moderate rain') if pm>=2.5 else ''
-            if wm>=39: kind=(kind+' and strong winds') if kind else 'strong winds'
-            runs.append(dict(start=seg[0]['t'],end=seg[-1]['t']+dt.timedelta(hours=1),kind=kind,now=(i==0)))
-            i=j+1
-        else: i+=1
-    later=sum(h['p'] for h in hrs[1:] if h['t']<MIDNIGHT)
-    T0=MIDNIGHT; T1=MIDNIGHT+dt.timedelta(days=1)
-    th=[h for h in hrs if T0<=h['t']<T1]; truns=[]; i=0
-    while i<len(th):
-        if bad(th[i]):
-            j=i
-            while j+1<len(th) and bad(th[j+1]): j+=1
-            seg=th[i:j+1]; pm=max(h['p'] for h in seg); wm=max(round(h['w']) for h in seg)
-            kind=('heavy rain' if pm>=7.6 else 'moderate rain') if pm>=2.5 else ''
-            if wm>=39: kind=(kind+' and strong winds') if kind else 'strong winds'
-            truns.append(dict(start=seg[0]['t'],end=seg[-1]['t']+dt.timedelta(hours=1),kind=kind,now=False,rank=(2.5 if pm>=7.6 else 2 if pm>=2.5 else 1))); i=j+1
-        else: i+=1
-    tsum=sum(h['p'] for h in th)
-    # days ahead (day+2, day+3) from hourly then 6-hourly values
-    lasth=hrs[-1]['t']+dt.timedelta(hours=1); days=[]
-    for k in (2,3):
-        D0=MIDNIGHT+dt.timedelta(days=k-1); D1=D0+dt.timedelta(days=1); tot=0.0; wmax=0; cov=dt.timedelta(0)
-        for h in hrs:
-            if D0<=h['t']<D1: tot+=h['p']; wmax=max(wmax,round(h['w'])); cov+=dt.timedelta(hours=1)
-        for e in m['properties']['timeseries']:
-            t=dt.datetime.fromisoformat(e['time'].replace('Z','+00:00')); n6=e['data'].get('next_6_hours')
-            if t<lasth or not n6 or 'next_1_hours' in e['data']: continue
-            a=max(t,D0); b=min(t+dt.timedelta(hours=6),D1)
-            if b>a:
-                fr=(b-a)/dt.timedelta(hours=6); tot+=n6['details'].get('precipitation_amount',0.0)*fr; cov+=(b-a)
-                wmax=max(wmax,round(e['data']['instant']['details']['wind_speed']*3.6))
-        if cov>=dt.timedelta(hours=18): days.append((D0,tot,wmax))
-    return dict(upd=upd,cur=hrs[0],runs=runs,later=later,truns=truns,tsum=tsum,days=days,src=m.get('_src','metno'))
-def met(ic):
-    try: return met_parse(ic)
-    except Exception as e:
-        print('MET PARSE ERROR',ic,e,file=sys.stderr); return None
-def wkday(t): t=ph(t); return f"{t.strftime('%a')}, {t.strftime('%b')} {t.day}"
-def days_text(m):
-    if not m or not m['days']: return 'No outlook available.'
-    out=[]
-    for D0,tot,w in m['days']:
-        n=int(round(tot)); d='mostly dry' if tot<1 else f'light rain at times (about {n} mm)' if tot<10 else f'rainy periods (about {n} mm)' if tot<30 else f'heavy rain likely (about {n} mm)'
-        if w>=39: d+=f', strong winds up to {w} km/h'
-        out.append(f"{wkday(D0)}: {d}.")
-    return ' '.join(out)+' Estimate from the MET Norway forecast; less certain the further ahead.'
-def tspan(a,b):
-    T0=MIDNIGHT; T1=MIDNIGHT+dt.timedelta(days=1)
-    if a<=T0 and b>=T1: return 'All day'
-    return f"{clock(a)} to {clock(b)}"
-def est_tmr(m,prefix):
-    if m['truns']: return prefix+' '.join((r['kind'][0].upper()+r['kind'][1:] if i else r['kind'])+f" possible {tspan(r['start'],r['end'])}." for i,r in enumerate(m['truns']))
-    return prefix+'no moderate or heavy rain expected tomorrow. '+('Light showers possible.' if m['tsum']>=0.5 else 'Mostly dry.')
-def pick_tmr(cands):
-    if not cands: return dict(t=0,twhat='',twhen='',tsort=0,test=False)
-    c=max(cands,key=lambda c:(c['rank'],not c['est'],-c['a'].timestamp()))
-    return dict(t=1,twhat=c['what'],twhen=tspan(c['a'],c['b']),tsort=c['a'].timestamp(),test=c['est'])
-def est_cands(m): return [dict(a=r['start'],b=r['end'],rank=r['rank'],est=True,what=r['kind'][0].upper()+r['kind'][1:]+' possible') for r in m['truns']]
-def span(r,cap=False):
-    if r['now']: return ('Now, until ' if cap else 'now until ')+clock(r['end'])
-    return f"{clock(r['start'])} to {clock(r['end'])}"
-def est_row(m):
-    c=m['cur']; p=c['p']; k=round(c['w'])
-    cl=c['cloud']; sky='cloudy' if cl>=87.5 else 'mostly cloudy' if cl>=62.5 else 'partly cloudy' if cl>=37.5 else 'mostly clear' if cl>=12.5 else 'clear'
-    wx=(sky+', no rain') if p<0.1 else 'light rain' if p<2.5 else 'moderate rain' if p<7.6 else 'heavy rain'
-    now=f"Estimate: {wx}, {windword(k).lower()} ({k} km/h), {round(c['temp'])}°C."
-    runs=m['runs']
-    if runs:
-        parts=[f"{r['kind']} possible {span(r)}." for r in runs]
-        nxt='Estimate: '+' '.join([parts[0]]+[x[0].upper()+x[1:] for x in parts[1:]])
-        r=runs[0]; level='warning' if r['start']<=SOON else 'advisory'
-        what=r['kind'][0].upper()+r['kind'][1:]+' possible'; when=span(r,True); sort=0 if r['now'] else r['start'].timestamp()
-    else:
-        nxt='Estimate: no moderate or heavy rain expected for the rest of today. '+('Light showers possible.' if m['later']>=0.5 else 'Mostly dry.')
-        level='normal'; what=when=''; sort=0
-    u=m['upd']; upd=f"Estimate updated {clock_plain(u)}." if ph(u).date()==ph(NOW).date() else f"Estimate updated {day(u)}, {clock_plain(u)}."
-    r=dict(level=level,now=now,next=nxt,todo=TODO[level],upd=upd,src=SRC_EST,est=True,what=what,when=when,sort=sort,tmr=est_tmr(m,'Estimate: '),days=days_text(m))
-    age=(NOW-m['upd']).total_seconds()/3600
-    r['conf']=('Lower' if age<=3 else 'Low')+f": there is no official airport report here, so this is a computer forecast (MET Norway) for the location, updated {clock_plain(m['upd'])}. It shows rain and wind only and cannot confirm thunderstorms."
-    r.update(pick_tmr(est_cands(m))); return r
-def est_name(m): return SHORT[m.get('src','metno')] if m else 'MET Norway'
-def rename_est(r,m):
-    nm=est_name(m)
-    if nm!='MET Norway':
-        for k,v in list(r.items()):
-            if isinstance(v,str): r[k]=v.replace('MET Norway',nm)
-    r['estsrc']=nm if m else ''
-    return r
+  var h = '';
+  D.quakes.forEach(function (q) {
+    if (!q.onmap) return;
+    var s = q.size, hs = s + 12, lab = 'Magnitude ' + q.mag.toFixed(1) + ' earthquake, ' + q.place;
+    h += '<div class="pin q" data-q="' + esc(q.id) + '" style="left:' + q.x.toFixed(1) + '%;top:' + q.y.toFixed(1) + '%;opacity:' + q.op + '">' +
+      '<span class="qsel" style="left:' + (-hs / 2) + 'px;top:' + (-hs / 2) + 'px;width:' + hs + 'px;height:' + hs + 'px"></span>' +
+      '<button aria-label="' + esc(lab) + '" title="' + esc(lab) + '"><span class="qring" style="width:' + s + 'px;height:' + s + 'px"></span></button>' +
+      '<span class="qlab" style="top:' + (s / 2 + 1) + 'px">M' + q.mag.toFixed(1) + '</span></div>';
+  });
+  ['normal', 'nodata', 'advisory', 'warning', 'danger'].forEach(function (lv) {
+    sorted(D.airports.filter(function (a) { return a.level === lv; })).forEach(function (a) {
+      h += '<div class="pin a" data-a="' + esc(a.id) + '" style="left:' + a.x.toFixed(1) + '%;top:' + a.y.toFixed(1) + '%">' +
+        (lv === 'danger' ? '<span class="wx-flash"></span><span class="wx-ring"></span><span class="wx-ring wx-ring2"></span><span class="wx-bolt"><i></i></span>' : '') +
+        '<span class="selring"></span>' +
+        '<button aria-label="' + esc(a.name) + '" title="' + esc(a.name) + '"><span class="dot" style="' + dotStyle(a) + '"></span></button>' +
+        (ORDER.indexOf(lv) >= 0 ? '<span class="lab">' + esc(a.name) + '</span>' : '') + '</div>';
+    });
+  });
+  $('pins').innerHTML = h;
+  $('banner').textContent = D.ty_banner;
+  $('qAsof').textContent = D.quake_asof ? (D.quake_src || 'USGS') + ', as of ' + D.quake_asof : '';
 
-# ---------- official ----------
-def latest_metar(ic):
-    xs=[x for x in METAR if x['icaoId']==ic]
-    if not xs: return None
-    x=max(xs,key=lambda x:x['obsTime'])
-    return x if NOW.timestamp()-x['obsTime']<=2.5*3600 else None
-def latest_taf(ic):
-    xs=[x for x in TAF if x['icaoId']==ic and x.get('validTimeTo',0)>NOW.timestamp()]
-    return max(xs,key=lambda x:x['issueTime']) if xs else None
-WXRE=re.compile(r'^(\+|-|VC|RE)?(MI|PR|BC|DR|BL|SH|TS|FZ)*(DZ|RA|SN|SG|PL|GR|GS|BR|FG|FU|VA|DU|SA|HZ|SQ|FC|SS|DS)*$')
-def wx_tokens(raw):
-    body=raw.split(' RMK')[0].split()
-    return [t for t in body if WXRE.match(t) and re.search(r'TS|SH|DZ|RA|FG|GR|SQ|FC',t) and not re.match(r'^\d|^Q|^A\d',t)]
-def kindtext(tok):
-    """plain words for one weather group; returns (text, rank, short)"""
-    inten='heavy ' if tok.startswith('+') else ('light ' if tok.startswith('-') else '')
-    if 'TS' in tok:
-        if re.search(r'RA|DZ|GR',tok): return ('Thunderstorm with heavy rain' if tok.startswith('+') else 'Thunderstorm with rain',3,'Thunderstorm')
-        return ('Thunderstorm',3,'Thunderstorm')
-    if 'SH' in tok: return (('Heavy rain showers' if tok.startswith('+') else 'Rain showers'),2,'Rain showers' if not tok.startswith('+') else 'Heavy rain showers')
-    if re.search(r'RA|DZ',tok): 
-        t={'heavy ':'Heavy rain','light ':'Light rain','':'Rain'}[inten]; return (t,2,t)
-    return (None,0,None)
-def off_row(mt,tf,m):
-    raw=mt['rawOb']; toks=wx_tokens(raw)
-    here=[t for t in toks if not t.startswith(('VC','RE'))]; vc=[t for t in toks if t.startswith('VC')]; rec=[t for t in toks if t.startswith('RE')]
-    ts_here=any('TS' in t for t in here)
-    precip=[t for t in here if re.search(r'RA|DZ|SH|GR',t)]
-    s=[]
-    if ts_here:
-        p=[t for t in here if 'TS' in t][0]
-        allp=''.join(here)
-        if re.search(r'RA|DZ|GR',allp):
-            s.append('Thunderstorm with '+('heavy rain' if any(t.startswith('+') for t in here) else 'light rain' if all(t.startswith('-') for t in precip) else 'rain')+' at the airport.')
-        else: s.append('Thunderstorm at the airport.')
-    elif precip:
-        t=precip[0]; inten='Heavy ' if t.startswith('+') else 'Light ' if t.startswith('-') else ''
-        w='rain showers' if 'SH' in t else 'rain'
-        s.append((inten+w).capitalize()+' at the airport.')
-    elif any('TS' in t for t in vc): s.append('Thunderstorm near the airport, none at the airport.')
-    elif vc: s.append('Rain showers nearby, none at the airport.')
-    else: s.append('No rain or thunderstorm at the airport.')
-    if any('FG' in t for t in here): s.append('Fog at the airport.')
-    if not ts_here:
-        if any('TS' in t for t in rec): s.append('Thunderstorm ended within the last hour.')
-        elif rec and not precip: s.append('Rain ended within the last hour.')
-        if re.search(r'\d{3}(CB|TCU)\b',raw.split(' RMK')[0]): s.append('Storm clouds near the airport.')
-    k=round((mt.get('wspd') or 0)*1.852); g=round((mt.get('wgst') or 0)*1.852)
-    obs=dt.datetime.fromtimestamp(mt['obsTime'],dt.timezone.utc)
-    s.append(f"{windword(max(k,g))} ({k} km/h{', gusts '+str(g)+' km/h' if g else ''}), {round(mt['temp'])}°C, as of {clock_plain(obs)}.")
-    now=' '.join(s)
-    # forecast periods
-    periods=[]
-    if tf:
-        for f in tf['fcsts']:
-            a=dt.datetime.fromtimestamp(f['timeFrom'],dt.timezone.utc); b=dt.datetime.fromtimestamp(f['timeTo'],dt.timezone.utc)
-            if b<=NOW or a>=MIDNIGHT: continue
-            best=(None,0,None)
-            for t in (f.get('wxString') or '').split():
-                kt=kindtext(t)
-                if kt[1]>best[1] or (kt[1]==best[1] and kt[0] and best[0] and len(kt[0])>len(best[0])): best=kt
-            wk=max(round((f.get('wspd') or 0)*1.852),round((f.get('wgst') or 0)*1.852))
-            if best[1]==0 and wk>=39: best=('Strong winds',1,'Strong winds')
-            if best[1]==0: continue
-            cert='possible' if (f.get('fcstChange') in ('TEMPO','PROB') or f.get('probability')) else 'expected'
-            periods.append(dict(a=a,b=b,text=best[0],rank=best[1],short=best[2],cert=cert,now=a<=NOW))
-    periods.sort(key=lambda p:p['a'])
-    def pspan(p,cap=False):
-        if p['now']: return ('Now, until ' if cap else 'now to ')+clock(p['b'])
-        return f"{clock(p['a'])} to {clock(p['b'])}"
-    nx=[f"{p['text']} {p['cert']} {pspan(p)}." for p in periods]
-    if not tf: nx=['No airport forecast is available for the rest of today.']
-    elif not nx: nx=['No thunderstorm or rain expected for the rest of today.']
-    if m and m['runs']: nx.append('Estimate (MET Norway): '+' '.join(f"{r['kind']} possible {span(r)}." for r in m['runs']).replace('. m','. M').replace('. h','. H').replace('. s','. S'))
-    strong_now=max(k,g)>=39
-    heavy_now=bool(precip) and not all(t.startswith('-') for t in precip)
-    if ts_here: level='danger'; what='Thunderstorm at the airport'; when='Now'; sort=0
-    else:
-        under=[p for p in periods if p['a']<=SOON]
-        if heavy_now or strong_now:
-            level='warning'; what=('Rain at the airport' if heavy_now else 'Strong winds at the airport'); when='Now'; sort=0
-            if under:
-                p=max(under,key=lambda p:(p['rank'],-p['a'].timestamp()))
-                if p['rank']>=3: what=f"{p['short']} {p['cert']}"; when=pspan(p,True)
-        elif under:
-            p=max(under,key=lambda p:(p['now'],p['rank'],-p['a'].timestamp())); level='warning'; what=f"{p['short']} {p['cert']}"; when=pspan(p,True); sort=0 if p['now'] else p['a'].timestamp()
-        elif periods:
-            p=periods[0]; level='advisory'; what=f"{p['short']} {p['cert']}"; when=pspan(p,True); sort=p['a'].timestamp()
-        else: level='normal'; what=when=''; sort=0
-    T0=MIDNIGHT; T1=MIDNIGHT+dt.timedelta(days=1); tp=[]; cands=[]
-    if tf:
-        for f in tf['fcsts']:
-            if f.get('fcstChange')=='BECMG' and not (f.get('wxString') or '').strip(): continue
-            a=max(dt.datetime.fromtimestamp(f['timeFrom'],dt.timezone.utc),T0); b=min(dt.datetime.fromtimestamp(f['timeTo'],dt.timezone.utc),T1)
-            if b<=a: continue
-            best=(None,0,None)
-            for t in (f.get('wxString') or '').split():
-                kt=kindtext(t)
-                if kt[1]>best[1] or (kt[1]==best[1] and kt[0] and best[0] and len(kt[0])>len(best[0])): best=kt
-            wk=max(round((f.get('wspd') or 0)*1.852),round((f.get('wgst') or 0)*1.852))
-            if best[1]==0 and wk>=39: best=('Strong winds',1,'Strong winds')
-            if best[1]==0: continue
-            cert='possible' if (f.get('fcstChange') in ('TEMPO','PROB') or f.get('probability')) else 'expected'
-            tp.append((a,f"{best[0]} {cert} {tspan(a,b)}.")); cands.append(dict(a=a,b=b,rank=best[1],est=False,what=f"{best[2]} {cert}"))
-        tend=dt.datetime.fromtimestamp(tf['validTimeTo'],dt.timezone.utc)
-        if tend<=T0: tm='The airport forecast does not reach tomorrow yet.'
-        else:
-            cov='' if tend>=T1 else f" (covers until {clock(tend)})"
-            tm=f"Airport forecast{cov}: "+(' '.join(x[1] for x in sorted(tp)) if tp else 'no thunderstorm or rain expected.')
-    else: tm='No airport forecast is available for tomorrow.'
-    if m: tm+=' '+est_tmr(m,'Estimate (MET Norway): '); cands+=est_cands(m)
-    tmr_pick=pick_tmr(cands)
-    agem=(NOW-obs).total_seconds()/60; offbad=bool(periods) or ts_here or bool(precip); estbad=bool(m and m['runs'])
-    conf=('High' if agem<=90 else 'Medium')+f": official airport report from {clock_plain(obs)}"+(' and official airport forecast' if tf else ', but no airport forecast')+'. These rank above any estimate.'
-    if agem>90: conf+=' The report is more than 90 minutes old.'
-    if m: conf+=(' The MET Norway estimate agrees.' if offbad==estbad else (' The MET Norway estimate shows less rain than the airport forecast; the airport forecast is used.' if offbad else ' The MET Norway estimate shows more rain than the airport forecast; it is noted under Rest of today.'))
-    upd=f"Airport report {clock_plain(obs)}."+(f" Airport forecast issued {clock_plain(dt.datetime.fromisoformat(tf['issueTime'].replace('Z','+00:00')))}." if tf else '')
-    return dict(level=level,now=now,next=' '.join(nx),todo=TODO[level],upd=upd,src=SRC_OFF,est=False,what=what,when=when,sort=sort,tmr=tm,days=days_text(m),conf=conf,**tmr_pick,_obs=obs,_taf=(dt.datetime.fromisoformat(tf['issueTime'].replace('Z','+00:00')) if tf else None))
+  $('qFlag').textContent = D.flag;
+  $('qCount').textContent = D.quake_count;
+  var ql = '';
+  D.quakes.forEach(function (q) { ql += '<button class="qline" data-q="' + esc(q.id) + '"><b>M' + q.mag.toFixed(1) + '</b> ' + esc(q.line) + '</button>'; });
+  $('qList').innerHTML = ql;
+  $('tyAsof').textContent = D.ty_asof;
+  $('tyText').textContent = D.ty_text;
+  $('sources').textContent = D.sources;
+  var TAG = { used: 'USED NOW', standby: 'BACKUP READY', failed: 'NOT REACHED' }, sg = '';
+  (D.source_status || []).forEach(function (g) {
+    sg += '<div class="srcbox' + (!g.ok ? ' bad' : (!g.first ? ' warn' : '')) + '"><span class="w">' + esc(g.what) + '</span><span class="u">' + esc(g.used) + '</span><div class="c">';
+    g.chain.forEach(function (c, i) { sg += '<div><span>' + (i + 1) + '. ' + esc(c.name) + '<br><span style="color:#3F5563">' + esc(c.role) + (c.state === 'used' && c.note !== 'Used' ? '. ' + esc(c.note) : '') + '</span></span><span class="tag ' + esc(c.state) + '">' + (TAG[c.state] || '') + '</span></div>'; });
+    sg += '</div></div>';
+  });
+  $('srcGrid').innerHTML = sg;
+  if (S.sel && !byId(S.sel)) S.sel = '';
+  if (S.qk && !quakeById(S.qk)) S.qk = '';
+  renderNotice();
+}
+function renderNotice() {
+  if (!D) return;
+  var msgs = (D.problems || []).slice();
+  var ageMin = (Date.now() - D.generated_ms) / 60000;
+  var chip = $('chip');
+  if (ageMin > STALE_MIN) {
+    var hrs = ageMin / 60;
+    var age = hrs < 2 ? Math.round(ageMin) + ' minutes' : (hrs < 48 ? Math.round(hrs) + ' hours' : Math.round(hrs / 24) + ' days');
+    msgs.unshift('This data is about ' + age + ' old. The automatic refresh may be delayed or stopped. Treat the alert levels with care.');
+    chip.textContent = 'Data may be out of date'; chip.className = 'chip stale';
+  } else { chip.textContent = 'Live, updates about every 10 minutes'; chip.className = 'chip'; }
+  var n = $('notice');
+  if (msgs.length) { n.hidden = false; n.innerHTML = '<strong>Please note:</strong>' + msgs.map(esc).join(' '); } else { n.hidden = true; n.innerHTML = ''; }
+  fit();
+}
 
-rows=[]; obs_times=[]; taf_times=[]; est_times=[]; TS_AIRPORTS=[]; TS_AREAS=[]
-for i,ic,nm_,rg_,la,lo,x_,y_ in APTS:
-    m=met(ic); mt=latest_metar(ic); tf=latest_taf(ic)
-    if m: est_times.append(m['upd'])
-    r=None
-    if mt:
-        try: r=off_row(mt,tf,m); obs_times.append(r.pop('_obs')); t=r.pop('_taf'); t and taf_times.append(t)
-        except Exception as e: print('REPORT PARSE ERROR',ic,e,file=sys.stderr); r=None
-    if r is None and m: r=est_row(m)
-    if r is not None: pass
-    else: r=dict(level='nodata',now='No weather data could be reached for this airport.',next='No data.',todo='Check local conditions directly.',upd='No update available.',src='No source reachable.',est=False,what='',when='',sort=0,tmr='No data.',days='No data.',conf='None: no source could be reached for this airport.',t=0,twhat='',twhen='',tsort=0,test=False)
-    rename_est(r,m)
-    if not r['est'] and r['level']!='nodata':
-        if r['level']=='danger': TS_AIRPORTS.append(dict(id=i,a=int(NOW.timestamp()*1000),b=int((NOW+dt.timedelta(hours=1)).timestamp()*1000)))
-        for f in (tf['fcsts'] if tf else []):
-            if 'TS' in (f.get('wxString') or '') and f['timeTo']>NOW.timestamp(): TS_AIRPORTS.append(dict(id=i,a=int(f['timeFrom'])*1000,b=int(f['timeTo'])*1000))
-    if not r['est'] and r['level']!='nodata': r['src']=f"Official airport weather report ({SHORT[USED['reports']]})"+(f" and forecast ({SHORT[USED['forecasts']]})." if tf else '.')
-    r.update(id=i,name=nm_,region=rg_,x=x_,y=y_,icao=ic,lat=la,lon=lo); rows.append(r)
+/* ---------- map view ---------- */
+function clampC(c, z) { var half = 50 / z; return Math.min(100 - half, Math.max(half, c)); }
+function selPoint() {
+  if (S.sel) { return byId(S.sel); }
+  if (S.qk) { var q = quakeById(S.qk); return q && q.onmap ? q : null; }
+  return null;
+}
+function viewNow() {
+  var p = selPoint(), v = S.view;
+  var z = v ? v.z : (p ? 2.2 : 1);
+  return { z: z, cx: clampC(v ? v.cx : (p ? p.x : 50), z), cy: clampC(v ? v.cy : (p ? p.y : 50), z) };
+}
+function setView(z, cx, cy, drag) { S.view = { z: z, cx: clampC(cx, z), cy: clampC(cy, z) }; S.drag = !!drag; applyView(); }
+function applyView() {
+  var v = viewNow(), L = $('layer');
+  L.classList.toggle('nodrag', S.drag);
+  L.style.transform = 'translate(' + ((0.5 - v.z * v.cx / 100) * 100).toFixed(2) + '%,' + ((0.5 - v.z * v.cy / 100) * 100).toFixed(2) + '%) scale(' + v.z.toFixed(3) + ')';
+  L.style.setProperty('--inv', Math.min(1, 1.35 / v.z).toFixed(3));
+  L.style.touchAction = v.z > 1 ? 'none' : 'pan-x pan-y';
+  L.style.cursor = v.z > 1 ? 'grab' : 'default';
+  if (typeof R !== 'undefined' && R && !R.playing) rainDraw();
+}
 
-# ---------- earthquakes ----------
-def hav(a,b,c,d):
-    R=6371; p1,p2=math.radians(a),math.radians(c); x=math.sin((p2-p1)/2)**2+math.cos(p1)*math.cos(p2)*math.sin(math.radians(d-b)/2)**2
-    return 2*R*math.asin(math.sqrt(x))
-quakes=[]; flags=[]; qok=True
-try:
-    Q=QUAKES
-    if Q is None: raise RuntimeError('no earthquake source reached')
-    asof=dt.datetime.fromtimestamp(Q['metadata']['generated']/1000,dt.timezone.utc)
-    for f in sorted(Q['features'],key=lambda f:-f['properties']['time']):
-        p=f['properties']; lo,la,dep=f['geometry']['coordinates']; t=dt.datetime.fromtimestamp(p['time']/1000,dt.timezone.utc)
-        near=min(rows,key=lambda r:hav(la,lo,r['lat'],r['lon'])); dist=hav(la,lo,near['lat'],near['lon'])
-        x=P['cx'][0]*lo+P['cx'][1]; y=P['cy'][0]*la+P['cy'][1]; recent=(NOW-t)<=dt.timedelta(hours=24)
-        place=re.sub(r', Philippines$','',p['place'])
-        dkm=int(round(dist/10)*10); hit=[]
-        if recent and p['mag']>=5.0:
-            for r in rows:
-                dd=hav(la,lo,r['lat'],r['lon'])
-                if dd<=100: flags.append((r['name'],p['mag'],round(dd),place,t)); hit.append(r['name'])
-        dep=max(0,round(dep or 0)); dword='shallow' if dep<70 else 'mid-depth' if dep<300 else 'very deep'
-        if hit: todo='Earthquake flag. Check runways, buildings and equipment at '+', '.join(hit)+' before normal work continues.'
-        elif p['mag']<5.0: todo='No action needed. No airport flag: a flag needs magnitude 5.0 or stronger within 100 km of an airport in the last 24 hours.'
-        elif not recent: todo='No action needed. This earthquake is more than 24 hours old and is shown for reference.'
-        else: todo='No action needed. No airport is within 100 km of this earthquake.'
-        quakes.append(dict(id=f'q{len(quakes)}',mag=p['mag'],place=place,x=x,y=y,onmap=(0<=x<=100 and 0<=y<=100),op=('1' if recent else '0.5'),size=round(14+(p['mag']-4.5)*16),
-            title=f"Magnitude {p['mag']:.1f} earthquake",where=place+'.',when=f"{day(t)}, {clock_plain(t)} (Philippine time)."+(' Within the last 24 hours.' if recent else ''),
-            depth=f"About {dep} km below ground ({dword}).",tsu=(f'{QSRC} has linked a tsunami notice to this earthquake. Check official tsunami bulletins for coastal airports.' if p.get('tsunami') else (f'No tsunami notice is linked to this earthquake ({QSRC}).' if p.get('tsunami') is False else f'{QSRC} data does not include tsunami notices. For a strong earthquake at sea, check PHIVOLCS tsunami bulletins.')),after=('USGS has published an aftershock forecast for this earthquake.' if 'oaf' in (p.get('types') or '') else 'Smaller earthquakes can follow in the same area over the next days. No official aftershock forecast has been published for this one.')+(f" {p['felt']} {'person' if p['felt']==1 else 'people'} reported feeling it to {QSRC}." if p.get('felt') else ''),near=f"{near['name']}, about {dkm} km away.",todo=todo,src=SOURCE_NAMES[USED['quakes']]+'.',
-            line=f"{place}. {day(t)}, {clock_plain(t)}. Nearest airport: {near['name']}, about {dkm} km away."))
-except Exception as e:
-    qok=False; asof=None; quakes=[]; flags=[]; print('QUAKE ERROR',e,file=sys.stderr)
-    if QUAKES is not None: PROBLEMS.append('Earthquake data could not be read.')
-if flags:
-    flag='Earthquake flag: '+'; '.join(f"{n} is about {d} km from a magnitude {m:.1f} earthquake ({pl}, {day(t)}, {clock_plain(t)})" for n,m,d,pl,t in flags)+'. Check runways and facilities before resuming normal work.'
-else: flag='No airport is within 100 km of a magnitude 5.0 or stronger earthquake in the last 24 hours.'
-def brg(a,b,c,d):
-    p1,p2=math.radians(a),math.radians(c); dl=math.radians(d-b)
-    y=math.sin(dl)*math.cos(p2); x=math.cos(p1)*math.sin(p2)-math.sin(p1)*math.cos(p2)*math.cos(dl)
-    return (math.degrees(math.atan2(y,x))+360)%360
-C8=['north','northeast','east','southeast','south','southwest','west','northwest']
-def comp(b): return C8[int((b+22.5)//45)%8]
-DIRW={'N':'north','NNE':'north-northeast','NE':'northeast','ENE':'east-northeast','E':'east','ESE':'east-southeast','SE':'southeast','SSE':'south-southeast','S':'south','SSW':'south-southwest','SW':'southwest','WSW':'west-southwest','W':'west','WNW':'west-northwest','NW':'northwest','NNW':'north-northwest'}
-def ll(mm):
-    la=int(mm.group(2)[:2])+int(mm.group(2)[2:])/60; lo=int(mm.group(4)[:3])+int(mm.group(4)[3:])/60
-    return (la if mm.group(1)=='N' else -la, lo if mm.group(3)=='E' else -lo)
-storms=[]; tyok=True; ty_time=None; area_hits=[]
-try:
-    SG=SIGMET or []; seen={}
-    if SIGMET is None and GDACS is None: raise RuntimeError('no typhoon source reached')
-    for x in SG:
-        if x.get('hazard')!='TC' or x.get('validTimeTo',0)<NOW.timestamp(): continue
-        raw=' '.join(x['rawSigmet'].split()); nm=re.search(r'\bTC ([A-Z][A-Z-]+)',raw); ps=list(re.finditer(r'\b([NS])(\d{4}) ?([EW])(\d{5})\b',raw))
-        if not nm or not ps: continue
-        la,lo=ll(ps[0])
-        if not (0<=la<=45 and 100<=lo<=180): continue
-        fc=None; mf=re.search(r'FCST AT .*?([NS])(\d{4}) ?([EW])(\d{5})',raw)
-        if mf: fc=ll(mf)
-        name='-'.join(w.capitalize() for w in nm.group(1).split('-'))
-        if name in seen and seen[name]['rt']>=x['receiptTime']: continue
-        near=min(rows,key=lambda r:hav(la,lo,r['lat'],r['lon'])); dist=hav(la,lo,near['lat'],near['lon'])
-        trend=None
-        if fc:
-            d2=min(hav(fc[0],fc[1],r['lat'],r['lon']) for r in rows); trend='getting closer to the Philippines' if d2<dist-10 else 'moving away from the Philippines' if d2>dist+10 else 'staying about the same distance from the Philippines'
-        mv=DIRW.get(x.get('dir') or ''); sp=round(float(x['spd'])*1.852) if x.get('spd') else None
-        if not mv and fc and hav(la,lo,fc[0],fc[1])>20: mv=comp(brg(la,lo,fc[0],fc[1]))
-        seen[name]=dict(rt=x['receiptTime'],name=name,la=la,lo=lo,dist=dist,near=near['name'],side=comp(brg(near['lat'],near['lon'],la,lo)),mv=mv,sp=sp,chg={'INTSF':'strengthening','WKN':'weakening','NC':'holding steady'}.get(x.get('chng')),trend=trend,inpar=(5<=la<=25 and 115<=lo<=135))
-    for g in (GDACS or []):
-        la,lo=g['la'],g['lo']
-        if not (0<=la<=45 and 100<=lo<=180): continue
-        near=min(rows,key=lambda r:hav(la,lo,r['lat'],r['lon'])); dist=hav(la,lo,near['lat'],near['lon'])
-        seen[g['name']]=dict(rt='',name=g['name'],la=la,lo=lo,dist=dist,near=near['name'],side=comp(brg(near['lat'],near['lon'],la,lo)),mv=None,sp=None,chg=None,trend=None,inpar=(5<=la<=25 and 115<=lo<=135))
-    storms=sorted(seen.values(),key=lambda z:z['dist'])
-    def inside(la,lo,poly):
-        n=len(poly); c=False; j=n-1
-        for i in range(n):
-            yi,xi=poly[i]; yj,xj=poly[j]
-            if ((yi>la)!=(yj>la)) and (lo<(xj-xi)*(la-yi)/(yj-yi)+xi): c=not c
-            j=i
-        return c
-    for x in SG:
-        if x.get('hazard') not in ('TS','TC') or not x.get('coords'): continue
-        if not (x.get('validTimeFrom',0)<=NOW.timestamp()+3600 and x.get('validTimeTo',0)>NOW.timestamp()): continue
-        cs=x['coords']; polys=[]
-        for pc in (cs if isinstance(cs[0],list) else [cs]):
-            pp=[(c['lat'],c['lon']) for c in pc if isinstance(c,dict) and c.get('lat') is not None and c.get('lon') is not None]
-            if len(pp)>=3: polys.append(pp)
-        if not polys: continue
-        if x['hazard']=='TS':
-            for pp in polys:
-                if any(0<=la<=25 and 110<=lo<=135 for la,lo in pp):
-                    TS_AREAS.append(dict(a=int(x.get('validTimeFrom',0))*1000,b=int(x['validTimeTo'])*1000,p=[[round(P['cx'][0]*lo+P['cx'][1],1),round(P['cy'][0]*la+P['cy'][1],1)] for la,lo in pp]))
-        vt=dt.datetime.fromtimestamp(x['validTimeTo'],dt.timezone.utc); kind='Tropical cyclone' if x['hazard']=='TC' else 'Thunderstorm'
-        for r in rows:
-            if r.get('_area') or not any(inside(r['lat'],r['lon'],pp) for pp in polys): continue
-            r['_area']=True; area_hits.append(r['name'])
-            r['next']=f"Official {kind.lower()} area warning covers this airport until {clock(vt)}. "+r['next']
-            if r['level'] in ('normal','advisory','nodata'):
-                r['level']='warning'; r['what']=f'{kind} area warning'; r['when']='Now, until '+clock(vt); r['sort']=0; r['todo']=TODO['warning']
-            if r['est']: r['conf']='Medium: an official '+kind.lower()+' area warning covers this airport. Local rain and wind are still an estimate (MET Norway).'
-except Exception as e:
-    tyok=False; print('SIGMET ERROR',e,file=sys.stderr)
-def km(d): return f"{int(round(d/10)*10):,}"
-def sdesc(z):
-    t=f"{z['name']} is about {km(z['dist'])} km {z['side']} of {z['near']}"
-    if z['mv']: t+=f", moving {z['mv']}"+(f" at {z['sp']} km/h" if z['sp'] else '')
-    if z['chg']: t+=f" and {z['chg']}"
-    t+='.'
-    if z['trend']: t+=f" It is {z['trend']}."
-    return t
-inp=[z for z in storms if z['inpar']]; outp=[z for z in storms if not z['inpar']]
-if not tyok:
-    ty_main=ty_pa='Aviation storm warnings could not be reached at this check, so the typhoon watch is not available.'; ty_banner='Typhoon watch not available at this check'
-else:
-    if inp:
-        lead=' '.join('Tropical cyclone '+sdesc(z) for z in inp); ty_banner='Typhoon watch: '+', '.join(z['name'] for z in inp)+' in the Philippine area'
-        pa_lead='In the Philippine area: '+'; '.join(f"{z['name']}, {km(z['dist'])} km {z['side']} of {z['near']}" for z in inp)+'.'
-    else: lead='No typhoon or storm is in the Philippine area now.'; pa_lead=lead; ty_banner='No typhoon in the Philippine area today'
-    if outp:
-        ty_main=lead+' Tropical cyclones being tracked in the western Pacific: '+' '.join(sdesc(z) for z in outp)+('' if SIGMET is not None else ' This backup source shows position only, not movement.')
-        short=[f"{z['name']}, {km(z['dist'])} km {z['side']}"+(f", {z['trend'].replace(' to the Philippines','').replace(' from the Philippines','').replace(' from the Philippines','')}" if z['trend'] else '') for z in outp[:2]]
-        ty_pa=pa_lead+' Tracked in the Pacific: '+'; '.join(short)+('.' if len(outp)<=2 else f"; and {len(outp)-2} more farther away.")
-    else:
-        ty_main=lead+(' No other storms are being tracked in the western Pacific.' if not inp else ''); ty_pa=pa_lead+('' if inp else ' None tracked in the western Pacific.')
-T0=MIDNIGHT
-for r in rows: r.pop('_area',None)
-def common(ts): return Counter(ts).most_common(1)[0][0] if ts else None
-ot=common(obs_times); tt=common(taf_times)
-nOff=sum(1 for r in rows if not r['est'] and r['level']!='nodata'); nEst=sum(1 for r in rows if r['est'])
-if est_times:
-    e0=clock_plain(min(est_times)); e1=clock_plain(max(est_times)); et=e1 if e0==e1 else f'{e0} to {e1}'
-else: et=None
-n=ph(NOW)
-parts=[f"Checked {n.strftime('%A')}, {day(NOW)}, {clock_plain(NOW)}."]
-bits=[]
-if ot: bits.append(f"Airport reports {clock_plain(ot)}")
-if tt: bits.append(f"airport forecasts issued {clock_plain(tt)}")
-if et: bits.append(f"estimates updated {et}")
-if bits: parts.append(', '.join(bits)[0].upper()+', '.join(bits)[1:]+' (Philippine time).')
-parts.append(f"{len(rows)} Cebu Pacific and Cebgo airports in the Philippines.")
-src=[]
-if nOff: src.append(f"Sources: official airport weather reports{f' ({clock_plain(ot)})' if ot else ''} and airport forecasts{f' (issued {clock_plain(tt)})' if tt else ''} from {SHORT[USED['reports']]} for {nOff} airports.")
-else: src.append('Sources: no official airport report could be read at this check.')
-if nEst: src.append(f"The {'other ' if nOff else ''}{nEst} airports have no official airport report, so they use the {' or '.join(sorted(set(r['estsrc'] for r in rows if r['est'])))} location forecast{f' (updated {et})' if et else ''} and are marked Estimate.")
-src.append("Estimates show rain and wind only and cannot confirm thunderstorms, so an Estimate airport is never shown as Danger. For Estimates, bad weather means moderate or heavy rain (2.5 mm or more in an hour), or winds of 39 km/h or more. Tomorrow and days-ahead outlooks use the same airport forecasts and MET Norway estimates and are less certain than today's alerts.")
-if not tyok: src.append("Typhoon watch: no typhoon source could be reached at this check.")
-elif SIGMET is not None: src.append(f"Typhoon watch is from aviation storm warnings (SIGMET) on aviationweather.gov, checked {clock_plain(NOW)}; these look 6 hours ahead only.")
-else: src.append(f"Typhoon watch is from the backup source GDACS, checked {clock_plain(NOW)}; it shows storm positions only.")
-src.append(f"Earthquakes are from {QSRC} (magnitude 4.5 and stronger), data as of {day(asof)}, {clock_plain(asof)}." if asof else "Earthquake data could not be reached at this check.")
-src.append("Accuracy ranking, highest first: 1) official airport report, 2) official airport forecast, 3) official aviation area warning, 4) computer forecast estimate. The moving rain layer on the map is a MET Norway forecast, rebuilt every few hours; it is a picture of the forecast and plays no part in the alert levels. When sources differ the higher-ranked one is used, and each airport's details show its confidence. If a source cannot be reached, its backup is used automatically and the Data sources table shows which one supplied the data. Times are Philippine time.")
-ROLE=['First choice','Backup','Second backup','Third backup']
-SRC_STATUS=[]
-for g in SOURCE_ORDER:
-    SRC_STATUS.append(dict(what=GROUP_LABEL[g], used=(SOURCE_NAMES[USED[g]] if USED[g] else 'None reached'), ok=bool(USED[g]), first=(USED[g]==SOURCE_ORDER[g][0]),
-        chain=[dict(name=SOURCE_NAMES[k], role=ROLE[min(i,3)], state=st, note=note) for i,(k,st,note) in enumerate(STATUS[g])]))
-KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test')
-QKEEP=('id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
-data=dict(
-    generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000),
-    checked=' '.join(parts), problems=PROBLEMS,
-    airports=[{k:r[k] for k in KEEP} for r in rows],
-    quakes=[{k:q[k] for k in QKEEP} for q in quakes],
-    quake_ok=bool(asof), flag=flag if asof else 'Earthquake data could not be reached at this check.',
-    quake_asof=(f"{day(asof)}, {clock_plain(asof)}" if asof else ''),
-    quake_count=(f"{len(quakes)} earthquake{'' if len(quakes)==1 else 's'} of magnitude 4.5+ in the past 7 days (purple rings, tap one for details)." if asof else ''),
-    ty_text=ty_main, ty_banner=ty_banner, ty_asof=(f"{'Aviation storm warnings' if SIGMET is not None else 'GDACS (backup source)'}, {day(NOW)}, {clock_plain(NOW)}" if tyok else ''),
-    quake_src=QSRC, source_status=SRC_STATUS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
-    tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
-    sources=' '.join(src),
-)
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-tmp=OUT+'.tmp'
-with open(tmp,'w',encoding='utf-8') as f: json.dump(data,f,ensure_ascii=False,separators=(',',':'))
-os.replace(tmp,OUT)
-c=Counter(r['level'] for r in rows)
-print(data['checked'])
-print('Danger',c['danger'],'| Warning',c['warning'],'| Advisory',c['advisory'],'| Normal',c['normal'],'| No data',c['nodata'])
-print(data['flag'])
-for p in PROBLEMS: print('PROBLEM:',p)
+/* ---------- everything that depends on what is selected or filtered ---------- */
+function field(k, v) { return '<div class="f"><span class="k">' + k + '</span><span class="v">' + esc(v) + '</span></div>'; }
+function applyState() {
+  if (!D) return;
+  var c = { advisory: 0, warning: 0, danger: 0, normal: 0 };
+  D.airports.forEach(function (a) { if (inRegion(a) && c[a.level] !== undefined) c[a.level]++; });
+  $('nAll').textContent = c.advisory + c.warning + c.danger;
+  $('nAdv').textContent = c.advisory; $('nWarn').textContent = c.warning; $('nDanger').textContent = c.danger; $('nNormal').textContent = c.normal;
+  Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.classList.toggle('on', b.getAttribute('data-f') === S.filter); });
+  Array.prototype.forEach.call(document.querySelectorAll('.daysw button'), function (b) { b.classList.toggle('on', b.getAttribute('data-day') === S.day); });
+  $('region').value = S.region; $('airportPick').value = S.sel;
 
-# =====================================================================================
-# RAIN AND THUNDER ANIMATION
-# A grid of MET Norway forecasts over the map, hour by hour, saved as docs/rain.json.
-# The page plays it as a moving rain layer. Rebuilt only every few hours, because the
-# forecast itself changes only a few times a day and each rebuild needs many requests.
-# =====================================================================================
-RAIN_OUT = os.path.join(os.path.dirname(OUT), 'rain.json')
-RAIN_EVERY_HOURS = 3          # how often to rebuild the animation
-RAIN_HOURS = 30               # how many hours ahead to store
-GRID = dict(lat0=21.0, lon0=116.0, step=0.75, rows=23, cols=16)     # top-left point, spacing in degrees
+  Array.prototype.forEach.call(document.querySelectorAll('.pin.a'), function (el) {
+    var a = byId(el.getAttribute('data-a'));
+    el.style.display = (inRegion(a) && (levelShown(a.level, true) || a.id === S.sel)) ? '' : 'none';
+    el.classList.toggle('sel', a.id === S.sel);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.pin.q'), function (el) { el.classList.toggle('sel', el.getAttribute('data-q') === S.qk); });
 
-def build_rain():
-    try:
-        with open(RAIN_OUT, encoding='utf-8') as f: old = json.load(f)
-        age = (NOW.timestamp() * 1000 - old['generated_ms']) / 3.6e6
-    except Exception:
-        age = 1e9
-    if age < RAIN_EVERY_HOURS:
-        print(f'Rain animation: still fresh ({age:.1f} hours old), not rebuilt.'); return
-    from concurrent.futures import ThreadPoolExecutor
-    pts = [(r, c) for r in range(GRID['rows']) for c in range(GRID['cols'])]
-    h0 = NOW.replace(minute=0, second=0, microsecond=0)
-    hours = [h0 + dt.timedelta(hours=i) for i in range(RAIN_HOURS)]
-    def one(p):
-        lat = GRID['lat0'] - p[0] * GRID['step']; lon = GRID['lon0'] + p[1] * GRID['step']
-        m = fetch(f'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat:.2f}&lon={lon:.2f}', tries=2, timeout=30)
-        if not m: return None
-        out = {}
-        try:
-            for e in m['properties']['timeseries']:
-                n1 = e['data'].get('next_1_hours')
-                if not n1: continue
-                out[e['time'][:13]] = (float(n1['details'].get('precipitation_amount', 0.0) or 0.0), 'thunder' in (n1.get('summary', {}).get('symbol_code') or ''))
-        except Exception:
-            return None
-        return out
-    with ThreadPoolExecutor(max_workers=4) as ex: res = list(ex.map(one, pts))
-    ok = sum(1 for r in res if r)
-    if ok < 0.8 * len(pts):
-        print(f'Rain animation: only {ok} of {len(pts)} grid points answered, keeping the previous animation.', file=sys.stderr); return
-    rain = []; thunder = []
-    for h in hours:
-        k = h.strftime('%Y-%m-%dT%H'); fr = []; th = []
-        for i, r in enumerate(res):
-            v = r.get(k) if r else None
-            fr.append(round(v[0], 1) if v else 0)
-            if v and v[1]: th.append(i)
-        rain.append(fr); thunder.append(th)
-    doc = dict(generated_ms=int(NOW.timestamp() * 1000), source='MET Norway', grid=GRID, proj=P,
-               times=[int(h.timestamp() * 1000) for h in hours], rain=rain, thunder=thunder)
-    tmp = RAIN_OUT + '.tmp'
-    with open(tmp, 'w', encoding='utf-8') as f: json.dump(doc, f, separators=(',', ':'))
-    os.replace(tmp, RAIN_OUT)
-    print(f'Rain animation: rebuilt from {ok} of {len(pts)} grid points.')
+  var al = '', n = 0;
+  if (S.day === 'today') {
+    var lvls = S.filter === 'alerts' ? ORDER : [S.filter], shown = [];
+    lvls.forEach(function (lv) { shown = shown.concat(sorted(D.airports.filter(function (a) { return a.level === lv && inRegion(a); }))); });
+    shown.forEach(function (a) {
+      al += '<button class="alert' + (a.id === S.sel ? ' on' : '') + '" data-a="' + esc(a.id) + '"><span class="a1">' + pill(a.level) + '<span class="nm">' + esc(a.name) + '</span>' + (a.est ? EST : '') + '</span>' +
+        '<span class="a2"><span>' + esc(a.what || 'No bad weather expected today') + '</span><span class="wh">' + esc(a.when) + '</span></span></button>';
+    });
+    n = shown.length;
+    if (!n) al = '<div class="empty">No airports at this level right now.</div>';
+    $('listTitle').textContent = LABELS[S.filter]; $('listSub').textContent = n + (n === 1 ? ' airport' : ' airports');
+  } else {
+    var tm = D.airports.filter(function (a) { return a.t && inRegion(a); }).sort(function (a, b) { return (a.tsort - b.tsort) || (a.test - b.test) || a.name.localeCompare(b.name); });
+    tm.forEach(function (a) {
+      al += '<button class="alert' + (a.id === S.sel ? ' on' : '') + '" data-a="' + esc(a.id) + '"><span class="a1"><span class="nm">' + esc(a.name) + '</span>' + (a.test ? EST : '<span class="pill blue">AIRPORT FORECAST</span>') + '</span>' +
+        '<span class="a2"><span>' + esc(a.twhat) + '</span><span class="wh">' + esc(a.twhen) + '</span></span></button>';
+    });
+    n = tm.length;
+    if (!n) al = '<div class="empty">No bad weather is forecast for tomorrow at these airports.</div>';
+    $('listTitle').textContent = 'Bad weather forecast tomorrow'; $('listSub').textContent = D.tmr_note.split('. ')[0].replace(/\.$/, '') + ', ' + n + (n === 1 ? ' airport' : ' airports');
+  }
+  $('list').innerHTML = al;
 
-try: build_rain()
-except Exception as e: print('Rain animation could not be built:', e, file=sys.stderr)
+  var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null;
+  if (a) {
+    d.innerHTML = '<div class="detail"><div class="hd"><div class="ttl"><h3>' + esc(a.name) + '</h3>' + pill(a.level) + (a.est ? EST : '') + '</div><button class="btn" data-close="1">Close</button></div>' +
+      field('Right now', a.now) + field('Rest of today', a.next) + field('Tomorrow', a.tmr) + field('Days ahead', a.days) + field('What to do', a.todo) +
+      field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src) + '</div>';
+  } else if (q) {
+    d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(q.title) + '</h3><span class="pill quake">EARTHQUAKE</span></div><button class="btn" data-close="1">Close</button></div>' +
+      field('Where', q.where) + field('When', q.when) + field('Depth', q.depth) + field('Nearest airport', q.near) + field('Tsunami', q.tsu) + field('Aftershocks', q.after) +
+      field('What to do', q.todo) + field('Source', q.src) + '</div>';
+  } else {
+    d.innerHTML = '<div class="hint">Select an airport or earthquake to see its details here.</div>';
+  }
+  var flagged = /^Earthquake flag/.test(D.flag || '');
+  $('qDot').hidden = !flagged;
+  $('summary').innerHTML = (a || q) ? '' :
+    '<button class="sum" data-go="quakes"><span class="k">Earthquakes</span><span class="v">' + esc(D.flag) + '</span></button>' +
+    '<button class="sum" data-go="typhoon"><span class="k">Typhoon watch</span><span class="v">' + esc(D.ty_banner) + '</span></button>';
+  Array.prototype.forEach.call(document.querySelectorAll('.stabs button[data-tab]'), function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === S.tab); });
+  $('paneDetails').hidden = S.tab !== 'details'; $('paneQuakes').hidden = S.tab !== 'quakes'; $('paneTyphoon').hidden = S.tab !== 'typhoon';
+  Array.prototype.forEach.call(document.querySelectorAll('.ptabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === S.pane); });
+  Array.prototype.forEach.call(document.querySelectorAll('.col'), function (el) { el.classList.toggle('show', el.getAttribute('data-pane') === S.pane); });
+  var sb = $('selBar'); sb.classList.toggle('has', !!(a || q));
+  if (a) { $('selName').textContent = a.name; $('selPill').innerHTML = pill(a.level); } else if (q) { $('selName').textContent = q.title; $('selPill').innerHTML = ''; }
+  fit();
+  applyView();
+  wxUpdate();
+  R.lab = -1; rainDraw();
+}
+/* ---------- rain and thunder animation (Windy.com embed) ---------- */
+var WX = { open: false, layer: 'rain', follow: true, src: '' };
+function wxUpdate() {
+  if (!WX.open) return;
+  var a = (WX.follow && S.sel && D) ? byId(S.sel) : null, has = a && typeof a.lat === 'number' && typeof a.lon === 'number';
+  var lat = has ? a.lat : 12.3, lon = has ? a.lon : 122.6, zoom = has ? 8 : 5;
+  var u = 'https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=%C2%B0C&metricWind=km%2Fh&zoom=' + zoom +
+    '&overlay=' + WX.layer + '&product=ecmwf&level=surface&lat=' + lat.toFixed(3) + '&lon=' + lon.toFixed(3) +
+    (has ? '&detailLat=' + a.lat.toFixed(3) + '&detailLon=' + a.lon.toFixed(3) + '&marker=true' : '');
+  if (u !== WX.src) { WX.src = u; $('wxFrame').src = u; }
+  $('wxWhere').textContent = has ? 'Showing: ' + a.name : 'Showing: whole Philippines';
+  Array.prototype.forEach.call(document.querySelectorAll('.seg[data-layer]'), function (b) { b.classList.toggle('on', b.getAttribute('data-layer') === WX.layer); });
+}
+function wxOpen(on) {
+  WX.open = on; $('wxModal').classList.toggle('open', on);
+  if (!on) { WX.src = ''; $('wxFrame').removeAttribute('src'); $('wxToggle').focus(); } else { WX.follow = true; wxUpdate(); $('wxClose').focus(); }
+}
+$('wxToggle').addEventListener('click', function () { wxOpen(true); });
+$('wxClose').addEventListener('click', function () { wxOpen(false); }); $('wxBack').addEventListener('click', function () { wxOpen(false); });
+Array.prototype.forEach.call(document.querySelectorAll('.seg[data-layer]'), function (b) { b.addEventListener('click', function () { WX.layer = b.getAttribute('data-layer'); wxUpdate(); }); });
+$('wxAll').addEventListener('click', function () { WX.follow = false; wxUpdate(); });
+function selectAirport(id) { WX.follow = true; S.sel = id; S.qk = ''; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
+function selectQuake(id) { S.sel = ''; S.qk = id; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
+function clearSel() { S.sel = ''; S.qk = ''; S.view = null; S.drag = false; applyState(); }
+
+/* ---------- events ---------- */
+$('region').addEventListener('change', function (e) { S.region = e.target.value; applyState(); });
+$('airportPick').addEventListener('change', function (e) { if (e.target.value) selectAirport(e.target.value); else clearSel(); });
+Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.addEventListener('click', function () { S.filter = b.getAttribute('data-f'); S.day = 'today'; if (S.pane === 'side') S.pane = 'list'; applyState(); }); });
+Array.prototype.forEach.call(document.querySelectorAll('.daysw button'), function (b) { b.addEventListener('click', function () { S.day = b.getAttribute('data-day'); if (S.pane === 'side') S.pane = 'list'; applyState(); }); });
+Array.prototype.forEach.call(document.querySelectorAll('.stabs button[data-tab]'), function (b) { b.addEventListener('click', function () { S.tab = b.getAttribute('data-tab'); applyState(); }); });
+Array.prototype.forEach.call(document.querySelectorAll('.ptabs button'), function (b) { b.addEventListener('click', function () { S.pane = b.getAttribute('data-pane'); applyState(); }); });
+$('summary').addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b) { S.tab = b.getAttribute('data-go'); applyState(); } });
+$('selGo').addEventListener('click', function () { S.pane = 'side'; S.tab = 'details'; applyState(); });
+$('detail').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) clearSel(); });
+$('list').addEventListener('click', function (e) { var b = e.target.closest('[data-a]'); if (b) { S.pane = 'side'; selectAirport(b.getAttribute('data-a')); } });
+$('qList').addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) { selectQuake(b.getAttribute('data-q')); } });
+$('airportPick').addEventListener('change', function () { if (S.sel) { S.pane = 'side'; applyState(); } });
+$('zIn').addEventListener('click', function () { var v = viewNow(); setView(Math.min(6, v.z * 1.5), v.cx, v.cy, false); });
+$('zOut').addEventListener('click', function () { var v = viewNow(); setView(Math.max(1, v.z / 1.5), v.cx, v.cy, false); });
+$('zAll').addEventListener('click', clearSel);
+var modal = $('modal');
+$('helpBtn').addEventListener('click', function () { modal.classList.add('open'); $('modalClose').focus(); });
+function closeHelp() { modal.classList.remove('open'); $('helpBtn').focus(); }
+$('modalBack').addEventListener('click', closeHelp); $('modalClose').addEventListener('click', closeHelp);
+document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (modal.classList.contains('open')) closeHelp(); else if (WX.open) wxOpen(false); });
+
+/* fit the map to the space available so the whole dashboard stays on one screen */
+function fit() {
+  var col = $('mapCol'), cols = $('cols'); if (!col || !cols.clientHeight) return;
+  var narrow = window.matchMedia('(max-width:900px)').matches;
+  if (!narrow) cols.style.gridTemplateColumns = '';
+  var cs = getComputedStyle(col), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  var used = 0, kids = 0; Array.prototype.forEach.call(col.children, function (el) { if (el.id !== 'vp' && el.offsetParent !== null) { used += el.offsetHeight; kids++; } });
+  var availH = cols.clientHeight - padY - used - kids * 8 - 10;
+  /*
+   * Size the map from the actual dashboard width, not window.innerWidth.
+   * This keeps the layout correct at browser zoom levels and on wide displays.
+   */
+  var maxW = narrow
+    ? Math.max(160, cols.clientWidth - padX)
+    : Math.max(320, Math.min(cols.clientWidth * 0.34, 560));
+  var w = Math.max(160, Math.min(maxW, availH * 1000 / 1506));
+  $('vp').style.width = w + 'px';
+  $('vp').style.height = (w * 1506 / 1000) + 'px';
+  if (!narrow) {
+    var mapTrack = Math.round(w + padX + 2);
+    cols.style.gridTemplateColumns = mapTrack + 'px minmax(0,1fr) minmax(0,1.05fr)';
+  }
+  if (!fit.again) { fit.again = true; requestAnimationFrame(function () { fit(); fit.again = false; }); }
+}
+window.addEventListener('resize', fit);
+
+/* map: wheel, drag, pinch, double-tap */
+var layer = $('layer'), vp = $('vp'), pts = {}, drag = null, pinch = null, moved = false, lastTap = null;
+function frac(x, y) { var R = vp.getBoundingClientRect(); return { fx: (x - R.left) / R.width, fy: (y - R.top) / R.height, R: R }; }
+function zoomAt(nz, x, y, animate) { var v = viewNow(), f = frac(x, y); setView(nz, v.cx + (f.fx - 0.5) * 100 / v.z - (f.fx - 0.5) * 100 / nz, v.cy + (f.fy - 0.5) * 100 / v.z - (f.fy - 0.5) * 100 / nz, !animate); }
+layer.addEventListener('wheel', function (e) {
+  var v = viewNow(), nz = Math.min(6, Math.max(1, v.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2)));
+  if (nz === v.z) return;
+  e.preventDefault(); zoomAt(nz, e.clientX, e.clientY, false);
+}, { passive: false });
+layer.addEventListener('pointerdown', function (e) {
+  if (e.isPrimary) pts = {};
+  pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+  var ids = Object.keys(pts), v = viewNow();
+  if (ids.length === 1) {
+    moved = false; pinch = null; drag = null;
+    if (v.z > 1) { var R = vp.getBoundingClientRect(); drag = { id: e.pointerId, x: e.clientX, y: e.clientY, cx: v.cx, cy: v.cy, w: R.width, h: R.height, z: v.z, moved: false }; }
+  } else if (ids.length === 2) {
+    var a = pts[ids[0]], b = pts[ids[1]], f = frac((a.x + b.x) / 2, (a.y + b.y) / 2);
+    drag = null; moved = true; lastTap = null;
+    pinch = { d: Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), z: v.z, px: v.cx + (f.fx - 0.5) * 100 / v.z, py: v.cy + (f.fy - 0.5) * 100 / v.z };
+  }
+});
+layer.addEventListener('pointermove', function (e) {
+  if (pts[e.pointerId]) pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+  if (pinch) {
+    var ids = Object.keys(pts); if (ids.length < 2) return;
+    var a = pts[ids[0]], b = pts[ids[1]], f = frac((a.x + b.x) / 2, (a.y + b.y) / 2);
+    var nz = Math.min(6, Math.max(1, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
+    setView(nz, pinch.px - (f.fx - 0.5) * 100 / nz, pinch.py - (f.fy - 0.5) * 100 / nz, true);
+    return;
+  }
+  if (!drag || drag.id !== e.pointerId) return;
+  var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 6) return;
+  drag.moved = true; moved = true;
+  setView(drag.z, drag.cx - dx / (drag.w * drag.z) * 100, drag.cy - dy / (drag.h * drag.z) * 100, true);
+  layer.style.cursor = 'grabbing';
+});
+function pointerEnd(e) {
+  var had = !!pts[e.pointerId]; delete pts[e.pointerId];
+  var wasPinch = !!pinch;
+  if (pinch && Object.keys(pts).length < 2) { pinch = null; S.drag = false; applyView(); }
+  if (drag) { drag = null; S.drag = false; applyView(); }
+  if (e.type !== 'pointerup' || !had || wasPinch || moved) return;
+  if (e.target.closest && e.target.closest('button')) { lastTap = null; return; }
+  var t = Date.now();
+  if (lastTap && t - lastTap.t < 320 && Math.abs(e.clientX - lastTap.x) + Math.abs(e.clientY - lastTap.y) < 30) {
+    lastTap = null; var v = viewNow(); zoomAt(v.z >= 5.9 ? 1 : Math.min(6, v.z * 1.8), e.clientX, e.clientY, true);
+  } else { lastTap = { t: t, x: e.clientX, y: e.clientY }; }
+}
+layer.addEventListener('pointerup', pointerEnd); layer.addEventListener('pointercancel', pointerEnd); layer.addEventListener('pointerleave', pointerEnd);
+layer.addEventListener('click', function (e) {
+  if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); return; }
+  var b = e.target.closest('.pin'); if (!b || !e.target.closest('button')) return;
+  if (b.hasAttribute('data-a')) selectAirport(b.getAttribute('data-a')); else selectQuake(b.getAttribute('data-q'));
+}, true);
+
+/* ---------- rain and thunder timeline on the airport map ---------- */
+var RAIN = null, R = { playing: !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches), show: true, pos: 0, n: 0, i0: 0, last: 0, hold: 0, lab: -1 };
+var HOUR_MS = 800;                        // how long each forecast hour stays on screen while playing
+var cv = $('rainCv'), cx2 = cv.getContext('2d'), small = document.createElement('canvas'), sctx = small.getContext('2d');
+function rainColor(v) {
+  if (v < 0.15) return [90, 160, 235, 0];
+  if (v < 1) return [90, 160, 235, 90 + 60 * v];
+  if (v < 2.5) return [40, 110, 220, 160];
+  if (v < 5) return [0, 170, 150, 185];
+  if (v < 7.6) return [120, 200, 60, 195];
+  if (v < 15) return [255, 190, 0, 210];
+  return [230, 60, 60, 220];
+}
+function bolt(x, y, s) {
+  var p = [[.56, 0], [.1, .58], [.44, .58], [.32, 1], [.9, .38], [.56, .38]];
+  cx2.beginPath(); p.forEach(function (q, i) { var px = x + (q[0] - .5) * s * .8, py = y + (q[1] - .5) * s; if (i) cx2.lineTo(px, py); else cx2.moveTo(px, py); });
+  cx2.closePath(); cx2.lineWidth = 2.5; cx2.strokeStyle = '#12303F'; cx2.lineJoin = 'round'; cx2.stroke(); cx2.fillStyle = '#FFD600'; cx2.fill();
+}
+function rainSetup() {
+  R.n = 0;
+  if (RAIN && RAIN.times && RAIN.rain) {
+    var now = Date.now(), i0 = 0;
+    while (i0 < RAIN.times.length && RAIN.times[i0] + 3600000 <= now) i0++;
+    R.i0 = i0; R.n = Math.min(24, RAIN.times.length - i0);
+  }
+  var ok = R.n >= 6;
+  $('rainBar').hidden = !ok; cv.style.display = (ok && R.show) ? '' : 'none'; fit();
+  if (!ok) return;
+  small.width = RAIN.grid.cols; small.height = RAIN.grid.rows;
+  $('rainSlider').max = R.n - 1; R.pos = Math.min(R.pos, R.n - 1); R.lab = -1;
+  var gen = new Date(RAIN.generated_ms).toLocaleString('en-US', { timeZone: 'Asia/Manila', weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  $('hRain').textContent = 'The moving rain layer is a ' + (RAIN.source || 'MET Norway') + ' computer forecast, last built ' + gen + ' (Philippine time). It is a picture of the forecast only and plays no part in the alert levels.';
+  rainDraw();
+}
+function rainDraw() {
+  if (!RAIN || R.n < 6) return;
+  var g = RAIN.grid, P = RAIN.proj, k = Math.floor(R.pos), f = R.pos - k, A = RAIN.rain[R.i0 + k], B = RAIN.rain[Math.min(R.i0 + k + 1, RAIN.rain.length - 1)];
+  var img = sctx.createImageData(g.cols, g.rows), d = img.data;
+  for (var i = 0; i < A.length; i++) { var c = rainColor(A[i] + (B[i] - A[i]) * f); d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = c[3]; }
+  sctx.putImageData(img, 0, 0);
+  var W = cv.width, H = cv.height, X = function (lon) { return (P.cx[0] * lon + P.cx[1]) / 100 * W; }, Y = function (lat) { return (P.cy[0] * lat + P.cy[1]) / 100 * H; };
+  var x0 = X(g.lon0 - g.step / 2), x1 = X(g.lon0 + (g.cols - .5) * g.step), y0 = Y(g.lat0 + g.step / 2), y1 = Y(g.lat0 - (g.rows - .5) * g.step);
+  cx2.clearRect(0, 0, W, H); cx2.imageSmoothingEnabled = true; cx2.imageSmoothingQuality = 'high';
+  cx2.drawImage(small, x0, y0, x1 - x0, y1 - y0);
+  var inv = Math.min(1, 1.35 / viewNow().z);
+  var T = RAIN.times[R.i0 + k] + f * 3600000, th = (D && D.thunder) || { areas: [], airports: [] };
+  (th.areas || []).forEach(function (a) {
+    if (!(a.a <= T + 1800000 && T < a.b) || !a.p || a.p.length < 3) return;
+    var sx = 0, sy = 0; cx2.beginPath();
+    a.p.forEach(function (q, i) { var px = q[0] / 100 * W, py = q[1] / 100 * H; sx += px; sy += py; if (i) cx2.lineTo(px, py); else cx2.moveTo(px, py); });
+    cx2.closePath(); cx2.fillStyle = 'rgba(255,214,0,.16)'; cx2.fill(); cx2.setLineDash([6, 4]); cx2.lineWidth = 2; cx2.strokeStyle = '#B8860B'; cx2.stroke(); cx2.setLineDash([]);
+    var mx = sx / a.p.length, my = sy / a.p.length; bolt(mx, my, 20 * inv);
+    a.p.forEach(function (q) { bolt(mx + (q[0] / 100 * W - mx) * .55, my + (q[1] / 100 * H - my) * .55, 15 * inv); });
+  });
+  var seen = {};
+  (th.airports || []).forEach(function (t) {
+    if (!(t.a <= T + 1800000 && T < t.b) || seen[t.id] || !D) return;
+    var ap = byId(t.id); if (!ap || !inRegion(ap)) return; seen[t.id] = 1;
+    bolt(ap.x / 100 * W - 12 * inv, ap.y / 100 * H - 14 * inv, 18 * inv);
+  });
+  var hk = Math.round(R.pos);
+  if (hk !== R.lab) {
+    R.lab = hk; $('rainSlider').value = hk;
+    var t = new Date(RAIN.times[R.i0 + Math.min(hk, R.n - 1)]), now = new Date();
+    var day = t.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', weekday: 'long' }), today = now.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', weekday: 'long' });
+    $('rainTime').textContent = (hk === 0 ? 'Now, ' : '') + (day === today ? 'Today' : day) + ' ' + t.toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
+  }
+}
+function rainTick(ts) {
+  if (R.playing && R.show && R.n >= 6 && !document.hidden) {
+    var dtm = R.last ? Math.min(200, ts - R.last) : 0;
+    if (R.hold > 0) { R.hold -= dtm; if (R.hold <= 0) { R.pos = 0; rainDraw(); } }
+    else { R.pos += dtm / HOUR_MS; if (R.pos >= R.n - 1) { R.pos = R.n - 1; R.hold = 1500; } rainDraw(); }
+  }
+  R.last = ts; requestAnimationFrame(rainTick);
+}
+$('rainPlay').addEventListener('click', function () { R.playing = !R.playing; this.textContent = R.playing ? 'Stop' : 'Play'; if (R.playing && R.pos >= R.n - 1) { R.pos = 0; R.hold = 0; } });
+$('rainPlay').textContent = R.playing ? 'Stop' : 'Play';
+$('rainSlider').addEventListener('input', function () { R.pos = +this.value; R.hold = 0; R.lab = -1; rainDraw(); });
+$('rainShow').addEventListener('click', function () { R.show = !R.show; this.textContent = R.show ? 'Hide rain' : 'Show rain'; this.setAttribute('aria-pressed', R.show ? 'true' : 'false'); cv.style.display = (R.show && R.n >= 6) ? '' : 'none'; if (R.show) rainDraw(); });
+function loadRain() {
+  fetch('rain.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+    if (!RAIN || j.generated_ms !== RAIN.generated_ms) { RAIN = j; }
+    rainSetup();
+  }).catch(function () { rainSetup(); });
+}
+requestAnimationFrame(rainTick);
+
+/* ---------- load and auto-refresh ---------- */
+function load() {
+  fetch('data.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+    if (!D || j.generated_ms !== D.generated_ms) { D = j; renderData(); applyState(); } else { renderNotice(); }
+  }).catch(function () {
+    if (!D) { $('checked').textContent = 'The data could not be loaded. Please reload the page in a minute.'; } else { renderNotice(); }
+  });
+}
+load(); loadRain();
+setInterval(function () { load(); loadRain(); }, REFRESH_MS);
+document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>
