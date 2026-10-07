@@ -30,12 +30,13 @@ why, and how reliable each reading is.
 
 ## How it works
 
-1. **Collect.** Every 10 minutes reads the latest public data from the sources below.
+1. **Collect.** On a schedule, reads the latest public data from the sources below. The schedule asks
+   for every 10 minutes; in practice the hosting service runs it about every 20 to 25 minutes.
 2. **Choose the best source.** For each kind of data it uses the first-choice source. If that cannot
    be reached, it switches to a backup by itself.
 3. **Apply the rules.** It works out each airport's alert level, tomorrow's outlook, the earthquake
    flag and the typhoon watch, and writes the result.
-4. **Show.** The page reads that file and checks for newer data every 5 minutes.
+4. **Show.** The page reads that file and checks for newer data every minute.
    Viewers never need to reload.
 5. **Flag problems.** If a backup source is in use, or the data is more than 60 minutes old, the
    page shows a yellow notice.
