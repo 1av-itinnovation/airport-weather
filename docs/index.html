@@ -953,7 +953,7 @@ header.top{padding:10px 16px;border-radius:10px}
     </div>
   </div>
   <div class="tools">
-    <div class="chip" id="chip">Live, updates about every 10 minutes</div>
+    <div class="chip" id="chip">Live, updates about every 20 minutes</div>
     <button class="helpbtn" id="helpBtn" aria-label="How this dashboard works" title="How this dashboard works"><span>?</span></button>
   </div>
 </header>
@@ -1214,7 +1214,7 @@ function renderNotice() {
     var age = hrs < 2 ? Math.round(ageMin) + ' minutes' : (hrs < 48 ? Math.round(hrs) + ' hours' : Math.round(hrs / 24) + ' days');
     msgs.unshift('This data is about ' + age + ' old. The automatic refresh may be delayed or stopped. Treat the alert levels with care.');
     chip.textContent = 'Data may be out of date'; chip.className = 'chip stale';
-  } else { chip.textContent = 'Live, updates about every 10 minutes'; chip.className = 'chip'; }
+  } else { chip.className = 'chip'; chip.textContent = 'Live, updates about every ' + (Math.round(typicalGap() / 5) * 5 || 5) + ' minutes'; }
   var n = $('notice');
   if (msgs.length) { n.hidden = false; n.innerHTML = '<strong>Please note:</strong>' + msgs.map(esc).join(' '); } else { n.hidden = true; n.innerHTML = ''; }
   fit();
@@ -1340,12 +1340,14 @@ $('wxAll').addEventListener('click', function () { WX.follow = false; wxUpdate()
    carries the times of recent refreshes, so the page works out how often they really happen and
    bases its estimate on that. */
 var RAINSEEN = 0;
-var CYCLE_MIN = 10;                       // the intended refresh interval (must match the schedule file)
+var CYCLE_MIN = 10;                       // what the schedule file asks for
+var TYPICAL_MIN = 22;                     // what the hosting service actually delivers (from its run history, 7 Oct 2026):
+                                          // scheduled runs arrived 14 to 27 minutes apart, typically 22 to 23
 var PUBLISH_MIN = 1.5;                    // typical delay between a refresh and the page going live
 function typicalGap() {
   var r = ((D && D.recent) || []).slice().sort(function (a, b) { return a - b; }), g = [];
-  for (var i = 1; i < r.length; i++) { var m = (r[i] - r[i - 1]) / 60000; if (m >= 3 && m <= 180) g.push(m); }
-  if (g.length < 3) return CYCLE_MIN;
+  for (var i = 1; i < r.length; i++) { var m = (r[i] - r[i - 1]) / 60000; if (m >= 8 && m <= 180) g.push(m); }       // gaps under 8 minutes are manual runs, not the schedule
+  if (g.length < 4) return TYPICAL_MIN;
   g = g.slice(-8).sort(function (a, b) { return a - b; });
   var med = g.length % 2 ? g[(g.length - 1) / 2] : (g[g.length / 2 - 1] + g[g.length / 2]) / 2;
   return Math.max(CYCLE_MIN, Math.min(90, med));
