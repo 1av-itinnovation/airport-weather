@@ -82,17 +82,6 @@ aviation area warning, computer forecast estimate. When sources differ, the high
 - PAGASA is the official typhoon authority for the Philippines but publishes no data feed, so it is
   not read directly. Confirm typhoon decisions against PAGASA bulletins.
 
-## Files
-
-| File | Purpose |
-|---|---|
-| `build.py` | Collects the data, chooses sources, applies the rules. |
-| `docs/index.html` | The dashboard page. |
-| `docs/data.json` | Latest alert data, rewritten at every check. |
-| `docs/rain.json` | Rain forecast grid for the moving rain layer. |
-| `docs/assets/` | Map image and 1AV logo. |
-| `.github/workflows/refresh.yml` | The 10-minute schedule. |
-
 ## Data credits
 
 Weather and earthquake data belong to their publishers: the US Aviation Weather Center and NOAA,
@@ -102,5 +91,4 @@ The optional detailed rain map is provided by Windy.com.
 ## Copyright
 
 © 2026 1Aviation Groundhandling Services, Corp. All rights reserved.
-
 Created under 1AV IT Innovation by Jake V Borras.
