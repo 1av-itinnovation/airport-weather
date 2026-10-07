@@ -918,6 +918,27 @@ header.top{padding:10px 16px;border-radius:10px}
 /* ---------- Normal level shown in green ---------- */
 .stat.normal{background:#2E7D32;color:#FFFFFF;border-color:#2E7D32}
 .pill.normal{background:#2E7D32;color:#FFFFFF}
+
+/* ---------- next update time in the header ---------- */
+.nextup{margin-left:10px;padding-left:10px;border-left:1px solid rgba(202,226,231,.45);color:#FFFFFF;font-weight:500}
+.nextup:empty{display:none}
+.nextup.late{color:#FFD600}
+/* ---------- automatic tour of Danger airports ---------- */
+.tour{position:absolute;left:6px;top:6px;max-width:calc(100% - 170px);display:flex;align-items:center;gap:8px;background:#FFFFFF;border:1px solid #C62828;border-radius:6px;padding:4px 5px 4px 9px;font-size:11px;font-weight:600;color:#12303F;box-shadow:0 1px 3px rgba(18,48,63,.15)}
+.tour.off{border-color:#CAE2E7;color:#5B7180}
+.tour .tdot{width:8px;height:8px;border-radius:50%;background:#C62828;flex:none}
+.tour.off .tdot{background:#9DBFD0}
+.tour.run .tdot{animation:tourPulse 1.2s ease-in-out infinite}
+@keyframes tourPulse{0%,100%{opacity:1}50%{opacity:.25}}
+.tour #tourText{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tour button{flex:none;height:24px;padding:0 8px;border:1px solid #CAE2E7;border-radius:4px;background:#FFFFFF;color:#005687;font:inherit;font-size:10.5px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.tour.run .tdot{animation:none}}
+@media (max-width:900px){
+  .brand .checked{white-space:normal}
+  .nextup{display:block;margin-left:0;padding-left:0;border-left:none}
+  .tour{top:auto;bottom:6px;left:54px;max-width:calc(100% - 62px)}
+  .tour button{height:30px}
+}
 </style>
 </head>
 <body>
@@ -928,7 +949,7 @@ header.top{padding:10px 16px;border-radius:10px}
     <img src="assets/logo.png" alt="1Aviation logo">
     <div>
       <h1>Airport Weather Monitoring</h1>
-      <div class="checked" id="checked">Loading the latest data…</div>
+      <div class="checked"><span id="checked">Loading the latest data…</span><span class="nextup" id="nextUp"></span></div>
     </div>
   </div>
   <div class="tools">
@@ -967,6 +988,7 @@ header.top{padding:10px 16px;border-radius:10px}
         <div class="stage" id="pins"></div>
       </div>
       <div class="banner" id="banner"></div>
+      <div class="tour" id="tourBar" hidden><span class="tdot" id="tourDot"></span><span id="tourText"></span><button id="tourBtn" aria-pressed="true">Turn off</button></div>
       <div class="zoom">
         <button id="zIn" aria-label="Zoom in" title="Zoom in">+</button>
         <button id="zOut" aria-label="Zoom out" title="Zoom out">−</button>
@@ -1048,7 +1070,8 @@ header.top{padding:10px 16px;border-radius:10px}
         <li><strong>Earthquakes and Typhoon tabs.</strong> The panel on the right has tabs for airport details, recent earthquakes and the typhoon watch.</li>
         <li><strong>Rain and thunder animation.</strong> The airport map plays the forecast rain for the next 24 hours by itself, with lightning marks where an official thunderstorm warning or airport forecast applies. Use Stop and Play, or drag the slider to any hour. It is a computer forecast, so the alert levels take priority when the two differ. Lightning marks come from official thunderstorm area warnings and official airport forecasts, so they cover the next few hours and the larger airports only; rain with no lightning mark does not mean no thunder. A more detailed Windy.com map can be opened with the Windy map button: it is a different forecast, so the two can differ, and inside it you press its own play button to step through the hours.</li>
         <li><strong>Earthquakes and typhoons.</strong> Earthquakes cannot be forecast; the list shows what has already happened. The typhoon watch uses storm warnings that look 6 hours ahead only, so it is not a multi-day track. It is a computer forecast, so the alert levels take priority when the two differ.</li>
-        <li><strong>The time at the top.</strong> It shows when the data was last checked. The page updates itself about every 10 minutes; you do not need to reload it.</li>
+        <li><strong>Auto-show Danger.</strong> When any airport is at Danger and nobody is using the screen, the map selects each Danger airport in turn, zooms to it and shows its details, then returns to the whole map and repeats. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
+        <li><strong>The time at the top.</strong> It shows when the data was last checked and when the next update is expected. The page updates itself about every 10 minutes; you do not need to reload it. The next-update time is an estimate, because the scheduled refresh can start a few minutes late.</li>
       </ul>
     </div>
     <div class="sec">
@@ -1311,6 +1334,56 @@ $('wxToggle').addEventListener('click', function () { wxOpen(true); });
 $('wxClose').addEventListener('click', function () { wxOpen(false); }); $('wxBack').addEventListener('click', function () { wxOpen(false); });
 Array.prototype.forEach.call(document.querySelectorAll('.seg[data-layer]'), function (b) { b.addEventListener('click', function () { WX.layer = b.getAttribute('data-layer'); wxUpdate(); }); });
 $('wxAll').addEventListener('click', function () { WX.follow = false; wxUpdate(); });
+/* ---------- next update time ---------- */
+var CYCLE_MIN = 10;                       // how often GitHub refreshes the data (must match the schedule file)
+function nextUpdate() {
+  var el = $('nextUp'); if (!D) { el.textContent = ''; return; }
+  var next = D.generated_ms + CYCLE_MIN * 60000, now = Date.now(), mins = Math.ceil((next - now) / 60000);
+  var t = new Date(next).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
+  el.classList.toggle('late', mins < 1);
+  el.textContent = mins >= 1 ? 'Next update about ' + t + ' (in ' + mins + ' min)' : (now - next < 20 * 60000 ? 'Next update due any moment' : 'Next update is overdue');
+}
+setInterval(nextUpdate, 10000);
+
+/* ---------- automatic tour of Danger airports ----------
+   With nothing selected and nobody touching the screen, the dashboard selects each Danger airport in turn
+   (zooming in and showing its details), then returns to the whole map, waits, and repeats. */
+var TOUR_SHOW_MS = 15000;                 // how long each Danger airport stays on screen
+var TOUR_REST_MS = 45000;                 // how long the whole map shows between rounds
+var TOUR_IDLE_MS = 60000;                 // wait this long after someone last touched the screen
+var TOUR = { on: true, idx: -1, timer: null, lastUser: 0, active: false };
+try { if (window.localStorage && localStorage.getItem('awm-tour') === 'off') TOUR.on = false; } catch (e) {}
+if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { try { if (!localStorage.getItem('awm-tour')) TOUR.on = false; } catch (e) { TOUR.on = false; } }
+function dangerList() { return D ? sorted(D.airports.filter(function (a) { return a.level === 'danger' && inRegion(a); })) : []; }
+function tourLabel() {
+  var bar = $('tourBar'), n = dangerList().length;
+  if (!n) { bar.hidden = true; return; }
+  bar.hidden = false; bar.classList.toggle('off', !TOUR.on); bar.classList.toggle('run', TOUR.on && TOUR.active);
+  $('tourBtn').textContent = TOUR.on ? 'Turn off' : 'Turn on'; $('tourBtn').setAttribute('aria-pressed', TOUR.on ? 'true' : 'false');
+  $('tourText').textContent = !TOUR.on ? 'Auto-show Danger is off' : (TOUR.active ? 'Showing Danger airport ' + (TOUR.idx + 1) + ' of ' + n : 'Auto-show Danger: ' + n + (n === 1 ? ' airport' : ' airports'));
+}
+function tourStep() {
+  clearTimeout(TOUR.timer);
+  if (!D || !TOUR.on) { TOUR.active = false; TOUR.idx = -1; tourLabel(); return; }
+  var blocked = document.hidden || modal.classList.contains('open') || WX.open || S.day !== 'today' || !(S.filter === 'alerts' || S.filter === 'danger');
+  if (blocked || Date.now() - TOUR.lastUser < TOUR_IDLE_MS) { TOUR.active = false; TOUR.idx = -1; tourLabel(); TOUR.timer = setTimeout(tourStep, 5000); return; }
+  var list = dangerList();
+  if (!list.length) { if (TOUR.active) { TOUR.active = false; clearSel(); } TOUR.idx = -1; tourLabel(); TOUR.timer = setTimeout(tourStep, 10000); return; }
+  TOUR.idx++;
+  if (TOUR.idx >= list.length) { TOUR.idx = -1; TOUR.active = false; clearSel(); tourLabel(); TOUR.timer = setTimeout(tourStep, TOUR_REST_MS); return; }
+  TOUR.active = true; selectAirport(list[TOUR.idx].id); tourLabel(); TOUR.timer = setTimeout(tourStep, TOUR_SHOW_MS);
+}
+function tourUser(e) {
+  if (e && e.target && e.target.closest && e.target.closest('#tourBar')) return;
+  TOUR.lastUser = Date.now();
+  if (TOUR.active) { TOUR.active = false; TOUR.idx = -1; tourLabel(); clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 5000); }
+}
+['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, tourUser, { capture: true, passive: true }); });
+$('tourBtn').addEventListener('click', function () {
+  TOUR.on = !TOUR.on; try { localStorage.setItem('awm-tour', TOUR.on ? 'on' : 'off'); } catch (e) {}
+  if (!TOUR.on && TOUR.active) { TOUR.active = false; clearSel(); }
+  TOUR.idx = -1; TOUR.lastUser = 0; tourLabel(); clearTimeout(TOUR.timer); if (TOUR.on) TOUR.timer = setTimeout(tourStep, 1500);
+});
 function selectAirport(id) { WX.follow = true; S.sel = id; S.qk = ''; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
 function selectQuake(id) { S.sel = ''; S.qk = id; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
 function clearSel() { S.sel = ''; S.qk = ''; S.view = null; S.drag = false; applyState(); }
@@ -1506,7 +1579,10 @@ requestAnimationFrame(rainTick);
 /* ---------- load and auto-refresh ---------- */
 function load() {
   fetch('data.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+    var first = !D;
     if (!D || j.generated_ms !== D.generated_ms) { D = j; renderData(); applyState(); } else { renderNotice(); }
+    nextUpdate(); tourLabel();
+    if (first) { clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 8000); }
   }).catch(function () {
     if (!D) { $('checked').textContent = 'The data could not be loaded. Please reload the page in a minute.'; } else { renderNotice(); }
   });
