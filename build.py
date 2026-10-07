@@ -694,6 +694,13 @@ def hav(a,b,c,d):
     R=6371; p1,p2=math.radians(a),math.radians(c); x=math.sin((p2-p1)/2)**2+math.cos(p1)*math.cos(p2)*math.sin(math.radians(d-b)/2)**2
     return 2*R*math.asin(math.sqrt(x))
 quakes=[]; flags=[]; qok=True
+# ---------- earthquake alerts ----------
+# STRONG_MAG   : an earthquake this strong in the Philippine area in the last 24 hours raises an alert.
+# TSUNAMI_MAG  : this strong AND no deeper than TSUNAMI_DEPTH km raises a "possible tsunami" alert,
+#                as does any earthquake the USGS marks with its tsunami flag.
+# These are prompts to check official PHIVOLCS bulletins. They are not tsunami warnings.
+STRONG_MAG = 6.0; TSUNAMI_MAG = 6.5; TSUNAMI_DEPTH = 70
+EQ_ALERTS = []
 try:
     Q=QUAKES
     if Q is None: raise RuntimeError('no earthquake source reached')
@@ -709,17 +716,36 @@ try:
                 dd=hav(la,lo,r['lat'],r['lon'])
                 if dd<=100: flags.append((r['name'],p['mag'],round(dd),place,t)); hit.append(r['name'])
         dep=max(0,round(dep or 0)); dword='shallow' if dep<70 else 'mid-depth' if dep<300 else 'very deep'
+        qid=f'q{len(quakes)}'; tsu_poss=recent and (p.get('tsunami') is True or (p['mag']>=TSUNAMI_MAG and dep<=TSUNAMI_DEPTH)); strong=recent and p['mag']>=STRONG_MAG
+        whenq=f"{day(t)}, {clock_plain(t)}"
+        if tsu_poss: EQ_ALERTS.append(dict(kind='tsunami',q=qid,ms=p['time'],text=f"Possible tsunami: magnitude {p['mag']:.1f} earthquake, {place} ({whenq}). Check PHIVOLCS tsunami bulletins now, especially for coastal airports."))
+        elif strong: EQ_ALERTS.append(dict(kind='strong',q=qid,ms=p['time'],text=f"Strong earthquake: magnitude {p['mag']:.1f}, {place} ({whenq}). Nearest airport: {near['name']}, about {dkm} km away."))
+        elif hit: EQ_ALERTS.append(dict(kind='flag',q=qid,ms=p['time'],text=f"Earthquake near {', '.join(hit)}: magnitude {p['mag']:.1f}, {place} ({whenq}). Check runways and facilities."))
         if hit: todo='Earthquake flag. Check runways, buildings and equipment at '+', '.join(hit)+' before normal work continues.'
         elif p['mag']<5.0: todo='No action needed. No airport flag: a flag needs magnitude 5.0 or stronger within 100 km of an airport in the last 24 hours.'
         elif not recent: todo='No action needed. This earthquake is more than 24 hours old and is shown for reference.'
         else: todo='No action needed. No airport is within 100 km of this earthquake.'
         quakes.append(dict(id=f'q{len(quakes)}',mag=p['mag'],place=place,x=x,y=y,onmap=(0<=x<=100 and 0<=y<=100),op=('1' if recent else '0.5'),size=round(14+(p['mag']-4.5)*16),
             title=f"Magnitude {p['mag']:.1f} earthquake",where=place+'.',when=f"{day(t)}, {clock_plain(t)} (Philippine time)."+(' Within the last 24 hours.' if recent else ''),
-            depth=f"About {dep} km below ground ({dword}).",tsu=(f'{QSRC} has linked a tsunami notice to this earthquake. Check official tsunami bulletins for coastal airports.' if p.get('tsunami') else (f'No tsunami notice is linked to this earthquake ({QSRC}).' if p.get('tsunami') is False else f'{QSRC} data does not include tsunami notices. For a strong earthquake at sea, check PHIVOLCS tsunami bulletins.')),after=('USGS has published an aftershock forecast for this earthquake.' if 'oaf' in (p.get('types') or '') else 'Smaller earthquakes can follow in the same area over the next days. No official aftershock forecast has been published for this one.')+(f" {p['felt']} {'person' if p['felt']==1 else 'people'} reported feeling it to {QSRC}." if p.get('felt') else ''),near=f"{near['name']}, about {dkm} km away.",todo=todo,src=SOURCE_NAMES[USED['quakes']]+'.',
+            depth=f"About {dep} km below ground ({dword}).",tsu=('Tsunami possible. This was a strong, shallow earthquake'+(' and USGS has flagged it for tsunami information' if p.get('tsunami') is True else '')+'. Check PHIVOLCS tsunami bulletins now, especially for coastal airports.') if tsu_poss else (f'{QSRC} has linked a tsunami notice to this earthquake. Check official tsunami bulletins for coastal airports.' if p.get('tsunami') else (f'No tsunami notice is linked to this earthquake ({QSRC}).' if p.get('tsunami') is False else f'{QSRC} data does not include tsunami notices. For a strong earthquake at sea, check PHIVOLCS tsunami bulletins.')),after=('USGS has published an aftershock forecast for this earthquake.' if 'oaf' in (p.get('types') or '') else 'Smaller earthquakes can follow in the same area over the next days. No official aftershock forecast has been published for this one.')+(f" {p['felt']} {'person' if p['felt']==1 else 'people'} reported feeling it to {QSRC}." if p.get('felt') else ''),near=f"{near['name']}, about {dkm} km away.",todo=todo,src=SOURCE_NAMES[USED['quakes']]+'.',
             line=f"{place}. {day(t)}, {clock_plain(t)}. Nearest airport: {near['name']}, about {dkm} km away."))
 except Exception as e:
-    qok=False; asof=None; quakes=[]; flags=[]; print('QUAKE ERROR',e,file=sys.stderr)
+    qok=False; asof=None; quakes=[]; flags=[]; EQ_ALERTS=[]; print('QUAKE ERROR',e,file=sys.stderr)
     if QUAKES is not None: PROBLEMS.append('Earthquake data could not be read.')
+# Cross-check: a large earthquake anywhere in the region that USGS marks with its tsunami flag
+# (this also catches strong earthquakes outside the Philippine area, which can still send a tsunami here).
+try:
+    _u = fetch('https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=' + (NOW - dt.timedelta(hours=24)).strftime('%Y-%m-%dT%H:%M:%S') +
+               '&minmagnitude=6.5&minlatitude=-10&maxlatitude=40&minlongitude=95&maxlongitude=160', tries=1, timeout=25)
+    for _f in ((_u or {}).get('features') or []):
+        _p = _f['properties']
+        if not _p.get('tsunami'): continue
+        if any(a['kind'] == 'tsunami' and abs(a['ms'] - _p['time']) < 15 * 60000 for a in EQ_ALERTS): continue      # already alerted from the main source
+        _t = dt.datetime.fromtimestamp(_p['time'] / 1000, dt.timezone.utc)
+        EQ_ALERTS.append(dict(kind='tsunami', q='', ms=_p['time'], text=f"Possible tsunami: magnitude {_p['mag']:.1f} earthquake, {_p.get('place') or 'in the region'} ({day(_t)}, {clock_plain(_t)}). USGS has flagged it for tsunami information. Check PHIVOLCS tsunami bulletins now."))
+except Exception as _e:
+    print('TSUNAMI CROSS-CHECK ERROR', _e, file=sys.stderr)
+EQ_ALERTS.sort(key=lambda a: ({'tsunami': 0, 'strong': 1, 'flag': 2}[a['kind']], -a['ms']))
 if flags:
     flag='Earthquake flag: '+'; '.join(f"{n} is about {d} km from a magnitude {m:.1f} earthquake ({pl}, {day(t)}, {clock_plain(t)})" for n,m,d,pl,t in flags)+'. Check runways and facilities before resuming normal work.'
 else: flag='No airport is within 100 km of a magnitude 5.0 or stronger earthquake in the last 24 hours.'
@@ -892,7 +918,7 @@ data=dict(
     quake_asof=(f"{day(asof)}, {clock_plain(asof)}" if asof else ''),
     quake_count=(f"{len(quakes)} earthquake{'' if len(quakes)==1 else 's'} of magnitude 4.5+ in the past 7 days (purple rings, tap one for details)." if asof else ''),
     ty_text=ty_main, ty_banner=ty_banner, ty_asof=(f"{'Aviation storm warnings' if SIGMET is not None else 'GDACS (backup source)'}, {day(NOW)}, {clock_plain(NOW)}" if tyok else ''),
-    quake_src=QSRC, source_status=SRC_STATUS, rain_chance=bool(RAIN_CHANCE), backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
+    quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
     sources=' '.join(src),
 )
