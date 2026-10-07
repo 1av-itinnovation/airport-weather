@@ -132,42 +132,283 @@ h2{font-size:18px;font-weight:900;color:#005687}
 .wxwhere{font-size:15px;font-weight:700}
 @media (max-width:640px){.wxframe{height:440px}}
 .empty{font-size:15px;color:#3F5563;padding:8px 0}
-.modal{position:fixed;left:0;top:0;right:0;bottom:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
-.modal.open{display:flex}
-.modal .back{position:absolute;left:0;top:0;width:100%;height:100%;border:none;padding:0;background:rgba(18,48,63,.6);cursor:pointer}
+/* =========================================================
+   MODALS
+   Responsive landscape layout with sticky modal header
+   ========================================================= */
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+
+.modal.open{
+  display:flex;
+}
+
+.modal .back{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:none;
+  padding:0;
+  background:rgba(18,48,63,.62);
+  cursor:pointer;
+}
+
+/* Main modal window */
 .modal .box{
   position:relative;
   width:min(1180px, calc(100vw - 32px));
   max-width:1180px;
+  height:min(90vh, 900px);
   max-height:calc(100vh - 32px);
+
   overflow-y:auto;
+  overflow-x:hidden;
+
   background:#FFFFFF;
   border-radius:12px;
-  padding:24px;
+  padding:0;
+
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+
+/* Sticky title / close bar */
+.modal .mh{
+  position:sticky;
+  top:0;
+  z-index:20;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+
+  padding:18px 24px 14px;
+
+  background:#FFFFFF;
+  border-bottom:1px solid #E2EBEF;
+}
+
+.modal .mh h2{
+  margin:0;
+  font-size:21px;
+  line-height:1.2;
+  color:#005687;
+}
+
+.modal .mh .btn{
+  flex:none;
+}
+
+/* Base typography */
+.modal h3{
+  margin:0;
+  font-size:17px;
+  font-weight:900;
+  line-height:1.3;
+  color:#005687;
+}
+
+.modal p,
+.modal li,
+.modal .t{
+  font-size:14px;
+  line-height:1.5;
+}
+
+.modal .box > p{
+  margin:0;
+  padding:16px 24px 0;
+}
+
+.modal .sec{
+  margin:0;
+  padding:14px 24px;
   display:flex;
   flex-direction:column;
-  gap:18px;
-  box-shadow:0 8px 32px rgba(0,0,0,.3);
+  gap:10px;
 }
-.modal .mh{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.modal h2{font-size:20px}.modal h3{font-size:17px;font-weight:900;color:#005687}
-.modal p,.modal li,.modal .t{font-size:15px;line-height:1.5}
-.modal .sec{display:flex;flex-direction:column;gap:8px}
-.modal ul{margin:0;padding-left:20px}.modal li{margin:0 0 4px 0}
-.modal .lv{display:flex;gap:10px;align-items:flex-start}.modal .lv .c{width:96px;flex:none;display:flex}
-.modal .src{display:flex;flex-direction:column;gap:2px}.modal .src b{font-size:15px;font-weight:900}
 
-/* Help modal landscape layout */
-#modal .box > .sec:nth-of-type(n+2){
+.modal ul{
+  margin:0;
+  padding-left:20px;
+}
+
+.modal li{
+  margin:0 0 6px 0;
+}
+
+.modal .lv{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  min-width:0;
+}
+
+.modal .lv .c{
+  width:64px;
+  flex:0 0 64px;
+  display:flex;
+}
+
+.modal .src{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+.modal .src b{
+  font-size:15px;
+  font-weight:900;
+}
+
+/* =========================================================
+   HELP MODAL — 1. HOW TO READ IT
+   ========================================================= */
+
+#modal .box > .sec:nth-of-type(2){
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  column-gap:32px;
-  row-gap:18px;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  column-gap:36px;
+  row-gap:10px;
   align-items:start;
 }
 
-#modal .box > .sec:nth-of-type(n+2) > h3{
+#modal .box > .sec:nth-of-type(2) > h3{
   grid-column:1 / -1;
+}
+
+#modal .box > .sec:nth-of-type(2) > ul{
+  grid-column:1 / -1;
+  margin-top:4px;
+}
+
+#modal .box > .sec:nth-of-type(2) .lv{
+  min-height:34px;
+}
+
+/* =========================================================
+   HELP MODAL — 2. DATA SOURCES
+   ========================================================= */
+
+#modal .box > .sec:nth-of-type(3){
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  column-gap:36px;
+  row-gap:14px;
+  align-items:start;
+}
+
+#modal .box > .sec:nth-of-type(3) > h3,
+#modal .box > .sec:nth-of-type(3) > p{
+  grid-column:1 / -1;
+}
+
+#modal .box > .sec:nth-of-type(3) .src{
+  min-width:0;
+}
+
+/* =========================================================
+   HELP MODAL — 3. RULES
+   ========================================================= */
+
+#modal .box > .sec:nth-of-type(4){
+  display:block;
+}
+
+#modal .box > .sec:nth-of-type(4) > ul{
+  columns:2;
+  column-gap:42px;
+  margin-top:2px;
+}
+
+#modal .box > .sec:nth-of-type(4) li{
+  break-inside:avoid;
+  margin-bottom:9px;
+}
+
+/* =========================================================
+   HELP MODAL — 4. DATA ON SCREEN
+   ========================================================= */
+
+#modal .box > .sec:nth-of-type(5){
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(420px,520px);
+  column-gap:32px;
+  row-gap:10px;
+  align-items:start;
+}
+
+#modal .box > .sec:nth-of-type(5) > h3{
+  grid-column:1 / -1;
+}
+
+#modal .box > .sec:nth-of-type(5) > p:nth-of-type(1),
+#modal .box > .sec:nth-of-type(5) > p:nth-of-type(2),
+#modal .box > .sec:nth-of-type(5) > p:nth-of-type(3){
+  grid-column:1;
+}
+
+#modal .box > .sec:nth-of-type(5) > .srcgrid{
+  grid-column:2;
+  grid-row:2 / span 3;
+  align-self:start;
+}
+
+#modal .box > .sec:nth-of-type(5) > .small{
+  grid-column:1 / -1;
+  margin-top:2px;
+}
+
+#modal .srcgrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  min-width:0;
+}
+
+#modal .srcbox{
+  min-width:0;
+}
+
+/* =========================================================
+   HELP MODAL — 5. LIMITATIONS
+   ========================================================= */
+
+#modal .box > .sec:nth-of-type(6){
+  padding-bottom:24px;
+}
+
+#modal .box > .sec:nth-of-type(6) ul{
+  max-width:1000px;
+}
+
+/* Windy modal remains compact */
+.modal .box.wide{
+  max-width:1000px;
+}
+
+/* =========================================================
+   MODAL RESPONSIVE BREAKPOINTS
+   ========================================================= */
+
+@media (max-width:1000px){
+  #modal .box > .sec:nth-of-type(5){
+    grid-template-columns:minmax(0,1fr);
+  }
+
+  #modal .box > .sec:nth-of-type(5) > .srcgrid{
+    grid-column:1;
+    grid-row:auto;
+  }
 }
 
 @media (max-width:900px){
@@ -178,16 +419,58 @@ h2{font-size:18px;font-weight:900;color:#005687}
   .modal .box{
     width:100%;
     max-width:none;
+    height:auto;
     max-height:calc(100vh - 16px);
-    padding:18px;
+    border-radius:10px;
   }
 
-  #modal .box > .sec:nth-of-type(n+2){
+  .modal .mh{
+    padding:16px;
+  }
+
+  .modal .box > p,
+  .modal .sec{
+    padding-left:16px;
+    padding-right:16px;
+  }
+
+  #modal .box > .sec:nth-of-type(2),
+  #modal .box > .sec:nth-of-type(3){
     display:flex;
     flex-direction:column;
   }
+
+  #modal .box > .sec:nth-of-type(4) > ul{
+    columns:1;
+  }
+
+  #modal .box > .sec:nth-of-type(5){
+    display:flex;
+    flex-direction:column;
+  }
+
+  #modal .box > .sec:nth-of-type(5) > .srcgrid{
+    width:100%;
+  }
 }
-  
+
+@media (max-width:560px){
+  .modal .mh h2{
+    font-size:18px;
+  }
+
+  .modal p,
+  .modal li,
+  .modal .t{
+    font-size:13px;
+  }
+
+  .modal .lv .c{
+    width:64px;
+    flex-basis:64px;
+  }
+}
+
 @keyframes wxRing{0%{transform:scale(.5);opacity:.95}100%{transform:scale(2.8);opacity:0}}
 @keyframes wxBolt{0%,26%,100%{opacity:0}3%{opacity:1}7%{opacity:.15}11%{opacity:1}16%{opacity:.4}20%{opacity:1}}
 @keyframes wxFlash{0%,28%,100%{opacity:0}3%{opacity:.9}7%{opacity:.1}11%{opacity:.75}20%{opacity:.5}}
