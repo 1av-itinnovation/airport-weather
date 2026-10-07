@@ -282,6 +282,48 @@ try: RAIN_CHANCE = load_rain_chance()
 except Exception as _e:
     print('RAIN CHANCE ERROR', _e, file=sys.stderr); RAIN_CHANCE = {}
 
+# ---------- 7-day outlook ----------
+# A week-ahead view per airport from Open-Meteo: chance of rain, a day and a night picture
+# (including thunderstorms), and the high and low temperature. It is a computer forecast for
+# planning only and never affects alert levels. If it cannot be reached, the panel is left out.
+_HEAVY = (65, 67, 82, 96, 99); _MOD = (63, 66, 81, 95); _LIGHT = (51, 53, 55, 56, 57, 61, 80); _CLOUD = (3, 45, 48); _PART = (1, 2)
+def wmo_rank(code):
+    """International weather code -> (thunderstorm?, how wet/cloudy 0-5)."""
+    c = int(code)
+    return (c >= 95, 5 if c in _HEAVY else 4 if c in _MOD else 3 if c in _LIGHT else 2 if c in _CLOUD else 1 if c in _PART else 0)
+def wmo_pic(codes, night):
+    """Picture code for a group of hours: the most significant weather in the group."""
+    codes = [c for c in codes if c is not None]
+    if not codes: return ''
+    th, wet = max(wmo_rank(c) for c in codes)
+    return 'cpolrh'[wet] + ('n' if night else 'd') + ('t' if th else '')
+def load_week():
+    out = {}
+    url = ('https://api.open-meteo.com/v1/forecast?latitude=' + ','.join(f'{a[4]:.4f}' for a in APTS) + '&longitude=' + ','.join(f'{a[5]:.4f}' for a in APTS) +
+           '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&hourly=weather_code&timezone=Asia%2FManila&forecast_days=8')
+    d = fetch(url, tries=2, timeout=40)
+    if d is None: return out
+    if isinstance(d, dict): d = [d]
+    for a, j in zip(APTS, d):
+        try:
+            dy = j['daily']; hr = dict(zip(j['hourly']['time'], j['hourly']['weather_code']))
+            days = []
+            for i, day_ in enumerate(dy['time'][:7]):
+                nxt = (dt.date.fromisoformat(day_) + dt.timedelta(days=1)).isoformat()
+                dcodes = [hr.get(f'{day_}T{h:02d}:00') for h in range(6, 18)]
+                ncodes = [hr.get(f'{day_}T{h:02d}:00') for h in range(18, 24)] + [hr.get(f'{nxt}T{h:02d}:00') for h in range(0, 6)]
+                tmax, tmin, pp, mm = dy['temperature_2m_max'][i], dy['temperature_2m_min'][i], dy['precipitation_probability_max'][i], dy['precipitation_sum'][i]
+                if tmax is None or tmin is None: continue
+                days.append([day_, (None if pp is None else int(round(pp))), wmo_pic(dcodes, False) or wmo_pic([dy['weather_code'][i]], False), wmo_pic(ncodes, True) or wmo_pic([dy['weather_code'][i]], True),
+                             int(math.floor(tmax + 0.5)), int(math.floor(tmin + 0.5)), (None if mm is None else round(mm, 1))])
+            if len(days) >= 5: out[a[1]] = days
+        except Exception as e:
+            print('WEEK PARSE ERROR', a[1], e, file=sys.stderr)
+    return out
+try: WEEK = load_week()
+except Exception as _e:
+    print('WEEK ERROR', _e, file=sys.stderr); WEEK = {}
+
 # ---------- earthquakes: every source is reshaped into the same layout ----------
 def _feat(t, lat, lon, depth, mag, place, tsunami=None, felt=None, types=''):
     return {'properties': {'mag': mag, 'place': place, 'time': int(t.timestamp() * 1000), 'tsunami': tsunami, 'felt': felt, 'types': types},
@@ -682,6 +724,7 @@ for i,ic,nm_,rg_,la,lo,x_,y_ in APTS:
     if r is not None: pass
     else: r=dict(level='nodata',now='No weather data could be reached for this airport.',next='No data.',todo='Check local conditions directly.',upd='No update available.',src='No source reachable.',est=False,what='',when='',sort=0,tmr='No data.',days='No data.',conf='None: no source could be reached for this airport.',t=0,twhat='',twhen='',tsort=0,test=False)
     rename_est(r,m)
+    r['week']=WEEK.get(ic,[])
     if not r['est'] and r['level']!='nodata':
         if r['level']=='danger': TS_AIRPORTS.append(dict(id=i,a=int(NOW.timestamp()*1000),b=int((NOW+dt.timedelta(hours=1)).timestamp()*1000)))
         for f in (tf['fcsts'] if tf else []):
@@ -907,7 +950,7 @@ try:
 except Exception:
     RECENT = []
 RECENT = sorted(set(RECENT + [int(NOW.timestamp()*1000)]))[-13:]
-KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc')
+KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc','week')
 QKEEP=('id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
 data=dict(
     generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000), recent=RECENT,
