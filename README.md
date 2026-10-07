@@ -4,8 +4,6 @@ A view-only dashboard that watches the weather at the 36 Philippine airports ser
 and Cebgo, together with nearby earthquakes and typhoons. It shows which airports need attention,
 why, and how reliable each reading is.
 
-Developed by the 1AV IT Department. Created under 1AV IT Innovation by Jake V Borras.
-
 ## Alert levels
 
 | Level | Meaning | What staff do |
@@ -60,18 +58,18 @@ Developed by the 1AV IT Department. Created under 1AV IT Innovation by Jake V Bo
 
 ## How it works
 
-1. **Collect.** On a schedule, `build.py` reads the latest public data from the sources below. The
+1. **Collect.** On a schedule, reads the latest public data from the sources below. The
    schedule asks for every 10 minutes; in practice the hosting service runs it about every 20 to 25
    minutes.
 2. **Choose the best source.** For each kind of data it uses the first-choice source. If that cannot
    be reached, it switches to a backup by itself.
 3. **Apply the rules.** It works out each airport's alert level, the outlooks, the earthquake and
-   tsunami alerts and the typhoon watch, and writes the result to `docs/data.json`.
-4. **Show.** The page (`docs/index.html`) reads that file and looks for newer data by itself: every
+   tsunami alerts and the typhoon watch, and writes the result.
+4. **Show.** The page reads that file and looks for newer data by itself: every
    5 minutes while an update is not due, every minute once it is. Viewers never need to reload.
 5. **Flag problems.** A yellow notice appears when a backup is in use or the data is old.
 
-The moving rain layer is built separately every 3 hours and saved to `docs/rain.json`.
+The moving rain layer is built separately every 3 hours and saved.
 
 ## Where the data comes from
 
@@ -121,17 +119,6 @@ used. Idle backups are tested every 6 hours and the result is shown in Help.
   to whichever source is in use.
 - PAGASA's public typhoon bulletins are not published as data, so they are not read directly.
   Confirm typhoon decisions against PAGASA.
-
-## Files
-
-| File | Purpose |
-|---|---|
-| `build.py` | Collects the data, chooses sources, applies the rules. |
-| `docs/index.html` | The dashboard page. |
-| `docs/data.json` | Latest alert data, rewritten at every check. |
-| `docs/rain.json` | Rain forecast grid for the moving rain layer. |
-| `docs/assets/` | Map image and 1AV logo. |
-| `.github/workflows/refresh.yml` | The refresh schedule. |
 
 ## Data credits
 
