@@ -191,7 +191,7 @@ h2{font-size:18px;font-weight:900;color:#005687}
   justify-content:space-between;
   gap:16px;
 
-  padding:18px 24px 14px;
+  padding:16px 22px 13px;
 
   background:#FFFFFF;
   border-bottom:1px solid #E2EBEF;
@@ -231,7 +231,7 @@ h2{font-size:18px;font-weight:900;color:#005687}
 
 .modal .sec{
   margin:0;
-  padding:14px 24px;
+  padding:13px 22px;
   display:flex;
   flex-direction:column;
   gap:10px;
@@ -293,6 +293,16 @@ h2{font-size:18px;font-weight:900;color:#005687}
 
 #modal .box > .sec:nth-of-type(2) .lv{
   min-height:34px;
+  display:grid;
+  grid-template-columns:88px minmax(0,1fr);
+  column-gap:10px;
+  align-items:start;
+}
+
+#modal .box > .sec:nth-of-type(2) .lv .c{
+  width:auto;
+  min-width:88px;
+  justify-content:flex-start;
 }
 
 /* =========================================================
@@ -339,33 +349,34 @@ h2{font-size:18px;font-weight:900;color:#005687}
    HELP MODAL — 4. DATA ON SCREEN
    ========================================================= */
 
-#modal .box > .sec:nth-of-type(5){
+#modal .help-data{
+  display:block;
+}
+
+#modal .help-data-grid{
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(420px,520px);
-  column-gap:32px;
-  row-gap:10px;
+  grid-template-columns:minmax(0,1fr) minmax(430px,520px);
+  gap:24px 32px;
   align-items:start;
 }
 
-#modal .box > .sec:nth-of-type(5) > h3{
-  grid-column:1 / -1;
+#modal .help-data-copy{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  min-width:0;
 }
 
-#modal .box > .sec:nth-of-type(5) > p:nth-of-type(1),
-#modal .box > .sec:nth-of-type(5) > p:nth-of-type(2),
-#modal .box > .sec:nth-of-type(5) > p:nth-of-type(3){
-  grid-column:1;
+#modal .help-data-copy p{
+  margin:0;
 }
 
-#modal .box > .sec:nth-of-type(5) > .srcgrid{
-  grid-column:2;
-  grid-row:2 / span 3;
-  align-self:start;
+#modal .help-data .srcgrid{
+  min-width:0;
 }
 
-#modal .box > .sec:nth-of-type(5) > .small{
-  grid-column:1 / -1;
-  margin-top:2px;
+#modal .help-data > .small{
+  margin-top:16px;
 }
 
 #modal .srcgrid{
@@ -401,13 +412,8 @@ h2{font-size:18px;font-weight:900;color:#005687}
    ========================================================= */
 
 @media (max-width:1000px){
-  #modal .box > .sec:nth-of-type(5){
+  #modal .help-data-grid{
     grid-template-columns:minmax(0,1fr);
-  }
-
-  #modal .box > .sec:nth-of-type(5) > .srcgrid{
-    grid-column:1;
-    grid-row:auto;
   }
 }
 
@@ -444,12 +450,14 @@ h2{font-size:18px;font-weight:900;color:#005687}
     columns:1;
   }
 
-  #modal .box > .sec:nth-of-type(5){
+  #modal .help-data-grid{
     display:flex;
     flex-direction:column;
+    gap:16px;
   }
 
-  #modal .box > .sec:nth-of-type(5) > .srcgrid{
+  #modal .help-data-copy,
+  #modal .help-data .srcgrid{
     width:100%;
   }
 }
@@ -750,12 +758,16 @@ header.top,.filters,.cols{width:100%}
         <li><strong>Backups.</strong> If a first-choice source cannot be reached, its backup is used and a yellow notice at the top of the page says so.</li>
       </ul>
     </div>
-    <div class="sec">
+    <div class="sec help-data">
       <h3>4. About the data on screen now</h3>
-      <p id="hChecked"></p>
-      <p id="hRain"></p>
-      <p>The boxes below show which source supplied each kind of data at this check. A first-choice source that could not be reached is marked, and its backup is used instead.</p>
-      <div class="srcgrid" id="srcGrid"></div>
+      <div class="help-data-grid">
+        <div class="help-data-copy">
+          <p id="hChecked"></p>
+          <p id="hRain"></p>
+          <p>The boxes below show which source supplied each kind of data at this check. A first-choice source that could not be reached is marked, and its backup is used instead.</p>
+        </div>
+        <div class="srcgrid" id="srcGrid"></div>
+      </div>
       <p class="small" id="sources"></p>
     </div>
     <div class="sec">
