@@ -926,6 +926,8 @@ header.top{padding:10px 16px;border-radius:10px}
 /* ---------- automatic tour of Danger airports ---------- */
 .tour{position:absolute;left:6px;top:6px;max-width:calc(100% - 170px);display:flex;align-items:center;gap:8px;background:#FFFFFF;border:1px solid #C62828;border-radius:6px;padding:4px 5px 4px 9px;font-size:11px;font-weight:600;color:#12303F;box-shadow:0 1px 3px rgba(18,48,63,.15)}
 .tour.off{border-color:#CAE2E7;color:#5B7180}
+.tour.home{border-color:#0077C8}
+.tour.home .tdot{background:#0077C8}
 .tour .tdot{width:8px;height:8px;border-radius:50%;background:#C62828;flex:none}
 .tour.off .tdot{background:#9DBFD0}
 .tour.run .tdot{animation:tourPulse 1.2s ease-in-out infinite}
@@ -1070,6 +1072,7 @@ header.top{padding:10px 16px;border-radius:10px}
         <li><strong>Earthquakes and Typhoon tabs.</strong> The panel on the right has tabs for airport details, recent earthquakes and the typhoon watch.</li>
         <li><strong>Rain and thunder animation.</strong> The airport map plays the forecast rain for the next 24 hours by itself, with lightning marks where an official thunderstorm warning or airport forecast applies. Use Stop and Play, or drag the slider to any hour. It is a computer forecast, so the alert levels take priority when the two differ. Lightning marks come from official thunderstorm area warnings and official airport forecasts, so they cover the next few hours and the larger airports only; rain with no lightning mark does not mean no thunder. A more detailed Windy.com map can be opened with the Windy map button: it is a different forecast, so the two can differ, and inside it you press its own play button to step through the hours.</li>
         <li><strong>Earthquakes and typhoons.</strong> Earthquakes cannot be forecast; the list shows what has already happened. The typhoon watch uses storm warnings that look 6 hours ahead only, so it is not a multi-day track. It is a computer forecast, so the alert levels take priority when the two differ.</li>
+        <li><strong>Your nearest airport.</strong> When the page is opened or reloaded, the browser asks once for your location. If you allow it, the map first shows the airport nearest to you. Your location is used only inside your browser; it is not sent anywhere or stored. If you decline, nothing changes.</li>
         <li><strong>Auto-show Danger.</strong> When any airport is at Danger and nobody is using the screen, the map selects each Danger airport in turn, zooms to it and shows its details, then returns to the whole map and repeats. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
         <li><strong>The time at the top.</strong> It shows when the data was last checked and when the next update is expected. New data is collected on a schedule, and an open page looks for it every minute, so you do not need to reload. The next-update time is calculated automatically: the time of the last update plus the average gap between recent updates. It is an estimate, because the schedule does not run at exact times.</li>
       </ul>
@@ -1342,7 +1345,6 @@ $('wxAll').addEventListener('click', function () { WX.follow = false; wxUpdate()
    bases its estimate on that. */
 var RAINSEEN = 0;
 var CYCLE_MIN = 10;                       // what the schedule file asks for
-var PUBLISH_MIN = 2;                      // typical delay between a refresh starting and the page going live
 var START_MIN = 22;                       // used only until two scheduled refreshes have been recorded
 var AVG_OVER = 6;                         // average the gaps between this many recent scheduled refreshes
 // Simple automatic calculation: the data file lists when recent refreshes ran. The page averages the
@@ -1352,12 +1354,12 @@ function typicalGap() {
   for (var i = 1; i < r.length; i++) { var m = (r[i] - r[i - 1]) / 60000; if (m >= 8 && m <= 180) g.push(m); }   // under 8 minutes = a manual run
   g = g.slice(-AVG_OVER);
   if (!g.length) return START_MIN;
-  return Math.max(CYCLE_MIN, g.reduce(function (a, b) { return a + b; }, 0) / g.length);
+  return Math.max(CYCLE_MIN, Math.round(g.reduce(function (a, b) { return a + b; }, 0) / g.length));      // whole minutes, so the label and the countdown agree
 }
-function chipText() { return 'Live, updates about every ' + Math.round(typicalGap()) + ' minutes'; }
+function chipText() { return 'Live, updates about every ' + typicalGap() + ' minutes'; }
 function nextUpdate() {
   var el = $('nextUp'); if (!D) { el.textContent = ''; return; }
-  var gap = typicalGap(), next = D.generated_ms + (gap + PUBLISH_MIN) * 60000, now = Date.now(), mins = Math.ceil((next - now) / 60000);
+  var gap = typicalGap(), next = D.generated_ms + gap * 60000, now = Date.now(), mins = Math.ceil((next - now) / 60000);        // next = last check + interval
   var t = new Date(next).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
   el.classList.toggle('late', mins < 1);
   el.textContent = mins >= 1 ? 'Next update about ' + t + ' (in ' + mins + ' min)' : (now - next < 10 * 60000 ? 'Next update expected any moment' : 'Update is running late');
@@ -1374,9 +1376,36 @@ var TOUR_IDLE_MS = 60000;                 // wait this long after someone last t
 var TOUR = { on: true, idx: -1, timer: null, lastUser: 0, active: false };
 try { if (window.localStorage && localStorage.getItem('awm-tour') === 'off') TOUR.on = false; } catch (e) {}
 if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { try { if (!localStorage.getItem('awm-tour')) TOUR.on = false; } catch (e) { TOUR.on = false; } }
+/* On first load only: ask the browser where the viewer is and show the nearest airport once.
+   The position is used inside the browser only; it is never sent or stored. */
+var HOME_MAX_KM = 300;                    // ignore the result if the viewer is further than this from any airport
+var HOME = { pending: true, id: '', active: false, started: false };
+function kmBetween(a, b, c, d) {
+  var R = 6371, p1 = a * Math.PI / 180, p2 = c * Math.PI / 180, x = Math.sin((p2 - p1) / 2), y = Math.sin((d - b) * Math.PI / 360);
+  return 2 * R * Math.asin(Math.sqrt(x * x + Math.cos(p1) * Math.cos(p2) * y * y));
+}
+function locateHome() {
+  if (HOME.started) return; HOME.started = true;
+  var finished = false, finish = function () { if (!finished) { finished = true; HOME.pending = false; } };
+  if (!navigator.geolocation) { finish(); return; }
+  setTimeout(finish, 15000);              // do not hold up the page if nobody answers the browser's question
+  try {
+    navigator.geolocation.getCurrentPosition(function (p) {
+      if (finished) return;
+      var best = null, bk = 1e9;
+      D.airports.forEach(function (a) { if (typeof a.lat !== 'number') return; var k = kmBetween(p.coords.latitude, p.coords.longitude, a.lat, a.lon); if (k < bk) { bk = k; best = a; } });
+      finish();
+      if (!best || bk > HOME_MAX_KM || TOUR.lastUser || S.sel || S.qk || modal.classList.contains('open')) return;   // the viewer has already started using the page
+      HOME.id = best.id; HOME.active = true; selectAirport(best.id); tourLabel();
+      clearTimeout(TOUR.timer); TOUR.timer = setTimeout(function () { HOME.active = false; tourLabel(); tourStep(); }, TOUR_SHOW_MS);
+    }, finish, { timeout: 12000, maximumAge: 600000, enableHighAccuracy: false });
+  } catch (e) { finish(); }
+}
 function dangerList() { return D ? sorted(D.airports.filter(function (a) { return a.level === 'danger' && inRegion(a); })) : []; }
 function tourLabel() {
   var bar = $('tourBar'), n = dangerList().length;
+  bar.classList.toggle('home', HOME.active); $('tourBtn').hidden = HOME.active;
+  if (HOME.active) { var h = byId(HOME.id); bar.hidden = false; bar.classList.remove('off'); bar.classList.add('run'); $('tourText').textContent = 'Your nearest airport: ' + (h ? h.name : ''); return; }
   if (!n) { bar.hidden = true; return; }
   bar.hidden = false; bar.classList.toggle('off', !TOUR.on); bar.classList.toggle('run', TOUR.on && TOUR.active);
   $('tourBtn').textContent = TOUR.on ? 'Turn off' : 'Turn on'; $('tourBtn').setAttribute('aria-pressed', TOUR.on ? 'true' : 'false');
@@ -1384,6 +1413,7 @@ function tourLabel() {
 }
 function tourStep() {
   clearTimeout(TOUR.timer);
+  if (HOME.pending || HOME.active) { TOUR.timer = setTimeout(tourStep, 1000); return; }     // wait for the nearest-airport step
   if (!D || !TOUR.on) { TOUR.active = false; TOUR.idx = -1; tourLabel(); return; }
   var blocked = document.hidden || modal.classList.contains('open') || WX.open || S.day !== 'today' || !(S.filter === 'alerts' || S.filter === 'danger');
   if (blocked || Date.now() - TOUR.lastUser < TOUR_IDLE_MS) { TOUR.active = false; TOUR.idx = -1; tourLabel(); TOUR.timer = setTimeout(tourStep, 5000); return; }
@@ -1396,6 +1426,7 @@ function tourStep() {
 function tourUser(e) {
   if (e && e.target && e.target.closest && e.target.closest('#tourBar')) return;
   TOUR.lastUser = Date.now();
+  if (HOME.active) { HOME.active = false; tourLabel(); clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 5000); }
   if (TOUR.active) { TOUR.active = false; TOUR.idx = -1; tourLabel(); clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 5000); }
 }
 ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, tourUser, { capture: true, passive: true }); });
@@ -1603,7 +1634,7 @@ function load() {
     if (!D || j.generated_ms !== D.generated_ms) { D = j; renderData(); applyState(); } else { renderNotice(); }
     if (j.generated_ms !== RAINSEEN) { RAINSEEN = j.generated_ms; if (RAIN && j.generated_ms - RAIN.generated_ms > 3 * 3600000) loadRain(); }
     nextUpdate(); tourLabel();
-    if (first) { clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 8000); }
+    if (first) { locateHome(); clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 8000); }
   }).catch(function () {
     if (!D) { $('checked').textContent = 'The data could not be loaded. Please reload the page in a minute.'; } else { renderNotice(); }
   });
