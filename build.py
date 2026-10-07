@@ -840,10 +840,19 @@ SRC_STATUS=[]
 for g in SOURCE_ORDER:
     SRC_STATUS.append(dict(what=GROUP_LABEL[g], used=(SOURCE_NAMES[USED[g]] if USED[g] else 'None reached'), ok=bool(USED[g]), first=(USED[g]==SOURCE_ORDER[g][0]),
         chain=[_chain_entry(g,i,k,st,note) for i,(k,st,note) in enumerate(STATUS[g])]))
+# Times of the most recent refreshes, so the page can learn how often the schedule really runs
+# and show a realistic "next update" time (the hosting schedule often starts late).
+try:
+    with open(OUT, encoding='utf-8') as _f: _pd = json.load(_f)
+    RECENT = [int(x) for x in (_pd.get('recent') or [])]
+    if _pd.get('generated_ms') and int(_pd['generated_ms']) not in RECENT: RECENT.append(int(_pd['generated_ms']))
+except Exception:
+    RECENT = []
+RECENT = sorted(set(RECENT + [int(NOW.timestamp()*1000)]))[-13:]
 KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test')
 QKEEP=('id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
 data=dict(
-    generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000),
+    generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000), recent=RECENT,
     checked=' '.join(parts), problems=PROBLEMS,
     airports=[{k:r[k] for k in KEEP} for r in rows],
     quakes=[{k:q[k] for k in QKEEP} for q in quakes],
