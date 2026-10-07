@@ -1168,6 +1168,10 @@ body{background:var(--page);color:var(--ink)}
   .app .stabs button{height:40px;padding:0 10px}
   .app .col{padding:10px}
 }
+
+/* ---------- help window: sub-headings inside section 1 ---------- */
+#modal .box > .sec .subh{margin:10px 0 0;padding:0;font-size:13px;font-weight:600;color:#12303F;border:none}
+#modal .box > .sec .subh + ul{margin-top:4px}
 </style>
 </head>
 <body>
@@ -1287,46 +1291,73 @@ body{background:var(--page);color:var(--ink)}
   <button class="back" id="modalBack" aria-label="Close help"></button>
   <div class="box" role="dialog" aria-modal="true" aria-label="How this dashboard works">
     <div class="mh"><h2>How this dashboard works</h2><button class="btn" id="modalClose">Close</button></div>
-    <p>This dashboard watches the weather at the 36 Philippine airports served by Cebu Pacific and Cebgo, plus earthquakes and typhoons nearby. It tells you which airports need attention and why.</p>
+    <p>This dashboard watches the weather at the 36 Philippine airports served by Cebu Pacific and Cebgo, plus earthquakes and typhoons nearby. It shows which airports need attention, why, and how reliable each reading is.</p>
     <div class="sec">
-      <h3>1. How to read it</h3>
+      <h3>1. How to read and use it</h3>
       <div class="lv"><span class="c"><span class="pill normal">Normal</span></span><span class="t">No bad weather expected today. Shown on the map only.</span></div>
       <div class="lv"><span class="c"><span class="pill advisory">Advisory</span></span><span class="t">Bad weather is expected later today. Plan around it.</span></div>
       <div class="lv"><span class="c"><span class="pill warning">Warning</span></span><span class="t">Bad weather is expected within 1 hour, or is already happening. As a precaution, be ready to pause ramp work and stay careful.</span></div>
       <div class="lv"><span class="c"><span class="pill danger">Danger</span></span><span class="t">A thunderstorm is at the airport right now. Work at the ramp with extra care. Safety is the priority at all times.</span></div>
+      <p class="subh">The screen</p>
       <ul>
-        <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. Purple rings are earthquakes.</li>
-        <li><strong>Tap for details.</strong> Tap any airport dot or earthquake ring to see the full report. Use the + and − buttons, pinch, or double-tap to zoom. The ALL button shows the whole map again.</li>
-        <li><strong>Estimate.</strong> A reading marked Estimate comes from a computer forecast for that location, because the airport has no official weather report. Airports with normal weather appear on the map only, not in the lists.</li>
-        <li><strong>Filters.</strong> The coloured boxes at the top filter the map and the airport list by level, and show how many airports are at each level. Today and Tomorrow switch the list between today's alerts and airports with bad weather forecast for tomorrow. Region narrows everything to Luzon, Visayas or Mindanao.</li>
-        <li><strong>Earthquakes and Typhoon tabs.</strong> The panel on the right has tabs for airport details, recent earthquakes and the typhoon watch.</li>
-        <li><strong>Rain and thunder animation.</strong> The airport map plays the forecast rain for the next 24 hours by itself, with lightning marks where an official thunderstorm warning or airport forecast applies. Use Stop and Play, or drag the slider to any hour. It is a computer forecast, so the alert levels take priority when the two differ. Lightning marks come from official thunderstorm area warnings and official airport forecasts, so they cover the next few hours and the larger airports only; rain with no lightning mark does not mean no thunder. A more detailed Windy.com map can be opened with the Windy map button: it is a different forecast, so the two can differ, and inside it you press its own play button to step through the hours.</li>
-        <li><strong>Earthquakes and typhoons.</strong> Earthquakes cannot be forecast; the list shows what has already happened. The typhoon watch uses storm warnings that look 6 hours ahead only, so it is not a multi-day track. It is a computer forecast, so the alert levels take priority when the two differ.</li>
-        <li><strong>Alerts.</strong> A coloured bar appears under the title whenever an airport is at Danger, a strong earthquake has happened (magnitude 6.0 or more, or 5.0 or more within 100 km of an airport, in the last 24 hours), or a tsunami is possible (a strong, shallow earthquake, or one flagged by USGS). The browser tab also shows a warning sign. Press the bell at the top to turn on a sound for new alerts. A possible-tsunami alert is a prompt to check PHIVOLCS bulletins; it is not an official tsunami warning.</li>
-        <li><strong>Your nearest airport.</strong> When the page is opened or reloaded, the browser asks once for your location. If you allow it, the map first shows the airport nearest to you. Your location is used only inside your browser; it is not sent anywhere or stored. If you decline, nothing changes.</li>
+        <li><strong>Level tiles.</strong> The five tiles at the top show how many airports are at each level. Tap one to show only that level on the map and in the list. "Needs attention" shows Advisory, Warning and Danger together.</li>
+        <li><strong>Today and Tomorrow.</strong> Switches the list between today's alerts and airports with bad weather forecast for tomorrow.</li>
+        <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport.</li>
+        <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old.</li>
+        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. ALL shows the whole map again and clears the selection.</li>
+        <li><strong>Airport list.</strong> Lists the airports at the chosen level with what to expect and when. Tap a row to open that airport.</li>
+        <li><strong>Panel on the right.</strong> Details shows the selected airport or earthquake. Earthquakes lists those of the past 7 days. Typhoon shows storms being tracked. Windy map opens a more detailed rain map from Windy.com.</li>
+        <li><strong>On a phone.</strong> The map, the airport list and the details become three tabs.</li>
+      </ul>
+      <p class="subh">An airport's details</p>
+      <ul>
+        <li><strong>Right now and Rest of today.</strong> What the latest report or estimate says, with clock times.</li>
+        <li><strong>Rain in the next 12 hours.</strong> For each hour: the chance of rain as a percentage, a bar and a word for how heavy (Dry, Light, Moderate, Heavy), and the amount in millimetres. A lightning mark shows hours when the official airport forecast says a thunderstorm is possible.</li>
+        <li><strong>Tomorrow.</strong> What the official forecast and the estimate say about tomorrow.</li>
+        <li><strong>Next 7 days.</strong> For each day: the chance of rain, a day picture and a night picture (a lightning bolt means a thunderstorm is forecast), and the high and low temperature. It is for planning and is less certain the further ahead.</li>
+        <li><strong>What to do.</strong> The action that goes with the alert level.</li>
+        <li><strong>Confidence, Updated and Source.</strong> How far to trust the reading and why, when it was taken, and who supplied it.</li>
+      </ul>
+      <p class="subh">Rain on the map</p>
+      <ul>
+        <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Use Stop and Play, drag the slider to any hour, or press Hide rain.</li>
+        <li><strong>Lightning marks and dashed areas.</strong> These come only from official sources: thunderstorm area warnings and official airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
+        <li><strong>It is a picture of the forecast.</strong> It plays no part in the alert levels, which take priority when the two differ. The Windy map is a different forecast again, so it can differ from both.</li>
+      </ul>
+      <p class="subh">Alerts and what the page does by itself</p>
+      <ul>
+        <li><strong>Alert bar.</strong> A coloured bar appears under the title when an airport is at Danger, a strong earthquake has happened, or a tsunami is possible. The browser tab shows a warning sign as well. Tap a name or Details in the bar to go to it.</li>
+        <li><strong>Sound.</strong> Press the bell at the top to turn on a short chime for each new alert. Browsers only allow sound after someone has clicked on the page.</li>
+        <li><strong>Your nearest airport.</strong> When the page is opened or reloaded, the browser asks once for your location. If you allow it, the map first shows the airport nearest to you. Your location is used only inside your browser; it is not sent anywhere or stored.</li>
         <li><strong>Auto-show Danger.</strong> When any airport is at Danger and nobody is using the screen, the map selects each Danger airport in turn, zooms to it and shows its details, then returns to the whole map and repeats. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
-        <li><strong>The time at the top.</strong> It shows when the data was last checked and when the next update is expected. New data is collected on a schedule, and an open page looks for it every minute, so you do not need to reload. The next-update time is calculated automatically: the time of the last update plus the average gap between recent updates. It is an estimate, because the schedule does not run at exact times.</li>
+        <li><strong>The times at the top.</strong> "Checked" is when the data was last collected. "Next update" is that time plus the average gap between recent updates; it is an estimate, because the schedule does not run at exact times. An open page looks for new data every minute, so you never need to reload.</li>
+        <li><strong>Yellow notice.</strong> Appears when a backup source is in use or the data is more than 60 minutes old.</li>
       </ul>
     </div>
     <div class="sec">
       <h3>2. Where the data comes from</h3>
-      <p>Each kind of data has a first-choice source and one or more backups. If the first choice cannot be reached, the dashboard switches to the backup by itself. Section 4 below shows which source supplied the data on screen right now.</p>
-      <div class="src"><b>Official airport reports and forecasts</b><span class="t">Issued for the airport itself by aviation weather staff. This is the most reliable weather source. First choice: aviationweather.gov, the United States government aviation weather service. Backup: the NOAA data server, which carries the same official reports.</span></div>
+      <p>Each kind of data has a first-choice source and, where one exists, a backup. If the first choice cannot be reached, the dashboard switches to the backup by itself. Section 4 below shows which source supplied the data on screen right now.</p>
+      <div class="src"><b>Official airport reports and forecasts</b><span class="t">Issued for Philippine airports by PAGASA, the country's designated weather authority for aviation, and shared worldwide. This is the most reliable weather source. Read from aviationweather.gov, the United States government aviation weather service. Backup: the NOAA data server, which carries the same reports.</span></div>
       <div class="src"><b>Estimates</b><span class="t">For airports with no official report, a computer weather forecast for that exact location. These are marked Estimate. They show rain and wind only and cannot confirm a thunderstorm. First choice: MET Norway, the Norwegian national weather institute. Backup: Open-Meteo.</span></div>
-      <div class="src"><b>Storm and typhoon warnings</b><span class="t">First choice: official aviation storm warnings from aviationweather.gov, which show where a tropical cyclone is, how it is moving and where it will be in the next 6 hours. Backup: GDACS, the United Nations and European Union disaster alert system, which shows position only.</span></div>
-      <div class="src"><b>Earthquakes</b><span class="t">First choice: PHIVOLCS, the Philippine government agency with the most earthquake sensors inside the country. Backups: USGS (United States Geological Survey), then EMSC (European seismological centre). Different agencies can report slightly different magnitudes for the same earthquake.</span></div>
+      <div class="src"><b>Chance of rain and the 7-day outlook</b><span class="t">From Open-Meteo, a computer forecast. Used only for the hourly rain chance and the Next 7 days list. It never affects an alert level, and if it cannot be reached those two items are simply left out.</span></div>
+      <div class="src"><b>Storm and typhoon warnings</b><span class="t">First choice: official aviation storm warnings from aviationweather.gov, which show where a tropical cyclone is, how it is moving and where it will be in the next 6 hours, and which areas have thunderstorm warnings. Backup: GDACS, the United Nations and European Union disaster alert system, which shows position only.</span></div>
+      <div class="src"><b>Earthquakes</b><span class="t">First choice: PHIVOLCS, the Philippine government agency with the most earthquake sensors inside the country. Backups: USGS (United States Geological Survey), then EMSC (European seismological centre). Agencies can report slightly different magnitudes for the same earthquake.</span></div>
+      <div class="src"><b>Rain on the map</b><span class="t">A MET Norway forecast sampled on a grid of points across the region, rebuilt every 3 hours. The optional detailed map is provided by Windy.com.</span></div>
     </div>
     <div class="sec">
       <h3>3. The rules it follows</h3>
       <ul>
         <li><strong>Danger</strong> is only given when an official airport report says a thunderstorm is at the airport now. An Estimate can never be Danger.</li>
         <li><strong>Bad weather</strong> in an official report or forecast means a thunderstorm, rain or rain showers, or strong winds.</li>
-        <li><strong>"Possible at times"</strong> is how the official airport forecast describes weather that may come and go during a period, usually for less than an hour at a stretch. It is a warning that it can happen, not a statement that it will. "Expected" means the forecast is firm.</li>
+        <li><strong>"Possible at times"</strong> is how the official airport forecast describes weather that may come and go during a period, usually for less than an hour at a stretch. It can happen; it is not certain. "Expected" means the forecast is firm.</li>
         <li><strong>Bad weather in an Estimate</strong> means 2.5 mm or more of rain in an hour, or winds of 39 km/h or more.</li>
+        <li><strong>How heavy.</strong> Light is under 2.5 mm of rain in an hour, Moderate is 2.5 mm or more, Heavy is 7.6 mm or more.</li>
+        <li><strong>Area warnings.</strong> An airport inside an official thunderstorm or tropical cyclone area warning is raised to Warning.</li>
         <li><strong>Earthquakes shown</strong> are magnitude 4.5 or stronger in the Philippine area over the past 7 days.</li>
-        <li><strong>Earthquake flag.</strong> An airport is flagged when a magnitude 5.0 or stronger earthquake happened within 100 km of it in the last 24 hours.</li>
-        <li><strong>Which source wins.</strong> When sources differ, the dashboard uses the more reliable one, in this order: official airport report, official airport forecast, official area warning, then Estimate. Each airport shows its Confidence in its details.</li>
-        <li><strong>Backups.</strong> If a first-choice source cannot be reached, its backup is used and a yellow notice at the top of the page says so.</li>
+        <li><strong>Earthquake alerts</strong> cover the last 24 hours: magnitude 5.0 or stronger within 100 km of an airport, or magnitude 6.0 or stronger anywhere in the Philippine area.</li>
+        <li><strong>Possible tsunami</strong> is shown for an earthquake of magnitude 6.5 or stronger no deeper than 70 km, or one that USGS has flagged for tsunami information. It is a prompt to check PHIVOLCS bulletins, not an official tsunami warning.</li>
+        <li><strong>Which source wins.</strong> When sources differ, the dashboard uses the more reliable one, in this order: official airport report, official airport forecast, official area warning, then Estimate.</li>
+        <li><strong>Backups.</strong> If a first-choice source cannot be reached, its backup is used and a yellow notice says so. Idle backups are tested every 6 hours.</li>
       </ul>
     </div>
     <div class="sec help-data">
@@ -1344,9 +1375,12 @@ body{background:var(--page);color:var(--ink)}
     <div class="sec">
       <h3>5. What it cannot do</h3>
       <ul>
-        <li>Earthquakes cannot be predicted. The dashboard only shows ones that have already happened.</li>
+        <li>It supports decisions. It does not replace official bulletins, official tsunami warnings, or the judgement of staff at the airport.</li>
+        <li>It does not detect lightning. Thunderstorm information comes from official reports, forecasts and area warnings.</li>
+        <li>Estimates show rain and wind only and cannot confirm a thunderstorm.</li>
+        <li>Earthquakes cannot be predicted. Only those that have already happened are shown.</li>
         <li>Forecasts for tomorrow and the days ahead are less certain than today.</li>
-        <li>It supports decisions but does not replace official bulletins or the judgment of staff at the airport.</li>
+        <li>PAGASA's public typhoon bulletins are not read directly, because they are not published as data. Confirm typhoon decisions against PAGASA.</li>
       </ul>
     </div>
     <div class="about">
