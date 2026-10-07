@@ -67,8 +67,8 @@ Developed by the 1AV IT Department. Created under 1AV IT Innovation by Jake V Bo
    be reached, it switches to a backup by itself.
 3. **Apply the rules.** It works out each airport's alert level, the outlooks, the earthquake and
    tsunami alerts and the typhoon watch, and writes the result to `docs/data.json`.
-4. **Show.** The page (`docs/index.html`) reads that file and checks for newer data every minute.
-   Viewers never need to reload.
+4. **Show.** The page (`docs/index.html`) reads that file and looks for newer data by itself: every
+   5 minutes while an update is not due, every minute once it is. Viewers never need to reload.
 5. **Flag problems.** A yellow notice appears when a backup is in use or the data is old.
 
 The moving rain layer is built separately every 3 hours and saved to `docs/rain.json`.

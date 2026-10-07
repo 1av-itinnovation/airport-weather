@@ -320,9 +320,26 @@ def load_week():
         except Exception as e:
             print('WEEK PARSE ERROR', a[1], e, file=sys.stderr)
     return out
-try: WEEK = load_week()
-except Exception as _e:
-    print('WEEK ERROR', _e, file=sys.stderr); WEEK = {}
+# The 7-day outlook changes slowly, so it is fetched at most once an hour and reused in between.
+# This keeps the number of requests to Open-Meteo low.
+WEEK_EVERY_MIN = 60
+WEEK = {}; WEEK_MS = 0
+try:
+    with open(OUT, encoding='utf-8') as _f: _pw = json.load(_f)
+    _age = (NOW.timestamp() * 1000 - (_pw.get('week_ms') or 0)) / 60000
+    if 0 <= _age < WEEK_EVERY_MIN:
+        _by = {a['id']: a.get('week') or [] for a in _pw.get('airports', [])}
+        _reuse = {a[1]: _by.get(a[0], []) for a in APTS}
+        if sum(1 for v in _reuse.values() if len(v) >= 5) >= len(APTS) - 2:
+            WEEK = {k: v for k, v in _reuse.items() if len(v) >= 5}; WEEK_MS = int(_pw['week_ms'])
+            print(f'7-day outlook: reused (fetched {_age:.0f} minutes ago).')
+except Exception:
+    pass
+if not WEEK:
+    try: WEEK = load_week()
+    except Exception as _e:
+        print('WEEK ERROR', _e, file=sys.stderr); WEEK = {}
+    if WEEK: WEEK_MS = int(NOW.timestamp() * 1000)
 
 # ---------- earthquakes: every source is reshaped into the same layout ----------
 def _feat(t, lat, lon, depth, mag, place, tsunami=None, felt=None, types=''):
@@ -961,7 +978,7 @@ data=dict(
     quake_asof=(f"{day(asof)}, {clock_plain(asof)}" if asof else ''),
     quake_count=(f"{len(quakes)} earthquake{'' if len(quakes)==1 else 's'} of magnitude 4.5+ in the past 7 days (purple rings, tap one for details)." if asof else ''),
     ty_text=ty_main, ty_banner=ty_banner, ty_asof=(f"{'Aviation storm warnings' if SIGMET is not None else 'GDACS (backup source)'}, {day(NOW)}, {clock_plain(NOW)}" if tyok else ''),
-    quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
+    quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), week_ms=WEEK_MS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
     sources=' '.join(src),
 )
