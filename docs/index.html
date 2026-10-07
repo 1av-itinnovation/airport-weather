@@ -1002,6 +1002,172 @@ header.top{padding:10px 16px;border-radius:10px}
   .al .tx{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
   .al .tag{font-size:9px;padding:2px 5px}
 }
+
+/* ---------- 7-day outlook in the airport details ---------- */
+.wks{border:1px solid #DCE7EB;border-radius:8px;background:#FFFFFF;padding:2px 10px}
+.wk{display:grid;grid-template-columns:46px minmax(0,1fr) 38px 38px 38px 34px;align-items:center;column-gap:6px;padding:5px 0;border-top:1px solid #EEF3F5}
+.wk:first-child,.wkh + .wk{border-top:none}
+.wkh{padding:6px 0 3px;border-bottom:1px solid #DCE7EB}
+.wkh span{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5B7180;text-align:center}
+.wk .wd{font-size:13px;font-weight:600;text-align:left}
+.wk .wc{font-size:12.5px;font-weight:600;color:#0060A7;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:4px;justify-content:flex-start}
+.wkh .wc{justify-content:flex-start;color:#5B7180}
+.wk .wc svg{width:9px;height:12px;flex:none}
+.wk .wt{font-size:11px;font-weight:600;color:#B45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk .wi{display:flex;justify-content:center}
+.wk .wi svg{width:24px;height:24px;display:block}
+.wk .wh,.wk .wl{font-size:13px;font-variant-numeric:tabular-nums;text-align:right}
+.wk .wh{font-weight:700}.wk .wl{color:#5B7180}
+.wkh .wh,.wkh .wl{text-align:right;font-weight:600}
+
+/* =====================================================================
+   CORPORATE POLISH
+   One quiet system: white panels, hairline dividers, one blue for actions,
+   colour reserved for alert levels. Sentence case, three text sizes.
+   ===================================================================== */
+:root{--ink:#12303F;--muted:#5B7180;--line:#E1E9ED;--panel:#FFFFFF;--page:#F4F7F9;--brand:#005687;--action:#0060A7;--tint:#EEF5F9}
+body{background:var(--page);color:var(--ink)}
+:focus-visible{outline:2px solid #0077C8;outline-offset:2px}
+.app{gap:10px;padding:12px 14px}
+
+/* header: a slim bar, plain status text */
+.app header.top{padding:8px 16px;border-radius:8px;min-height:52px}
+.app .brand img{height:26px}
+.app .brand h1{font-size:16px;font-weight:600;letter-spacing:0}
+.app .brand .checked{font-size:12px;color:#D6E6EC}
+.app .nextup{color:#FFFFFF;font-weight:500;border-left-color:rgba(255,255,255,.3)}
+.app .chip{background:transparent;color:#D6E6EC;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;padding:0 4px 0 16px;border-radius:0;position:relative}
+.app .chip::before{content:"";position:absolute;left:0;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#52CAF5}
+.app .chip.stale{background:transparent;color:#FFD600}
+.app .chip.stale::before{background:#FFD600}
+.app .sndbtn,.app .helpbtn{width:34px;height:34px;border:1px solid rgba(255,255,255,.45);border-radius:6px;background:transparent}
+.app .helpbtn span{border:none;width:auto;height:auto;font-size:15px;font-weight:600}
+.app .sndbtn.on{background:#FFFFFF;border-color:#FFFFFF}
+.app .notice{background:#FFF8E1;border:1px solid #F2D675;color:#5C4400;font-size:12.5px;border-radius:6px}
+
+/* level filters: neutral tiles, colour only as a marker */
+.app .filters{gap:8px}
+.app .stat{height:38px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:0 12px 0 10px;gap:8px;outline:none;box-shadow:none}
+.app .stat::before{content:"";width:9px;height:9px;border-radius:50%;flex:none;background:#9DB0BC}
+.app .stat.all::before{background:var(--brand)}
+.app .stat.danger::before{background:#C62828}
+.app .stat.warning::before{background:#F57C00}
+.app .stat.advisory::before{background:#F2C200}
+.app .stat.normal::before{background:#2E7D32}
+.app .stat .l{font-size:13px;font-weight:500;color:var(--ink)}
+.app .stat .n{font-size:15px;font-weight:600;color:var(--ink)}
+.app .stat.zero .n{color:#9DB0BC;font-weight:500}
+.app .stat.danger:not(.zero) .n{color:#C62828}
+.app .stat:hover{border-color:#B9CBD4}
+.app .stat.on{border-color:var(--brand);background:var(--tint);box-shadow:inset 0 0 0 1px var(--brand);outline:none}
+.app .daysw{height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:3px;gap:2px}
+.app .daysw button{border-radius:4px;font-size:13px;font-weight:500;color:var(--muted);background:transparent;padding:0 14px}
+.app .daysw button.on{background:var(--brand);color:#FFFFFF}
+.app .filters select{height:38px;min-height:38px;border:1px solid var(--line);border-radius:6px;font-size:13px;color:var(--ink);background-color:var(--panel)}
+
+/* panels */
+.app .col{border:1px solid var(--line);border-radius:8px;background:var(--panel);box-shadow:none;padding:12px}
+.app .col h2,.app .colhead h2{font-size:14px;font-weight:600;color:var(--ink);letter-spacing:0}
+.app .colhead{padding-bottom:8px;border-bottom:1px solid var(--line)}
+.app .colhead .sub{font-size:12px;color:var(--muted)}
+
+/* map */
+.app .vp{border:1px solid var(--line);border-radius:6px}
+.app .pin .lab{font-size:10.5px;font-weight:500;color:var(--ink);background:rgba(255,255,255,.94);border:none;border-radius:3px;padding:0 5px;line-height:1.55;box-shadow:0 0 0 1px rgba(18,48,63,.10)}
+.app .banner{background:rgba(255,255,255,.94);color:var(--ink);font-size:11px;font-weight:500;border-radius:4px;box-shadow:0 0 0 1px rgba(18,48,63,.10);padding:5px 8px}
+.app .zoom{gap:0;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px rgba(18,48,63,.14);background:#FFFFFF}
+.app .zoom button{width:34px;height:34px;border:none;border-radius:0;box-shadow:none;color:var(--brand);font-weight:500;border-bottom:1px solid var(--line)}
+.app .zoom button:last-child{border-bottom:none}
+.app .tour{border:none;border-radius:4px;box-shadow:0 0 0 1px rgba(18,48,63,.14);font-weight:500;font-size:11px}
+.app .tour button{border:none;color:var(--action);font-weight:600;padding:0 4px;height:22px;background:transparent}
+.app .rainbar{border:none;background:transparent;padding:4px 2px 0;gap:6px 10px}
+.app .rainbar .btn{min-height:30px;border:1px solid var(--line);border-radius:6px;color:var(--brand);font-weight:500;font-size:12.5px;background:var(--panel)}
+.app .rainbar .info .k{font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+.app .rainbar .info .v{font-size:13px;font-weight:600}
+.app .rainbar .keys{font-size:11px;color:var(--muted)}
+
+/* airport list: rows, not cards */
+.app #list{gap:0;padding-right:2px}
+.app .alert{border:none;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:9px 8px;gap:3px;box-shadow:none}
+.app .alert:hover{background:#F7FAFB}
+.app .alert.on{border:none;border-bottom:1px solid var(--line);background:var(--tint);box-shadow:inset 3px 0 0 var(--brand)}
+.app .alert .nm{font-size:13.5px;font-weight:600}
+.app .alert .a2{font-size:12.5px;color:var(--muted)}
+.app .alert .wh{color:var(--ink);font-weight:500}
+
+/* level and source tags: small, sentence case */
+.pill{font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;padding:1px 7px;border-radius:4px;line-height:1.6}
+.pill.advisory{background:#FFD600;color:#3B2F00}
+.pill.warning{background:#F57C00;color:#2B1600}
+.pill.est,.pill.nodata{background:transparent;border:1px solid #C5D3DA;color:var(--muted);font-weight:500;padding:0 6px}
+.pill.blue{background:var(--tint);color:var(--brand);border:none}
+.pill.quake{background:#F1E7F6;color:#6A1B9A}
+.tag{letter-spacing:0;text-transform:none;font-size:10.5px;font-weight:600;border-radius:4px}
+
+/* details panel: underline tabs, flat content */
+.app .stabs{gap:0;border-bottom:1px solid var(--line);align-items:flex-end}
+.app .stabs button{height:34px;padding:0 12px;border:none;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--muted);font-size:13px;font-weight:500;margin-bottom:-1px}
+.app .stabs button:hover{color:var(--ink)}
+.app .stabs button.on{background:transparent;color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.app .stabs #wxToggle{margin-left:auto;color:var(--action)}
+.app .detail,.app .detail.quake{border:none;background:transparent;padding:4px 2px 2px;gap:12px}
+.app .detail h3{font-size:16px;font-weight:600}
+.app .detail .hd{padding-bottom:10px;border-bottom:1px solid var(--line)}
+.app .detail .hd .btn{min-height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-weight:500;font-size:12px;background:var(--panel)}
+.app .detail .f{gap:3px}
+.app .detail .f .k,.app .detail.quake .f .k,.app .sum .k{font-size:11.5px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+.app .detail .f .v{font-size:13px;line-height:1.5;color:var(--ink)}
+.app .hint{border:none;background:transparent;color:var(--muted);font-size:13px;padding:6px 2px}
+.app .sum{border:none;border-top:1px solid var(--line);border-radius:0;background:transparent;padding:10px 2px}
+.app .sum:hover{background:#F7FAFB}
+.app .sum .v{font-size:13px}
+.app .hrs,.app .wks{border:1px solid var(--line);border-radius:6px}
+.app .hcap,.app .hkey{font-size:11px;color:var(--muted)}
+.app .wkh span{font-size:10.5px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+.app .block .bh .asof{font-size:11.5px;color:var(--muted)}
+.app .qline{font-size:12.5px;border-bottom:1px solid var(--line)}
+.app .qline b{font-weight:600}
+.btn{border-radius:6px}
+
+/* alert bar: keeps its strong colours, tidier shape */
+.app .al{border-radius:6px;padding:7px 12px;font-weight:500}
+.app .al .tag{font-size:11px;font-weight:600;border-radius:4px;padding:2px 8px}
+.app .al .names button{font-weight:600}
+
+/* help and Windy windows */
+.modal .box{border-radius:10px}
+.modal .mh h2{font-size:17px;font-weight:600;color:var(--ink)}
+.modal h3{color:var(--brand)}
+.srcbox .w{letter-spacing:0;text-transform:none;font-size:11.5px;font-weight:500;color:var(--muted)}
+
+/* phones and tablets */
+@media (max-width:900px){
+  .app{padding:8px;gap:8px}
+  .app .chip{display:none}
+  .app .filters .stat{height:48px;padding:5px 2px 0;border-top:3px solid #9DB0BC;flex-direction:column-reverse;gap:1px}
+  .app .filters .stat::before{display:none}
+  .app .filters .stat.all{border-top-color:var(--brand)}
+  .app .filters .stat.danger{border-top-color:#C62828}
+  .app .filters .stat.warning{border-top-color:#F57C00}
+  .app .filters .stat.advisory{border-top-color:#F2C200}
+  .app .filters .stat.normal{border-top-color:#2E7D32}
+  .app .filters .stat .l{font-size:10.5px;font-weight:500;color:var(--muted)}
+  .app .filters .stat .n{font-size:16px}
+  .app .filters .stat.on{border-color:var(--brand);border-top-width:3px}
+  .app .daysw,.app .filters select{height:40px;min-height:40px}
+  .app .daysw{padding:2px;gap:1px}
+  .app .daysw button{padding:0 1px;font-size:12px;letter-spacing:-.01em}
+  .app .filters select{font-size:12.5px;padding:0 6px}
+  .app header.top{padding:8px 12px}
+  .app .brand h1{font-size:15px}
+  .app .brand .checked{font-size:11.5px;line-height:1.35}
+  .app .ptabs{border:none;border-bottom:1px solid var(--line);border-radius:0;background:transparent}
+  .app .ptabs button{background:transparent;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;height:38px}
+  .app .ptabs button.on{background:transparent;color:var(--brand);font-weight:600;border-bottom-color:var(--brand)}
+  .app .zoom button{width:40px;height:40px}
+  .app .stabs button{height:40px;padding:0 10px}
+  .app .col{padding:10px}
+}
 </style>
 </head>
 <body>
@@ -1086,7 +1252,7 @@ header.top{padding:10px 16px;border-radius:10px}
     <div class="scrolly" id="paneDetails"><div id="detail"></div><div id="summary" style="display:flex;flex-direction:column;gap:8px"></div></div>
     <div class="scrolly" id="paneQuakes" hidden>
       <div class="block">
-        <div class="bh"><span class="pill quake">EARTHQUAKES</span><span class="asof" id="qAsof"></span></div>
+        <div class="bh"><span class="pill quake">Earthquakes</span><span class="asof" id="qAsof"></span></div>
         <div class="strong" id="qFlag"></div>
         <div class="txt" id="qCount" style="font-size:13px"></div>
         <div id="qList"></div>
@@ -1094,7 +1260,7 @@ header.top{padding:10px 16px;border-radius:10px}
     </div>
     <div class="scrolly" id="paneTyphoon" hidden>
       <div class="block">
-        <div class="bh"><span class="pill blue">TYPHOON WATCH</span><span class="asof" id="tyAsof"></span></div>
+        <div class="bh"><span class="pill blue">Typhoon watch</span><span class="asof" id="tyAsof"></span></div>
         <div class="txt" id="tyText"></div>
       </div>
     </div>
@@ -1124,10 +1290,10 @@ header.top{padding:10px 16px;border-radius:10px}
     <p>This dashboard watches the weather at the 36 Philippine airports served by Cebu Pacific and Cebgo, plus earthquakes and typhoons nearby. It tells you which airports need attention and why.</p>
     <div class="sec">
       <h3>1. How to read it</h3>
-      <div class="lv"><span class="c"><span class="pill normal">NORMAL</span></span><span class="t">No bad weather expected today. Shown on the map only.</span></div>
-      <div class="lv"><span class="c"><span class="pill advisory">ADVISORY</span></span><span class="t">Bad weather is expected later today. Plan around it.</span></div>
-      <div class="lv"><span class="c"><span class="pill warning">WARNING</span></span><span class="t">Bad weather is expected within 1 hour, or is already happening. As a precaution, be ready to pause ramp work and stay careful.</span></div>
-      <div class="lv"><span class="c"><span class="pill danger">DANGER</span></span><span class="t">A thunderstorm is at the airport right now. Work at the ramp with extra care. Safety is the priority at all times.</span></div>
+      <div class="lv"><span class="c"><span class="pill normal">Normal</span></span><span class="t">No bad weather expected today. Shown on the map only.</span></div>
+      <div class="lv"><span class="c"><span class="pill advisory">Advisory</span></span><span class="t">Bad weather is expected later today. Plan around it.</span></div>
+      <div class="lv"><span class="c"><span class="pill warning">Warning</span></span><span class="t">Bad weather is expected within 1 hour, or is already happening. As a precaution, be ready to pause ramp work and stay careful.</span></div>
+      <div class="lv"><span class="c"><span class="pill danger">Danger</span></span><span class="t">A thunderstorm is at the airport right now. Work at the ramp with extra care. Safety is the priority at all times.</span></div>
       <ul>
         <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. Purple rings are earthquakes.</li>
         <li><strong>Tap for details.</strong> Tap any airport dot or earthquake ring to see the full report. Use the + and − buttons, pinch, or double-tap to zoom. The ALL button shows the whole map again.</li>
@@ -1203,12 +1369,12 @@ var STALE_MIN = 60;                  // warn when the data is older than this
 var D = null;
 var S = { filter: 'alerts', region: '', sel: '', qk: '', view: null, drag: false, day: 'today', tab: 'details', pane: 'map' };
 var LABELS = { alerts: 'Needs attention today', advisory: 'Advisory today', warning: 'Warning today', danger: 'Danger today', normal: 'Normal today' };
-var PILL = { danger: 'DANGER', warning: 'WARNING', advisory: 'ADVISORY', normal: 'NORMAL', nodata: 'NO DATA' };
+var PILL = { danger: 'Danger', warning: 'Warning', advisory: 'Advisory', normal: 'Normal', nodata: 'No data' };
 var ORDER = ['danger', 'warning', 'advisory'];
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function pill(lv) { return '<span class="pill ' + lv + '">' + PILL[lv] + '</span>'; }
-var EST = '<span class="pill est">ESTIMATE</span>';
+var EST = '<span class="pill est">Estimate</span>';
 
 function dotStyle(a) {
   var lv = a.level, e = a.est;
@@ -1269,8 +1435,8 @@ function renderData() {
   while ((m = rest.match(/^(.*?\.)\s+(?=[A-Z])/))) { parts.push(m[1]); rest = rest.slice(m[0].length); }
   if (rest) parts.push(rest);
   $('sources').innerHTML = '<details><summary>Full source notes</summary><ul>' + parts.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></details>';
-  var TAG = { used: 'USED NOW', standby: 'BACKUP READY', failed: 'NOT REACHED' }, sg = '';
-  var tagOf = function (c) { return (c.state === 'standby' && c.tested === 'failed') ? '<span class="tag failed">TEST FAILED</span>' : '<span class="tag ' + esc(c.state) + '">' + (TAG[c.state] || '') + '</span>'; };
+  var TAG = { used: 'Used now', standby: 'Backup ready', failed: 'Not reached' }, sg = '';
+  var tagOf = function (c) { return (c.state === 'standby' && c.tested === 'failed') ? '<span class="tag failed">Test failed</span>' : '<span class="tag ' + esc(c.state) + '">' + (TAG[c.state] || '') + '</span>'; };
   (D.source_status || []).forEach(function (g) {
     sg += '<div class="srcbox' + (!g.ok ? ' bad' : (!g.first ? ' warn' : '')) + '"><span class="w">' + esc(g.what) + '</span><span class="u">' + esc(g.used) + '</span><div class="c">';
     g.chain.forEach(function (c, i) { sg += '<div><span>' + (i + 1) + '. ' + esc(c.name) + '<br><span style="color:#3F5563">' + esc((c.state === 'standby' && c.tested) ? c.note : c.role) + (c.state === 'used' && c.note !== 'Used' ? '. ' + esc(c.note) : '') + '</span></span>' + tagOf(c) + '</div>'; });
@@ -1330,8 +1496,10 @@ var HPIC = (function () {
   var smallSun = '<circle cx="16.8" cy="7.6" r="3.4" fill="#F5A623"/>', smallMoon = '<path d="M19.6 9.6a4 4 0 0 1-4.1-6.2 4.5 4.5 0 1 0 6 5.6 4 4 0 0 1-1.9.6z" fill="#8FA3B5"/>';
   var drops = function (n, c) { var x = n === 2 ? [9.5, 14] : n === 3 ? [8, 12, 16] : [7, 10.3, 13.6, 17], o = ''; x.forEach(function (v) { o += '<path d="M' + v + ' 17.6l-1.2 3.4" stroke="' + c + '" stroke-width="1.7" stroke-linecap="round"/>'; }); return o; };
   var wrap = function (inner) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + inner + '</svg>'; };
+  var boltp = '<path d="M13.2 12.4l-4 5.2h2.7l-1 4 4.6-5.8h-2.8l1.2-3.4z" fill="#FFD600" stroke="#12303F" stroke-width=".7" stroke-linejoin="round"/>';
   return function (code) {
     var k = code.charAt(0), n = code.charAt(1) === 'n';
+    if (code.charAt(2) === 't') return wrap((k === 'h' ? '' : (n ? smallMoon : smallSun)) + cloud(k === 'h' ? '#66798A' : '#8395A3', k === 'h' ? -3 : -2) + '<path d="M7.2 17.4l-1 2.8M17.6 17.4l-1 2.8" stroke="#0060A7" stroke-width="1.6" stroke-linecap="round"/>' + boltp);
     if (k === 'c') return wrap(n ? moon : sun);
     if (k === 'p') return wrap((n ? smallMoon : smallSun) + cloud('#B4C5D1', 1));
     if (k === 'o') return wrap(cloud('#9FB1BF', 0));
@@ -1363,6 +1531,33 @@ function hoursStrip(a) {
     '<span class="hcap">Computer forecast for this location. ' + (hasChance ? 'Chance of rain: Open-Meteo. ' : '') + 'Amount of rain: ' + esc(a.estsrc || 'MET Norway') + '.' +
     (anyTs ? ' The lightning mark shows hours when the official airport forecast says a thunderstorm is possible.' : '') + '</span></div>';
 }
+/* 7-day outlook: chance of rain, day and night pictures (with thunderstorms), high and low */
+function weekList(a) {
+  var W = a.week || []; if (W.length < 5) return '';
+  var today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+  var ts = ((D.thunder && D.thunder.airports) || []).filter(function (t) { return t.id === a.id; }), official = false;
+  var rows = '';
+  W.slice(0, 7).forEach(function (d) {
+    if (d[0] < today) return;
+    var base = Date.parse(d[0] + 'T00:00:00+08:00'), dayA = base + 6 * 3600000, dayB = base + 18 * 3600000, nightB = base + 30 * 3600000;
+    var offD = ts.some(function (t) { return t.a < dayB && dayA < t.b; }), offN = ts.some(function (t) { return t.a < nightB && dayB < t.b; });
+    if (offD || offN) official = true;
+    var dc = d[2], nc = d[3];
+    if (offD && dc.charAt(2) !== 't') dc = (('lrh'.indexOf(dc.charAt(0)) >= 0) ? dc.charAt(0) : 'r') + 'dt';          // the official airport forecast takes priority
+    if (offN && nc.charAt(2) !== 't') nc = (('lrh'.indexOf(nc.charAt(0)) >= 0) ? nc.charAt(0) : 'r') + 'nt';
+    var lab = d[0] === today ? 'Today' : new Date(base).toLocaleDateString('en-US', { timeZone: 'Asia/Manila', weekday: 'short' });
+    var word = function (c) { return (c.charAt(2) === 't' ? 'Thunderstorm' : HWORD[c.charAt(0)]); };
+    rows += '<div class="wk" title="' + esc(lab + ': day ' + word(dc).toLowerCase() + ', night ' + word(nc).toLowerCase() + (d[6] !== null ? ', about ' + d[6] + ' mm of rain' : '')) + '">' +
+      '<span class="wd">' + lab + '</span>' +
+      '<span class="wc">' + (d[1] === null ? '' : '<svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1.2C4 4.4 1.6 7 1.6 10a4.4 4.4 0 0 0 8.8 0c0-3-2.4-5.600-4.400-8.800z" fill="#52CAF5"/></svg>' + d[1] + '%') + '</span>' +
+      '<span class="wi" aria-label="Day: ' + esc(word(dc)) + '">' + HPIC(dc) + '</span><span class="wi" aria-label="Night: ' + esc(word(nc)) + '">' + HPIC(nc) + '</span>' +
+      '<span class="wh">' + d[4] + '°</span><span class="wl">' + d[5] + '°</span></div>';
+  });
+  if (!rows) return '';
+  return '<div class="f"><span class="k">Next 7 days</span><div class="wks"><div class="wk wkh"><span class="wd"></span><span class="wc">Rain chance</span><span class="wi">Day</span><span class="wi">Night</span><span class="wh">High</span><span class="wl">Low</span></div>' + rows + '</div>' +
+    '<span class="hcap">Computer forecast for this location (Open-Meteo), for planning. The percentage is the highest chance of rain that day. A lightning picture means a thunderstorm is forecast in that half of the day.' +
+    (official ? ' Where the official airport forecast includes a thunderstorm, it is shown here too.' : '') + ' Less certain the further ahead.</span></div>';
+}
 function field(k, v) { return '<div class="f"><span class="k">' + k + '</span><span class="v">' + esc(v) + '</span></div>'; }
 function applyState() {
   if (!D) return;
@@ -1370,7 +1565,7 @@ function applyState() {
   D.airports.forEach(function (a) { if (inRegion(a) && c[a.level] !== undefined) c[a.level]++; });
   $('nAll').textContent = c.advisory + c.warning + c.danger;
   $('nAdv').textContent = c.advisory; $('nWarn').textContent = c.warning; $('nDanger').textContent = c.danger; $('nNormal').textContent = c.normal;
-  Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.classList.toggle('on', b.getAttribute('data-f') === S.filter); });
+  Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.classList.toggle('on', b.getAttribute('data-f') === S.filter); var n = b.querySelector('.n'); b.classList.toggle('zero', !!n && n.textContent === '0'); });
   Array.prototype.forEach.call(document.querySelectorAll('.daysw button'), function (b) { b.classList.toggle('on', b.getAttribute('data-day') === S.day); });
   $('region').value = S.region; $('airportPick').value = S.sel;
 
@@ -1395,7 +1590,7 @@ function applyState() {
   } else {
     var tm = D.airports.filter(function (a) { return a.t && inRegion(a); }).sort(function (a, b) { return (a.tsort - b.tsort) || (a.test - b.test) || a.name.localeCompare(b.name); });
     tm.forEach(function (a) {
-      al += '<button class="alert' + (a.id === S.sel ? ' on' : '') + '" data-a="' + esc(a.id) + '"><span class="a1"><span class="nm">' + esc(a.name) + '</span>' + (a.test ? EST : '<span class="pill blue">AIRPORT FORECAST</span>') + '</span>' +
+      al += '<button class="alert' + (a.id === S.sel ? ' on' : '') + '" data-a="' + esc(a.id) + '"><span class="a1"><span class="nm">' + esc(a.name) + '</span>' + (a.test ? EST : '<span class="pill blue">Airport forecast</span>') + '</span>' +
         '<span class="a2"><span>' + esc(a.twhat) + '</span><span class="wh">' + esc(a.twhen) + '</span></span></button>';
     });
     n = tm.length;
@@ -1407,10 +1602,10 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null;
   if (a) {
     d.innerHTML = '<div class="detail"><div class="hd"><div class="ttl"><h3>' + esc(a.name) + '</h3>' + pill(a.level) + (a.est ? EST : '') + '</div><button class="btn" data-close="1">Close</button></div>' +
-      field('Right now', a.now) + field('Rest of today', a.next) + hoursStrip(a) + field('Tomorrow', a.tmr) + field('Days ahead', a.days) + field('What to do', a.todo) +
+      field('Right now', a.now) + field('Rest of today', a.next) + hoursStrip(a) + field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days)) + field('What to do', a.todo) +
       field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src) + '</div>';
   } else if (q) {
-    d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(q.title) + '</h3><span class="pill quake">EARTHQUAKE</span></div><button class="btn" data-close="1">Close</button></div>' +
+    d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(q.title) + '</h3><span class="pill quake">Earthquake</span></div><button class="btn" data-close="1">Close</button></div>' +
       field('Where', q.where) + field('When', q.when) + field('Depth', q.depth) + field('Nearest airport', q.near) + field('Tsunami', q.tsu) + field('Aftershocks', q.after) +
       field('What to do', q.todo) + field('Source', q.src) + '</div>';
   } else {
@@ -1480,14 +1675,14 @@ function renderAlerts() {
   var eq = D.eq_alerts || (/^Earthquake flag/.test(D.flag || '') ? [{ kind: 'flag', q: '', text: D.flag }] : []);
   eq.forEach(function (a) {
     var ts = a.kind === 'tsunami'; keys.push(a.kind + ':' + a.text.slice(0, 60));
-    h += '<div class="al ' + (ts ? 'tsunami' : 'quake') + '" data-k="' + esc(keys[keys.length - 1]) + '"><span class="ai">' + AICON[ts ? 'tsunami' : 'quake'] + '</span><span class="tag">' + (ts ? 'POSSIBLE TSUNAMI' : 'EARTHQUAKE') + '</span><span class="tx">' + esc(a.text.replace(/^(Possible tsunami|Strong earthquake|Earthquake flag): /, '')) + '</span>' +
+    h += '<div class="al ' + (ts ? 'tsunami' : 'quake') + '" data-k="' + esc(keys[keys.length - 1]) + '"><span class="ai">' + AICON[ts ? 'tsunami' : 'quake'] + '</span><span class="tag">' + (ts ? 'Possible tsunami' : 'Earthquake') + '</span><span class="tx">' + esc(a.text.replace(/^(Possible tsunami|Strong earthquake|Earthquake flag): /, '')) + '</span>' +
       '<button class="go" data-q="' + esc(a.q || '') + '">Details</button></div>';
     if (!title) title = ts ? 'POSSIBLE TSUNAMI' : 'EARTHQUAKE';
   });
   var dg = sorted(D.airports.filter(function (a) { return a.level === 'danger' && inRegion(a); }));
   if (dg.length) {
     var k = 'danger:' + dg.map(function (a) { return a.id; }).join(','); keys.push(k);
-    h += '<div class="al" data-k="' + esc(k) + '"><span class="ai">' + AICON.danger + '</span><span class="tag">DANGER</span><span class="tx">Thunderstorm at the airport now: <span class="names">' +
+    h += '<div class="al" data-k="' + esc(k) + '"><span class="ai">' + AICON.danger + '</span><span class="tag">Danger</span><span class="tx">Thunderstorm at the airport now: <span class="names">' +
       dg.map(function (a) { return '<button data-a="' + esc(a.id) + '">' + esc(a.name) + '</button>'; }).join('') + '</span></span></div>';
     if (!title) title = 'DANGER (' + dg.length + ')';
   }
