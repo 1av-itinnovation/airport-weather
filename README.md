@@ -30,17 +30,17 @@ why, and how reliable each reading is.
 
 ## How it works
 
-1. **Collect.** Every 10 minutes `build.py` reads the latest public data from the sources below.
+1. **Collect.** Every 10 minutes reads the latest public data from the sources below.
 2. **Choose the best source.** For each kind of data it uses the first-choice source. If that cannot
    be reached, it switches to a backup by itself.
 3. **Apply the rules.** It works out each airport's alert level, tomorrow's outlook, the earthquake
-   flag and the typhoon watch, and writes the result to `docs/data.json`.
-4. **Show.** The page (`docs/index.html`) reads that file and checks for newer data every 5 minutes.
+   flag and the typhoon watch, and writes the result.
+4. **Show.** The page reads that file and checks for newer data every 5 minutes.
    Viewers never need to reload.
 5. **Flag problems.** If a backup source is in use, or the data is more than 60 minutes old, the
    page shows a yellow notice.
 
-The moving rain layer is built separately every 3 hours and saved to `docs/rain.json`.
+The moving rain layer is built separately every 3 hours and saved.
 
 ## Where the data comes from
 
