@@ -4,8 +4,6 @@ A view-only dashboard that watches the weather at the 36 Philippine airports ser
 and Cebgo, together with nearby earthquakes and typhoons. It shows which airports need attention,
 why, and how reliable each reading is.
 
-Created under 1AV IT Innovation by Jake V Borras.
-
 ## How to read the dashboard
 
 | Level | Meaning | What to do |
@@ -106,6 +104,3 @@ The optional detailed rain map is provided by Windy.com.
 © 2026 1Aviation Groundhandling Services, Corp. All rights reserved.
 
 Created under 1AV IT Innovation by Jake V Borras.
-
-The dashboard design, code and alert rules may not be copied or reused without permission. The 1AV
-name and logo are the property of 1Aviation Groundhandling Services, Corp.
