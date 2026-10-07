@@ -898,6 +898,22 @@ header.top{padding:10px 16px;border-radius:10px}
   .tag{font-size:9px;padding:3px 7px}
   #modal .box > .sec:nth-of-type(6){padding-bottom:28px}
 }
+
+/* ---------- filters on phones and tablets: two tidy rows, no sideways scrolling ---------- */
+@media (max-width:900px){
+  .filters{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;overflow:visible;padding-bottom:0}
+  .filters .spacer{display:none}
+  .filters .stat{grid-column:span 2;height:46px;min-width:0;padding:0 2px;flex-direction:column-reverse;justify-content:center;align-items:center;gap:2px}
+  .filters .stat .l{font-size:10px;font-weight:600;letter-spacing:.02em;line-height:1.1;text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .filters .stat .l .lw{display:none}
+  .filters .stat .n{font-size:16px;line-height:1}
+  .filters .stat.on{outline-offset:0}
+  .filters .daysw{grid-column:span 4;height:40px;min-width:0}
+  .filters .daysw button{flex:1;padding:0 4px;font-size:12px;min-width:0}
+  .filters select{min-width:0;width:100%;max-width:none;font-size:12px;padding:0 6px}
+  .filters #region{grid-column:span 3}
+  .filters #airportPick{grid-column:span 3}
+}
 </style>
 </head>
 <body>
@@ -920,7 +936,7 @@ header.top{padding:10px 16px;border-radius:10px}
 <div class="notice" id="notice" hidden></div>
 
 <div class="filters" role="group" aria-label="Filters">
-  <button class="stat all" data-f="alerts"><span class="l">Needs attention</span><span class="n" id="nAll">0</span></button>
+  <button class="stat all" data-f="alerts"><span class="l"><span class="lw">Needs </span>attention</span><span class="n" id="nAll">0</span></button>
   <button class="stat danger" data-f="danger"><span class="l">Danger</span><span class="n" id="nDanger">0</span></button>
   <button class="stat warning" data-f="warning"><span class="l">Warning</span><span class="n" id="nWarn">0</span></button>
   <button class="stat advisory" data-f="advisory"><span class="l">Advisory</span><span class="n" id="nAdv">0</span></button>
