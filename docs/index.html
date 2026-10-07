@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Airport Weather Monitoring | 1Aviation</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%85%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Lato,"Segoe UI",Tahoma,sans-serif;background:#F1F7F9;color:#12303F}
+button,select{font-family:inherit}
+h1,h2,h3,p{margin:0}
+.page{max-width:1360px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:#005687;color:#FFFFFF;border-radius:12px;padding:20px 24px}
+.brand{display:flex;align-items:center;gap:16px;min-width:0}
+.brand img{height:44px;width:auto;flex:none;display:block}
+.brand .who{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#CAE2E7}
+.brand h1{font-size:28px;font-weight:900;line-height:1.2}
+.brand .checked{font-size:15px;color:#CAE2E7;margin-top:4px}
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.helpbtn{width:44px;height:44px;padding:0;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.helpbtn span{width:28px;height:28px;border-radius:50%;border:2px solid #FFFFFF;color:#FFFFFF;font-size:16px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center}
+.chip{background:#FFFFFF;color:#005687;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;padding:8px 12px;border-radius:6px}
+.chip.stale{background:#FFD600;color:#12303F}
+.tools label{font-size:12px;font-weight:700;color:#CAE2E7}
+select{min-height:44px;padding:0 12px;font-size:15px;border-radius:8px;border:1px solid #CAE2E7;background:#FFFFFF;color:#12303F}
+.notice{background:#FFF4CC;border:2px solid #FFD600;border-radius:12px;padding:14px 18px;font-size:15px;line-height:1.45}
+.notice strong{display:block;margin-bottom:4px}
+h2{font-size:18px;font-weight:900;color:#005687}
+.muted{font-size:14px;color:#3F5563}
+.rowhead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.stat{min-height:104px;border:2px solid transparent;border-radius:12px;padding:16px 18px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.stat .l{font-size:15px;font-weight:700}.stat .n{font-size:40px;font-weight:900;line-height:1}.stat .s{font-size:13px}
+.stat.on{outline:3px solid #12303F;outline-offset:2px}
+.stat.all{background:#FFFFFF;color:#005687;border-color:#0077C8}
+.stat.advisory{background:#FFD600;color:#12303F}.stat.warning{background:#F57C00;color:#12303F}.stat.danger{background:#C62828;color:#FFFFFF}
+.two{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.card{background:#FFFFFF;border:1px solid #CAE2E7;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card.map{flex:1 1 560px}.card.side{flex:1 1 340px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px}
+.legend span.i{display:inline-flex;align-items:center;gap:6px}
+.legend .d{width:12px;height:12px;border-radius:50%;display:inline-block}
+.narrow{width:100%;max-width:560px;margin:0 auto}
+.find{display:flex;flex-direction:column;gap:4px}
+.find label{font-size:13px;font-weight:700;color:#005687}
+.find select{border-color:#0077C8}
+.vp{position:relative;aspect-ratio:1000/1506;border-radius:10px;border:1px solid #CAE2E7;overflow:hidden;background:#DDEEF3}
+.layer{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0;user-select:none;-webkit-user-select:none;transition:transform .6s ease}
+.layer.nodrag{transition:none}
+.layer img{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
+.pin{position:absolute;width:0;height:0;transform:scale(var(--inv,1));transition:transform .6s ease}
+.pin button{position:absolute;left:-16px;top:-16px;width:32px;height:32px;border:none;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pin .dot{display:block;border-radius:50%}
+.pin .lab{position:absolute;left:18px;top:-11px;white-space:nowrap;font-size:13px;font-weight:700;background:#FFFFFF;border:1px solid #CAE2E7;padding:1px 7px;border-radius:6px;pointer-events:none}
+.pin .selring{position:absolute;left:-19px;top:-19px;width:38px;height:38px;border-radius:50%;border:3px solid #005687;background:rgba(0,119,200,.18);display:none;pointer-events:none}
+.pin.sel .selring{display:block}
+.pin .qring{display:block;flex:none;border-radius:50%;border:2px solid #6A1B9A;background:rgba(106,27,154,.18)}
+.pin .qsel{position:absolute;border-radius:50%;border:3px solid #6A1B9A;background:rgba(106,27,154,.25);display:none;pointer-events:none}
+.pin.sel .qsel{display:block}
+.pin .qlab{position:absolute;left:-16px;width:32px;text-align:center;font-size:10px;font-weight:900;color:#6A1B9A;text-shadow:0 0 2px #FFFFFF,0 0 2px #FFFFFF;pointer-events:none}
+.banner{position:absolute;right:10px;top:10px;max-width:190px;font-size:12px;line-height:1.35;font-weight:700;color:#FFFFFF;background:#005687;padding:8px 10px;border-radius:8px}
+.zoom{position:absolute;left:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:44px;height:44px;padding:0;border:1px solid #0060A7;border-radius:8px;background:#FFFFFF;color:#005687;font-size:24px;font-weight:900;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.zoom button.all{font-size:12px}
+.detail{border:2px solid #0077C8;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;background:#F1F7F9}
+.detail.quake{border-color:#6A1B9A}
+.detail .hd{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.detail .ttl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.detail h3{font-size:20px;font-weight:900}
+.detail .f{display:flex;flex-direction:column;gap:2px}
+.detail .f .k{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#005687}
+.detail.quake .f .k{color:#6A1B9A}
+.detail .f .v{font-size:15px;line-height:1.45}
+.btn{min-height:44px;padding:0 16px;border:1px solid #0060A7;border-radius:8px;background:#FFFFFF;color:#0060A7;font-size:14px;font-weight:700;cursor:pointer}
+.hint{border:1px dashed #0077C8;border-radius:10px;padding:14px 16px;font-size:15px;background:#F1F7F9}
+.pill{font-size:12px;font-weight:900;padding:4px 10px;border-radius:999px;white-space:nowrap;display:inline-block}
+.pill.danger{background:#C62828;color:#FFFFFF}.pill.warning{background:#F57C00;color:#12303F}.pill.advisory{background:#FFD600;color:#12303F}
+.pill.normal{background:#CAE2E7;color:#12303F}.pill.nodata,.pill.est{background:#FFFFFF;color:#0060A7;border:1px solid #0060A7;padding:3px 9px}
+.pill.quake{background:#6A1B9A;color:#FFFFFF}.pill.blue{background:#005687;color:#FFFFFF}
+.alerts{max-height:760px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-right:8px}
+.alert{display:flex;flex-direction:column;gap:6px;padding:0 0 12px 0;border:none;border-bottom:1px solid #CAE2E7;background:transparent;text-align:left;color:inherit;cursor:pointer;width:100%}
+.alert .a1{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.alert .nm{font-size:15px;font-weight:900}
+.alert .a2{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;font-size:15px;line-height:1.4}
+.alert .wh{font-weight:900;color:#005687}
+.block{display:flex;flex-direction:column;gap:6px;padding-bottom:14px;border-bottom:1px solid #CAE2E7}
+.block:last-child{border-bottom:none;padding-bottom:0}
+.block .bh{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.block .bh .asof{font-size:13px;color:#3F5563}
+.block .strong{font-size:15px;line-height:1.45;font-weight:700}
+.block .txt{font-size:15px;line-height:1.45}
+.qline{font-size:14px;line-height:1.4;border:none;background:transparent;padding:2px 0;text-align:left;color:inherit;cursor:pointer;width:100%}
+.qline b{font-weight:900;color:#6A1B9A}
+.small{font-size:13px;color:#3F5563;line-height:1.5}
+.scroll{overflow-x:auto}
+.tbl{min-width:640px;font-size:15px;line-height:1.4;display:flex;flex-direction:column}
+.tr{display:grid;grid-template-columns:1.2fr 1.3fr 1.8fr 1.7fr}
+.tr.h{font-weight:900;color:#005687;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.tr.h>div{padding:10px 12px;border-bottom:2px solid #CAE2E7}
+.tr>div{padding:12px;border-bottom:1px solid #CAE2E7}
+.tr .nm{font-weight:900}.tr .wh{font-weight:700;color:#005687}
+.tr .pl{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start}
+.srcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.srcbox{border:1px solid #CAE2E7;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;background:#F1F7F9}
+.srcbox.warn{border:2px solid #FFD600}.srcbox.bad{border:2px solid #C62828}
+.srcbox .w{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#005687}
+.srcbox .u{font-size:16px;font-weight:900;line-height:1.3}
+.srcbox .c{display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.35}
+.srcbox .c div{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.srcbox .c div>span:first-child{min-width:0;overflow-wrap:anywhere}
+.srcbox .u{overflow-wrap:anywhere}
+.tag{font-size:11px;font-weight:900;padding:3px 8px;border-radius:999px;white-space:nowrap;flex:none}
+.tag.used{background:#005687;color:#FFFFFF}.tag.standby{background:#FFFFFF;color:#0060A7;border:1px solid #0060A7}.tag.failed{background:#C62828;color:#FFFFFF}
+.layer canvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;opacity:.85}
+.rainbar{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;border:1px solid #CAE2E7;border-radius:10px;padding:10px 12px;background:#F1F7F9}
+.rainbar .info{display:flex;flex-direction:column;gap:1px;min-width:150px;flex:1 1 150px}
+.rainbar .info .k{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#005687}
+.rainbar .info .v{font-size:16px;font-weight:900}
+.rainbar input[type=range]{flex:1 1 100%;min-height:32px;accent-color:#005687;margin:0}
+.rainbar .keys{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;flex:1 1 100%;align-items:center}
+.rainbar .keys i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.rainbar .keys .bolt{display:inline-block;width:8px;height:11px;margin-right:4px;vertical-align:middle;filter:drop-shadow(0 0 1px #12303F)}
+.wxbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{min-height:44px;padding:0 14px;border:1px solid #0060A7;border-radius:8px;background:#FFFFFF;color:#0060A7;font-size:14px;font-weight:900;cursor:pointer}
+.seg.on{background:#005687;color:#FFFFFF;border-color:#005687}
+.wxframe{width:100%;height:560px;border:1px solid #CAE2E7;border-radius:10px;display:block;background:#DDEEF3}
+.wxwhere{font-size:15px;font-weight:700}
+@media (max-width:640px){.wxframe{height:440px}}
+.empty{font-size:15px;color:#3F5563;padding:8px 0}
+.modal{position:fixed;left:0;top:0;right:0;bottom:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal .back{position:absolute;left:0;top:0;width:100%;height:100%;border:none;padding:0;background:rgba(18,48,63,.6);cursor:pointer}
+.modal .box{position:relative;width:100%;max-width:760px;max-height:100%;overflow-y:auto;background:#FFFFFF;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.modal .mh{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal h2{font-size:20px}.modal h3{font-size:17px;font-weight:900;color:#005687}
+.modal p,.modal li,.modal .t{font-size:15px;line-height:1.5}
+.modal .sec{display:flex;flex-direction:column;gap:8px}
+.modal ul{margin:0;padding-left:20px}.modal li{margin:0 0 4px 0}
+.modal .lv{display:flex;gap:10px;align-items:flex-start}.modal .lv .c{width:96px;flex:none;display:flex}
+.modal .src{display:flex;flex-direction:column;gap:2px}.modal .src b{font-size:15px;font-weight:900}
+@keyframes wxRing{0%{transform:scale(.5);opacity:.95}100%{transform:scale(2.8);opacity:0}}
+@keyframes wxBolt{0%,26%,100%{opacity:0}3%{opacity:1}7%{opacity:.15}11%{opacity:1}16%{opacity:.4}20%{opacity:1}}
+@keyframes wxFlash{0%,28%,100%{opacity:0}3%{opacity:.9}7%{opacity:.1}11%{opacity:.75}20%{opacity:.5}}
+.wx-flash{position:absolute;left:-34px;top:-34px;width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,rgba(255,214,0,.95) 0%,rgba(255,214,0,0) 70%);pointer-events:none;animation:wxFlash 2.6s linear infinite}
+.wx-ring{position:absolute;left:-16px;top:-16px;width:32px;height:32px;border-radius:50%;border:2px solid #C62828;pointer-events:none;animation:wxRing 1.8s ease-out infinite}
+.wx-ring2{animation-delay:.9s}
+.wx-bolt{position:absolute;left:-12px;top:-44px;width:24px;height:30px;filter:drop-shadow(0 0 1.5px #12303F) drop-shadow(0 0 1.5px #12303F);pointer-events:none;animation:wxBolt 2.6s linear infinite}
+.wx-bolt i,.bolt{display:block;background:#FFD600;clip-path:polygon(56% 0,10% 58%,44% 58%,32% 100%,90% 38%,56% 38%)}
+.wx-bolt i{width:100%;height:100%}
+@media (prefers-reduced-motion:reduce){.wx-flash,.wx-ring,.wx-bolt{animation:none}.wx-flash,.wx-ring2{opacity:0}.wx-ring{transform:scale(1.4)}.layer,.pin{transition:none}}
+@media (max-width:640px){.page{padding:12px;gap:14px}header.top{padding:16px}.brand h1{font-size:22px}.card{padding:14px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="top">
+  <div class="brand">
+    <img src="assets/logo.png" alt="1Aviation logo">
+    <div>
+      <div class="who">Monitored by 1Aviation Groundhandling Services, Corp.</div>
+      <h1>Airport Weather Monitoring</h1>
+      <div class="checked" id="checked">Loading the latest data…</div>
+    </div>
+  </div>
+  <div class="tools">
+    <button class="helpbtn" id="helpBtn" aria-label="How this dashboard works" title="How this dashboard works"><span>?</span></button>
+    <div class="chip" id="chip">Live, updates about every 10 minutes</div>
+    <label for="region">Region</label>
+    <select id="region">
+      <option value="">All regions</option>
+      <option value="luzon">Luzon</option>
+      <option value="visayas">Visayas</option>
+      <option value="mindanao">Mindanao</option>
+    </select>
+  </div>
+</header>
+
+<div class="notice" id="notice" hidden></div>
+
+<section style="display:flex;flex-direction:column;gap:10px">
+  <div class="rowhead">
+    <h2>Airports by alert level</h2>
+    <div style="font-size:15px;color:#3F5563">Showing: <strong id="filterLabel">Airports needing attention</strong>. Tap a box to filter.</div>
+  </div>
+  <div class="stats">
+    <button class="stat all" data-f="alerts"><span class="l">Needs attention</span><span class="n" id="nAll">0</span><span class="s">Advisory, Warning and Danger</span></button>
+    <button class="stat advisory" data-f="advisory"><span class="l">Advisory</span><span class="n" id="nAdv">0</span><span class="s">Bad weather later today</span></button>
+    <button class="stat warning" data-f="warning"><span class="l">Warning</span><span class="n" id="nWarn">0</span><span class="s">Within 1 hour or underway</span></button>
+    <button class="stat danger" data-f="danger"><span class="l">Danger</span><span class="n" id="nDanger">0</span><span class="s">Thunderstorm at the airport now</span></button>
+  </div>
+</section>
+
+<section class="two">
+  <div class="card map">
+    <h2>Airport map</h2>
+    <div class="legend">
+      <span class="i"><span class="d" style="background:#CAE2E7;border:1px solid #005687"></span>Normal</span>
+      <span class="i"><span class="d" style="background:#FFD600;border:1px solid #12303F"></span>Advisory</span>
+      <span class="i"><span class="d" style="background:#F57C00"></span>Warning</span>
+      <span class="i"><span class="d" style="background:#C62828"></span>Danger</span>
+      <span class="i"><span class="d" style="background:#FFFFFF;border:1px solid #0060A7;border-radius:2px"></span>No data</span>
+      <span class="i"><span class="d" style="background:#FFFFFF;border:2px dashed #005687"></span>Dashed outline = Estimate</span>
+      <span class="i"><span style="display:inline-block;filter:drop-shadow(0 0 1px #12303F)"><span class="bolt" style="width:9px;height:12px"></span></span>Flashing = thunderstorm now</span>
+      <span class="i"><span class="d" style="width:11px;height:11px;border:2px solid #6A1B9A;background:rgba(106,27,154,.18)"></span>Earthquake, past 7 days (tap for details)</span>
+    </div>
+    <div class="narrow find">
+      <label for="airportPick">Find an airport</label>
+      <select id="airportPick"><option value="">Choose an airport</option></select>
+    </div>
+    <div class="narrow vp" id="vp">
+      <div class="layer" id="layer">
+        <img src="assets/map.svg" alt="Map of the Philippines">
+        <canvas id="rainCv" width="480" height="723" aria-hidden="true"></canvas>
+        <div id="pins"></div>
+      </div>
+      <div class="banner" id="banner"></div>
+      <div class="zoom">
+        <button id="zIn" aria-label="Zoom in" title="Zoom in">+</button>
+        <button id="zOut" aria-label="Zoom out" title="Zoom out">−</button>
+        <button id="zAll" class="all" aria-label="Show whole map" title="Show whole map">ALL</button>
+      </div>
+    </div>
+    <div class="narrow rainbar" id="rainBar" hidden>
+      <button class="btn" id="rainPlay">Stop</button>
+      <div class="info"><span class="k">Forecast rain and thunder</span><span class="v" id="rainTime"></span></div>
+      <button class="btn" id="rainShow" aria-pressed="true">Hide rain</button>
+      <input type="range" id="rainSlider" min="0" max="23" step="1" value="0" aria-label="Forecast hour">
+      <div class="keys"><span><i style="background:rgba(90,160,235,.7)"></i>Light rain</span><span><i style="background:rgba(0,170,150,.8)"></i>Moderate</span><span><i style="background:rgba(255,190,0,.9)"></i>Heavy</span><span><i style="background:rgba(230,60,60,.9)"></i>Very heavy</span><span><span class="bolt"></span>Thunderstorm</span></div>
+    </div>
+    <div class="narrow" id="detail"></div>
+  </div>
+
+  <div class="card side">
+    <div style="display:flex;align-items:center;gap:10px"><span style="width:12px;height:12px;border-radius:50%;background:#0077C8;display:inline-block"></span><h2>Latest alerts</h2></div>
+    <div class="alerts" id="alerts"></div>
+    <div class="block">
+      <div class="bh"><span class="pill quake">EARTHQUAKES</span><span class="asof" id="qAsof"></span></div>
+      <div class="strong" id="qFlag"></div>
+      <div class="txt" id="qCount" style="font-size:14px"></div>
+      <div id="qList"></div>
+    </div>
+    <div class="block">
+      <div class="bh"><span class="pill blue">TYPHOON WATCH</span><span class="asof" id="tyAsof"></span></div>
+      <div class="txt" id="tyText"></div>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="wxCard">
+  <div class="rowhead">
+    <h2>Detailed rain map (Windy.com)</h2>
+    <button class="btn" id="wxToggle" aria-expanded="false">Show Windy map</button>
+  </div>
+  <div id="wxBody" hidden style="display:none;flex-direction:column;gap:12px">
+    <div class="wxbar">
+      <button class="seg on" data-layer="rain">Rain and thunder</button>
+      <button class="seg" data-layer="thunder">Thunderstorms only</button>
+      <button class="seg" id="wxAll">Whole Philippines</button>
+      <span class="wxwhere" id="wxWhere"></span>
+    </div>
+    <iframe class="wxframe" id="wxFrame" title="Rain and thunder forecast animation from Windy.com" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Tomorrow outlook</h2>
+  <div class="muted" id="tmrNote"></div>
+  <div class="scroll"><div class="tbl" id="tmrTbl"></div></div>
+</section>
+
+<section class="card">
+  <h2>Airport status</h2>
+  <div class="scroll"><div class="tbl" id="statTbl"></div></div>
+</section>
+
+<div class="small" id="foot" style="text-align:center"></div>
+</div>
+
+<div class="modal" id="modal">
+  <button class="back" id="modalBack" aria-label="Close help"></button>
+  <div class="box" role="dialog" aria-modal="true" aria-label="How this dashboard works">
+    <div class="mh"><h2>How this dashboard works</h2><button class="btn" id="modalClose">Close</button></div>
+    <p>This dashboard watches the weather at the 36 Philippine airports served by Cebu Pacific and Cebgo, plus earthquakes and typhoons nearby. It tells you which airports need attention and why.</p>
+    <div class="sec">
+      <h3>1. How to read it</h3>
+      <div class="lv"><span class="c"><span class="pill normal">NORMAL</span></span><span class="t">No bad weather expected today. Shown on the map only.</span></div>
+      <div class="lv"><span class="c"><span class="pill advisory">ADVISORY</span></span><span class="t">Bad weather is expected later today. Plan around it.</span></div>
+      <div class="lv"><span class="c"><span class="pill warning">WARNING</span></span><span class="t">Bad weather is expected within 1 hour, or is already happening. Prepare to pause ramp work.</span></div>
+      <div class="lv"><span class="c"><span class="pill danger">DANGER</span></span><span class="t">A thunderstorm is at the airport right now. Stop outdoor ramp work.</span></div>
+      <ul>
+        <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. Purple rings are earthquakes.</li>
+        <li><strong>Tap for details.</strong> Tap any airport dot or earthquake ring to see the full report. Use the + and − buttons, pinch, or double-tap to zoom. The ALL button shows the whole map again.</li>
+        <li><strong>Estimate.</strong> A reading marked Estimate comes from a computer forecast for that location, because the airport has no official weather report. Airports with normal weather appear on the map only, not in the lists.</li>
+        <li><strong>The lists.</strong> Latest alerts and Airport status show only the airports that need attention today. Tomorrow outlook shows airports where bad weather is forecast for tomorrow.</li>
+        <li><strong>Rain and thunder animation.</strong> The airport map plays the forecast rain for the next 24 hours by itself, with lightning marks where an official thunderstorm warning or airport forecast applies. Use Stop and Play, or drag the slider to any hour. It is a computer forecast, so the alert levels take priority when the two differ. Lightning marks come from official thunderstorm area warnings and official airport forecasts, so they cover the next few hours and the larger airports only; rain with no lightning mark does not mean no thunder. A more detailed Windy.com map can be opened further down the page: it is a different forecast, so the two can differ, and inside it you press its own play button to step through the hours.</li>
+        <li><strong>Earthquakes and typhoons.</strong> Earthquakes cannot be forecast; the list shows what has already happened. The typhoon watch uses storm warnings that look 6 hours ahead only, so it is not a multi-day track. It is a computer forecast, so the alert levels take priority when the two differ.</li>
+        <li><strong>The time at the top.</strong> It shows when the data was last checked. The page updates itself about every 10 minutes; you do not need to reload it.</li>
+      </ul>
+    </div>
+    <div class="sec">
+      <h3>2. Where the data comes from</h3>
+      <p>Each kind of data has a first-choice source and one or more backups. If the first choice cannot be reached, the dashboard switches to the backup by itself. Section 4 below shows which source supplied the data on screen right now.</p>
+      <div class="src"><b>Official airport reports and forecasts</b><span class="t">Issued for the airport itself by aviation weather staff. This is the most reliable weather source. First choice: aviationweather.gov, the United States government aviation weather service. Backup: the NOAA data server, which carries the same official reports.</span></div>
+      <div class="src"><b>Estimates</b><span class="t">For airports with no official report, a computer weather forecast for that exact location. These are marked Estimate. They show rain and wind only and cannot confirm a thunderstorm. First choice: MET Norway, the Norwegian national weather institute. Backup: Open-Meteo.</span></div>
+      <div class="src"><b>Storm and typhoon warnings</b><span class="t">First choice: official aviation storm warnings from aviationweather.gov, which show where a tropical cyclone is, how it is moving and where it will be in the next 6 hours. Backup: GDACS, the United Nations and European Union disaster alert system, which shows position only.</span></div>
+      <div class="src"><b>Earthquakes</b><span class="t">First choice: PHIVOLCS, the Philippine government agency with the most earthquake sensors inside the country. Backups: USGS (United States Geological Survey), then EMSC (European seismological centre). Different agencies can report slightly different magnitudes for the same earthquake.</span></div>
+    </div>
+    <div class="sec">
+      <h3>3. The rules it follows</h3>
+      <ul>
+        <li><strong>Danger</strong> is only given when an official airport report says a thunderstorm is at the airport now. An Estimate can never be Danger.</li>
+        <li><strong>Bad weather</strong> in an official report or forecast means a thunderstorm, rain or rain showers, or strong winds.</li>
+        <li><strong>Bad weather in an Estimate</strong> means 2.5 mm or more of rain in an hour, or winds of 39 km/h or more.</li>
+        <li><strong>Earthquakes shown</strong> are magnitude 4.5 or stronger in the Philippine area over the past 7 days.</li>
+        <li><strong>Earthquake flag.</strong> An airport is flagged when a magnitude 5.0 or stronger earthquake happened within 100 km of it in the last 24 hours.</li>
+        <li><strong>Which source wins.</strong> When sources differ, the dashboard uses the more reliable one, in this order: official airport report, official airport forecast, official area warning, then Estimate. Each airport shows its Confidence in its details.</li>
+        <li><strong>Backups.</strong> If a first-choice source cannot be reached, its backup is used and a yellow notice at the top of the page says so.</li>
+      </ul>
+    </div>
+    <div class="sec">
+      <h3>4. About the data on screen now</h3>
+      <p id="hChecked"></p>
+      <p id="hRain"></p>
+      <p>The boxes below show which source supplied each kind of data at this check. A first-choice source that could not be reached is marked, and its backup is used instead.</p>
+      <div class="srcgrid" id="srcGrid"></div>
+      <p class="small" id="sources"></p>
+    </div>
+    <div class="sec">
+      <h3>5. What it cannot do</h3>
+      <ul>
+        <li>Earthquakes cannot be predicted. The dashboard only shows ones that have already happened.</li>
+        <li>Forecasts for tomorrow and the days ahead are less certain than today.</li>
+        <li>It supports decisions but does not replace official bulletins or the judgment of staff at the airport.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+var REFRESH_MS = 5 * 60 * 1000;      // how often the page looks for new data
+var STALE_MIN = 60;                  // warn when the data is older than this
+var D = null;
+var S = { filter: 'alerts', region: '', sel: '', qk: '', view: null, drag: false };
+var LABELS = { alerts: 'Airports needing attention', advisory: 'Advisory only', warning: 'Warning only', danger: 'Danger only' };
+var PILL = { danger: 'DANGER', warning: 'WARNING', advisory: 'ADVISORY', normal: 'NORMAL', nodata: 'NO DATA' };
+var ORDER = ['danger', 'warning', 'advisory'];
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function pill(lv) { return '<span class="pill ' + lv + '">' + PILL[lv] + '</span>'; }
+var EST = '<span class="pill est">ESTIMATE</span>';
+
+function dotStyle(a) {
+  var lv = a.level, e = a.est;
+  if (lv === 'normal') return 'width:16px;height:16px;background:#CAE2E7;border:' + (e ? '2px dashed #005687' : '2px solid #005687');
+  if (lv === 'nodata') return 'width:16px;height:16px;background:#FFFFFF;border:2px solid #0060A7;border-radius:3px';
+  if (lv === 'advisory') return 'width:20px;height:20px;background:#FFD600;border:' + (e ? '2px dashed #12303F' : '2px solid #12303F');
+  if (lv === 'warning') return 'width:22px;height:22px;background:#F57C00;border:' + (e ? '2px dashed #FFFFFF' : '3px solid #FFFFFF');
+  return 'width:24px;height:24px;background:#C62828;border:3px solid #FFFFFF';
+}
+function byId(id) { for (var i = 0; i < D.airports.length; i++) { if (D.airports[i].id === id) return D.airports[i]; } return null; }
+function quakeById(id) { for (var i = 0; i < D.quakes.length; i++) { if (D.quakes[i].id === id) return D.quakes[i]; } return null; }
+function inRegion(a) { return !S.region || a.region === S.region; }
+function levelShown(lv, forMap) {
+  if (S.filter === 'alerts') return forMap ? true : ORDER.indexOf(lv) >= 0;
+  return lv === S.filter;
+}
+function sorted(list) { return list.slice().sort(function (a, b) { return (a.sort - b.sort) || (a.est - b.est) || a.name.localeCompare(b.name); }); }
+
+/* ---------- build the parts that depend only on the data ---------- */
+function renderData() {
+  $('checked').textContent = D.checked.split('. ')[0].replace(/\.$/, '') + ' (Philippine time)';
+  $('hChecked').textContent = D.checked;
+  var opts = '<option value="">Choose an airport</option>';
+  D.airports.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) { opts += '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>'; });
+  $('airportPick').innerHTML = opts;
+
+  var h = '';
+  D.quakes.forEach(function (q) {
+    if (!q.onmap) return;
+    var s = q.size, hs = s + 12, lab = 'Magnitude ' + q.mag.toFixed(1) + ' earthquake, ' + q.place;
+    h += '<div class="pin q" data-q="' + esc(q.id) + '" style="left:' + q.x.toFixed(1) + '%;top:' + q.y.toFixed(1) + '%;opacity:' + q.op + '">' +
+      '<span class="qsel" style="left:' + (-hs / 2) + 'px;top:' + (-hs / 2) + 'px;width:' + hs + 'px;height:' + hs + 'px"></span>' +
+      '<button aria-label="' + esc(lab) + '" title="' + esc(lab) + '"><span class="qring" style="width:' + s + 'px;height:' + s + 'px"></span></button>' +
+      '<span class="qlab" style="top:' + (s / 2 + 1) + 'px">M' + q.mag.toFixed(1) + '</span></div>';
+  });
+  ['normal', 'nodata', 'advisory', 'warning', 'danger'].forEach(function (lv) {
+    sorted(D.airports.filter(function (a) { return a.level === lv; })).forEach(function (a) {
+      h += '<div class="pin a" data-a="' + esc(a.id) + '" style="left:' + a.x.toFixed(1) + '%;top:' + a.y.toFixed(1) + '%">' +
+        (lv === 'danger' ? '<span class="wx-flash"></span><span class="wx-ring"></span><span class="wx-ring wx-ring2"></span><span class="wx-bolt"><i></i></span>' : '') +
+        '<span class="selring"></span>' +
+        '<button aria-label="' + esc(a.name) + '" title="' + esc(a.name) + '"><span class="dot" style="' + dotStyle(a) + '"></span></button>' +
+        (ORDER.indexOf(lv) >= 0 ? '<span class="lab">' + esc(a.name) + '</span>' : '') + '</div>';
+    });
+  });
+  $('pins').innerHTML = h;
+  $('banner').textContent = D.ty_banner;
+  $('qAsof').textContent = D.quake_asof ? (D.quake_src || 'USGS') + ', as of ' + D.quake_asof : '';
+
+  $('qFlag').textContent = D.flag;
+  $('qCount').textContent = D.quake_count;
+  var ql = '';
+  D.quakes.forEach(function (q) { ql += '<button class="qline" data-q="' + esc(q.id) + '"><b>M' + q.mag.toFixed(1) + '</b> ' + esc(q.line) + '</button>'; });
+  $('qList').innerHTML = ql;
+  $('tyAsof').textContent = D.ty_asof;
+  $('tyText').textContent = D.ty_text;
+  $('tmrNote').textContent = D.tmr_note.split('. ')[0].replace(/\.$/, '');
+  $('sources').textContent = D.sources;
+  var TAG = { used: 'USED NOW', standby: 'BACKUP READY', failed: 'NOT REACHED' }, sg = '';
+  (D.source_status || []).forEach(function (g) {
+    sg += '<div class="srcbox' + (!g.ok ? ' bad' : (!g.first ? ' warn' : '')) + '"><span class="w">' + esc(g.what) + '</span><span class="u">' + esc(g.used) + '</span><div class="c">';
+    g.chain.forEach(function (c, i) { sg += '<div><span>' + (i + 1) + '. ' + esc(c.name) + '<br><span style="color:#3F5563">' + esc(c.role) + (c.state === 'used' && c.note !== 'Used' ? '. ' + esc(c.note) : '') + '</span></span><span class="tag ' + esc(c.state) + '">' + (TAG[c.state] || '') + '</span></div>'; });
+    sg += '</div></div>';
+  });
+  $('srcGrid').innerHTML = sg;
+  var used = []; (D.source_status || []).forEach(function (g) { var n = g.used.split(' (')[0].replace(/^Aviation storm warnings$/, 'aviationweather.gov'); if (g.ok && used.indexOf(n) < 0) used.push(n); });
+  $('foot').textContent = (used.length ? 'Data from ' + used.join(', ') + '. ' : '') + 'Tap the ? at the top for how this dashboard works.';
+  if (S.sel && !byId(S.sel)) S.sel = '';
+  if (S.qk && !quakeById(S.qk)) S.qk = '';
+  renderNotice();
+}
+function renderNotice() {
+  if (!D) return;
+  var msgs = (D.problems || []).slice();
+  var ageMin = (Date.now() - D.generated_ms) / 60000;
+  var chip = $('chip');
+  if (ageMin > STALE_MIN) {
+    var hrs = ageMin / 60;
+    var age = hrs < 2 ? Math.round(ageMin) + ' minutes' : (hrs < 48 ? Math.round(hrs) + ' hours' : Math.round(hrs / 24) + ' days');
+    msgs.unshift('This data is about ' + age + ' old. The automatic refresh may be delayed or stopped. Treat the alert levels with care.');
+    chip.textContent = 'Data may be out of date'; chip.className = 'chip stale';
+  } else { chip.textContent = 'Live, updates about every 10 minutes'; chip.className = 'chip'; }
+  var n = $('notice');
+  if (msgs.length) { n.hidden = false; n.innerHTML = '<strong>Please note</strong>' + msgs.map(esc).join('<br>'); } else { n.hidden = true; n.innerHTML = ''; }
+}
+
+/* ---------- map view ---------- */
+function clampC(c, z) { var half = 50 / z; return Math.min(100 - half, Math.max(half, c)); }
+function selPoint() {
+  if (S.sel) { return byId(S.sel); }
+  if (S.qk) { var q = quakeById(S.qk); return q && q.onmap ? q : null; }
+  return null;
+}
+function viewNow() {
+  var p = selPoint(), v = S.view;
+  var z = v ? v.z : (p ? 2.2 : 1);
+  return { z: z, cx: clampC(v ? v.cx : (p ? p.x : 50), z), cy: clampC(v ? v.cy : (p ? p.y : 50), z) };
+}
+function setView(z, cx, cy, drag) { S.view = { z: z, cx: clampC(cx, z), cy: clampC(cy, z) }; S.drag = !!drag; applyView(); }
+function applyView() {
+  var v = viewNow(), L = $('layer');
+  L.classList.toggle('nodrag', S.drag);
+  L.style.transform = 'translate(' + ((0.5 - v.z * v.cx / 100) * 100).toFixed(2) + '%,' + ((0.5 - v.z * v.cy / 100) * 100).toFixed(2) + '%) scale(' + v.z.toFixed(3) + ')';
+  L.style.setProperty('--inv', Math.min(1, 1.35 / v.z).toFixed(3));
+  L.style.touchAction = v.z > 1 ? 'none' : 'pan-x pan-y';
+  L.style.cursor = v.z > 1 ? 'grab' : 'default';
+  if (typeof R !== 'undefined' && R && !R.playing) rainDraw();
+}
+
+/* ---------- everything that depends on what is selected or filtered ---------- */
+function field(k, v) { return '<div class="f"><span class="k">' + k + '</span><span class="v">' + esc(v) + '</span></div>'; }
+function applyState() {
+  if (!D) return;
+  var c = { advisory: 0, warning: 0, danger: 0 };
+  D.airports.forEach(function (a) { if (inRegion(a) && c[a.level] !== undefined) c[a.level]++; });
+  $('nAll').textContent = c.advisory + c.warning + c.danger;
+  $('nAdv').textContent = c.advisory; $('nWarn').textContent = c.warning; $('nDanger').textContent = c.danger;
+  $('filterLabel').textContent = LABELS[S.filter];
+  Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.classList.toggle('on', b.getAttribute('data-f') === S.filter); });
+  $('region').value = S.region; $('airportPick').value = S.sel;
+
+  Array.prototype.forEach.call(document.querySelectorAll('.pin.a'), function (el) {
+    var a = byId(el.getAttribute('data-a'));
+    el.style.display = (inRegion(a) && (levelShown(a.level, true) || a.id === S.sel)) ? '' : 'none';
+    el.classList.toggle('sel', a.id === S.sel);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.pin.q'), function (el) { el.classList.toggle('sel', el.getAttribute('data-q') === S.qk); });
+
+  var shown = [];
+  ORDER.forEach(function (lv) { shown = shown.concat(sorted(D.airports.filter(function (a) { return a.level === lv && inRegion(a) && levelShown(lv, false); }))); });
+  var al = '', st = '<div class="tr h"><div>Airport</div><div>Level</div><div>What to expect</div><div>When</div></div>';
+  shown.forEach(function (a) {
+    al += '<button class="alert" data-a="' + esc(a.id) + '"><span class="a1">' + pill(a.level) + '<span class="nm">' + esc(a.name) + '</span>' + (a.est ? EST : '') + '</span>' +
+      '<span class="a2"><span>' + esc(a.what) + '</span><span class="wh">' + esc(a.when) + '</span></span></button>';
+    st += '<div class="tr"><div class="nm">' + esc(a.name) + '</div><div class="pl">' + pill(a.level) + (a.est ? EST : '') + '</div><div>' + esc(a.what) + '</div><div class="wh">' + esc(a.when) + '</div></div>';
+  });
+  if (!shown.length) { al = '<div class="empty">No airports at this level right now.</div>'; st += '<div class="empty">No airports at this level right now.</div>'; }
+  $('alerts').innerHTML = al; $('statTbl').innerHTML = st;
+
+  var tm = D.airports.filter(function (a) { return a.t && inRegion(a); }).sort(function (a, b) { return (a.tsort - b.tsort) || (a.test - b.test) || a.name.localeCompare(b.name); });
+  var th = '<div class="tr h"><div>Airport</div><div>Based on</div><div>What to expect</div><div>When tomorrow</div></div>';
+  tm.forEach(function (a) { th += '<div class="tr"><div class="nm">' + esc(a.name) + '</div><div class="pl">' + (a.test ? EST : '<span class="pill blue">AIRPORT FORECAST</span>') + '</div><div>' + esc(a.twhat) + '</div><div class="wh">' + esc(a.twhen) + '</div></div>'; });
+  if (!tm.length) th += '<div class="empty">No bad weather is forecast for tomorrow at these airports.</div>';
+  $('tmrTbl').innerHTML = th;
+
+  var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null;
+  if (a) {
+    d.innerHTML = '<div class="detail"><div class="hd"><div class="ttl"><h3>' + esc(a.name) + '</h3>' + pill(a.level) + (a.est ? EST : '') + '</div><button class="btn" data-close="1">Close</button></div>' +
+      field('Right now', a.now) + field('Rest of today', a.next) + field('Tomorrow', a.tmr) + field('Days ahead', a.days) + field('What to do', a.todo) +
+      field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src) + '</div>';
+  } else if (q) {
+    d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(q.title) + '</h3><span class="pill quake">EARTHQUAKE</span></div><button class="btn" data-close="1">Close</button></div>' +
+      field('Where', q.where) + field('When', q.when) + field('Depth', q.depth) + field('Nearest airport', q.near) + field('Tsunami', q.tsu) + field('Aftershocks', q.after) +
+      field('What to do', q.todo) + field('Source', q.src) + '</div>';
+  } else {
+    d.innerHTML = '<div class="hint">Select an airport or earthquake on the map to see its details.</div>';
+  }
+  applyView();
+  wxUpdate();
+  R.lab = -1; rainDraw();
+}
+/* ---------- rain and thunder animation (Windy.com embed) ---------- */
+var WX = { open: false, layer: 'rain', follow: true, src: '' };
+function wxUpdate() {
+  if (!WX.open) return;
+  var a = (WX.follow && S.sel && D) ? byId(S.sel) : null, has = a && typeof a.lat === 'number' && typeof a.lon === 'number';
+  var lat = has ? a.lat : 12.3, lon = has ? a.lon : 122.6, zoom = has ? 8 : 5;
+  var u = 'https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=%C2%B0C&metricWind=km%2Fh&zoom=' + zoom +
+    '&overlay=' + WX.layer + '&product=ecmwf&level=surface&lat=' + lat.toFixed(3) + '&lon=' + lon.toFixed(3) +
+    (has ? '&detailLat=' + a.lat.toFixed(3) + '&detailLon=' + a.lon.toFixed(3) + '&marker=true' : '');
+  if (u !== WX.src) { WX.src = u; $('wxFrame').src = u; }
+  $('wxWhere').textContent = has ? 'Showing: ' + a.name : 'Showing: whole Philippines';
+  Array.prototype.forEach.call(document.querySelectorAll('.seg[data-layer]'), function (b) { b.classList.toggle('on', b.getAttribute('data-layer') === WX.layer); });
+}
+$('wxToggle').addEventListener('click', function () {
+  WX.open = !WX.open; $('wxBody').hidden = !WX.open; $('wxBody').style.display = WX.open ? 'flex' : 'none';
+  this.textContent = WX.open ? 'Hide Windy map' : 'Show Windy map'; this.setAttribute('aria-expanded', WX.open ? 'true' : 'false');
+  if (!WX.open) { WX.src = ''; $('wxFrame').removeAttribute('src'); } else { WX.follow = true; wxUpdate(); }
+});
+Array.prototype.forEach.call(document.querySelectorAll('.seg[data-layer]'), function (b) { b.addEventListener('click', function () { WX.layer = b.getAttribute('data-layer'); wxUpdate(); }); });
+$('wxAll').addEventListener('click', function () { WX.follow = false; wxUpdate(); });
+function selectAirport(id) { WX.follow = true; S.sel = id; S.qk = ''; S.view = null; S.drag = false; applyState(); }
+function selectQuake(id) { S.sel = ''; S.qk = id; S.view = null; S.drag = false; applyState(); }
+function clearSel() { S.sel = ''; S.qk = ''; S.view = null; S.drag = false; applyState(); }
+
+/* ---------- events ---------- */
+$('region').addEventListener('change', function (e) { S.region = e.target.value; applyState(); });
+$('airportPick').addEventListener('change', function (e) { if (e.target.value) selectAirport(e.target.value); else clearSel(); });
+Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.addEventListener('click', function () { S.filter = b.getAttribute('data-f'); applyState(); }); });
+$('detail').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) clearSel(); });
+function toMap() { var r = $('vp').getBoundingClientRect(); if (r.top < 0 || r.bottom > window.innerHeight) $('vp').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+$('alerts').addEventListener('click', function (e) { var b = e.target.closest('[data-a]'); if (b) { selectAirport(b.getAttribute('data-a')); toMap(); } });
+$('qList').addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) { selectQuake(b.getAttribute('data-q')); toMap(); } });
+$('zIn').addEventListener('click', function () { var v = viewNow(); setView(Math.min(6, v.z * 1.5), v.cx, v.cy, false); });
+$('zOut').addEventListener('click', function () { var v = viewNow(); setView(Math.max(1, v.z / 1.5), v.cx, v.cy, false); });
+$('zAll').addEventListener('click', clearSel);
+var modal = $('modal');
+$('helpBtn').addEventListener('click', function () { modal.classList.add('open'); $('modalClose').focus(); });
+function closeHelp() { modal.classList.remove('open'); $('helpBtn').focus(); }
+$('modalBack').addEventListener('click', closeHelp); $('modalClose').addEventListener('click', closeHelp);
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modal.classList.contains('open')) closeHelp(); });
+
+/* map: wheel, drag, pinch, double-tap */
+var layer = $('layer'), vp = $('vp'), pts = {}, drag = null, pinch = null, moved = false, lastTap = null;
+function frac(x, y) { var R = vp.getBoundingClientRect(); return { fx: (x - R.left) / R.width, fy: (y - R.top) / R.height, R: R }; }
+function zoomAt(nz, x, y, animate) { var v = viewNow(), f = frac(x, y); setView(nz, v.cx + (f.fx - 0.5) * 100 / v.z - (f.fx - 0.5) * 100 / nz, v.cy + (f.fy - 0.5) * 100 / v.z - (f.fy - 0.5) * 100 / nz, !animate); }
+layer.addEventListener('wheel', function (e) {
+  var v = viewNow(), nz = Math.min(6, Math.max(1, v.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2)));
+  if (nz === v.z) return;
+  e.preventDefault(); zoomAt(nz, e.clientX, e.clientY, false);
+}, { passive: false });
+layer.addEventListener('pointerdown', function (e) {
+  if (e.isPrimary) pts = {};
+  pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+  var ids = Object.keys(pts), v = viewNow();
+  if (ids.length === 1) {
+    moved = false; pinch = null; drag = null;
+    if (v.z > 1) { var R = vp.getBoundingClientRect(); drag = { id: e.pointerId, x: e.clientX, y: e.clientY, cx: v.cx, cy: v.cy, w: R.width, h: R.height, z: v.z, moved: false }; }
+  } else if (ids.length === 2) {
+    var a = pts[ids[0]], b = pts[ids[1]], f = frac((a.x + b.x) / 2, (a.y + b.y) / 2);
+    drag = null; moved = true; lastTap = null;
+    pinch = { d: Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), z: v.z, px: v.cx + (f.fx - 0.5) * 100 / v.z, py: v.cy + (f.fy - 0.5) * 100 / v.z };
+  }
+});
+layer.addEventListener('pointermove', function (e) {
+  if (pts[e.pointerId]) pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+  if (pinch) {
+    var ids = Object.keys(pts); if (ids.length < 2) return;
+    var a = pts[ids[0]], b = pts[ids[1]], f = frac((a.x + b.x) / 2, (a.y + b.y) / 2);
+    var nz = Math.min(6, Math.max(1, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
+    setView(nz, pinch.px - (f.fx - 0.5) * 100 / nz, pinch.py - (f.fy - 0.5) * 100 / nz, true);
+    return;
+  }
+  if (!drag || drag.id !== e.pointerId) return;
+  var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 6) return;
+  drag.moved = true; moved = true;
+  setView(drag.z, drag.cx - dx / (drag.w * drag.z) * 100, drag.cy - dy / (drag.h * drag.z) * 100, true);
+  layer.style.cursor = 'grabbing';
+});
+function pointerEnd(e) {
+  var had = !!pts[e.pointerId]; delete pts[e.pointerId];
+  var wasPinch = !!pinch;
+  if (pinch && Object.keys(pts).length < 2) { pinch = null; S.drag = false; applyView(); }
+  if (drag) { drag = null; S.drag = false; applyView(); }
+  if (e.type !== 'pointerup' || !had || wasPinch || moved) return;
+  if (e.target.closest && e.target.closest('button')) { lastTap = null; return; }
+  var t = Date.now();
+  if (lastTap && t - lastTap.t < 320 && Math.abs(e.clientX - lastTap.x) + Math.abs(e.clientY - lastTap.y) < 30) {
+    lastTap = null; var v = viewNow(); zoomAt(v.z >= 5.9 ? 1 : Math.min(6, v.z * 1.8), e.clientX, e.clientY, true);
+  } else { lastTap = { t: t, x: e.clientX, y: e.clientY }; }
+}
+layer.addEventListener('pointerup', pointerEnd); layer.addEventListener('pointercancel', pointerEnd); layer.addEventListener('pointerleave', pointerEnd);
+layer.addEventListener('click', function (e) {
+  if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); return; }
+  var b = e.target.closest('.pin'); if (!b || !e.target.closest('button')) return;
+  if (b.hasAttribute('data-a')) selectAirport(b.getAttribute('data-a')); else selectQuake(b.getAttribute('data-q'));
+}, true);
+
+/* ---------- rain and thunder timeline on the airport map ---------- */
+var RAIN = null, R = { playing: !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches), show: true, pos: 0, n: 0, i0: 0, last: 0, hold: 0, lab: -1 };
+var HOUR_MS = 800;                        // how long each forecast hour stays on screen while playing
+var cv = $('rainCv'), cx2 = cv.getContext('2d'), small = document.createElement('canvas'), sctx = small.getContext('2d');
+function rainColor(v) {
+  if (v < 0.15) return [90, 160, 235, 0];
+  if (v < 1) return [90, 160, 235, 90 + 60 * v];
+  if (v < 2.5) return [40, 110, 220, 160];
+  if (v < 5) return [0, 170, 150, 185];
+  if (v < 7.6) return [120, 200, 60, 195];
+  if (v < 15) return [255, 190, 0, 210];
+  return [230, 60, 60, 220];
+}
+function bolt(x, y, s) {
+  var p = [[.56, 0], [.1, .58], [.44, .58], [.32, 1], [.9, .38], [.56, .38]];
+  cx2.beginPath(); p.forEach(function (q, i) { var px = x + (q[0] - .5) * s * .8, py = y + (q[1] - .5) * s; if (i) cx2.lineTo(px, py); else cx2.moveTo(px, py); });
+  cx2.closePath(); cx2.lineWidth = 2.5; cx2.strokeStyle = '#12303F'; cx2.lineJoin = 'round'; cx2.stroke(); cx2.fillStyle = '#FFD600'; cx2.fill();
+}
+function rainSetup() {
+  R.n = 0;
+  if (RAIN && RAIN.times && RAIN.rain) {
+    var now = Date.now(), i0 = 0;
+    while (i0 < RAIN.times.length && RAIN.times[i0] + 3600000 <= now) i0++;
+    R.i0 = i0; R.n = Math.min(24, RAIN.times.length - i0);
+  }
+  var ok = R.n >= 6;
+  $('rainBar').hidden = !ok; cv.style.display = (ok && R.show) ? '' : 'none';
+  if (!ok) return;
+  small.width = RAIN.grid.cols; small.height = RAIN.grid.rows;
+  $('rainSlider').max = R.n - 1; R.pos = Math.min(R.pos, R.n - 1); R.lab = -1;
+  var gen = new Date(RAIN.generated_ms).toLocaleString('en-US', { timeZone: 'Asia/Manila', weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  $('hRain').textContent = 'The moving rain layer is a ' + (RAIN.source || 'MET Norway') + ' computer forecast, last built ' + gen + ' (Philippine time). It is a picture of the forecast only and plays no part in the alert levels.';
+  rainDraw();
+}
+function rainDraw() {
+  if (!RAIN || R.n < 6) return;
+  var g = RAIN.grid, P = RAIN.proj, k = Math.floor(R.pos), f = R.pos - k, A = RAIN.rain[R.i0 + k], B = RAIN.rain[Math.min(R.i0 + k + 1, RAIN.rain.length - 1)];
+  var img = sctx.createImageData(g.cols, g.rows), d = img.data;
+  for (var i = 0; i < A.length; i++) { var c = rainColor(A[i] + (B[i] - A[i]) * f); d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = c[3]; }
+  sctx.putImageData(img, 0, 0);
+  var W = cv.width, H = cv.height, X = function (lon) { return (P.cx[0] * lon + P.cx[1]) / 100 * W; }, Y = function (lat) { return (P.cy[0] * lat + P.cy[1]) / 100 * H; };
+  var x0 = X(g.lon0 - g.step / 2), x1 = X(g.lon0 + (g.cols - .5) * g.step), y0 = Y(g.lat0 + g.step / 2), y1 = Y(g.lat0 - (g.rows - .5) * g.step);
+  cx2.clearRect(0, 0, W, H); cx2.imageSmoothingEnabled = true; cx2.imageSmoothingQuality = 'high';
+  cx2.drawImage(small, x0, y0, x1 - x0, y1 - y0);
+  var inv = Math.min(1, 1.35 / viewNow().z);
+  var T = RAIN.times[R.i0 + k] + f * 3600000, th = (D && D.thunder) || { areas: [], airports: [] };
+  (th.areas || []).forEach(function (a) {
+    if (!(a.a <= T + 1800000 && T < a.b) || !a.p || a.p.length < 3) return;
+    var sx = 0, sy = 0; cx2.beginPath();
+    a.p.forEach(function (q, i) { var px = q[0] / 100 * W, py = q[1] / 100 * H; sx += px; sy += py; if (i) cx2.lineTo(px, py); else cx2.moveTo(px, py); });
+    cx2.closePath(); cx2.fillStyle = 'rgba(255,214,0,.16)'; cx2.fill(); cx2.setLineDash([6, 4]); cx2.lineWidth = 2; cx2.strokeStyle = '#B8860B'; cx2.stroke(); cx2.setLineDash([]);
+    var mx = sx / a.p.length, my = sy / a.p.length; bolt(mx, my, 20 * inv);
+    a.p.forEach(function (q) { bolt(mx + (q[0] / 100 * W - mx) * .55, my + (q[1] / 100 * H - my) * .55, 15 * inv); });
+  });
+  var seen = {};
+  (th.airports || []).forEach(function (t) {
+    if (!(t.a <= T + 1800000 && T < t.b) || seen[t.id] || !D) return;
+    var ap = byId(t.id); if (!ap || !inRegion(ap)) return; seen[t.id] = 1;
+    bolt(ap.x / 100 * W - 12 * inv, ap.y / 100 * H - 14 * inv, 18 * inv);
+  });
+  var hk = Math.round(R.pos);
+  if (hk !== R.lab) {
+    R.lab = hk; $('rainSlider').value = hk;
+    var t = new Date(RAIN.times[R.i0 + Math.min(hk, R.n - 1)]), now = new Date();
+    var day = t.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', weekday: 'long' }), today = now.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', weekday: 'long' });
+    $('rainTime').textContent = (hk === 0 ? 'Now, ' : '') + (day === today ? 'Today' : day) + ' ' + t.toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
+  }
+}
+function rainTick(ts) {
+  if (R.playing && R.show && R.n >= 6 && !document.hidden) {
+    var dtm = R.last ? Math.min(200, ts - R.last) : 0;
+    if (R.hold > 0) { R.hold -= dtm; if (R.hold <= 0) { R.pos = 0; rainDraw(); } }
+    else { R.pos += dtm / HOUR_MS; if (R.pos >= R.n - 1) { R.pos = R.n - 1; R.hold = 1500; } rainDraw(); }
+  }
+  R.last = ts; requestAnimationFrame(rainTick);
+}
+$('rainPlay').addEventListener('click', function () { R.playing = !R.playing; this.textContent = R.playing ? 'Stop' : 'Play'; if (R.playing && R.pos >= R.n - 1) { R.pos = 0; R.hold = 0; } });
+$('rainPlay').textContent = R.playing ? 'Stop' : 'Play';
+$('rainSlider').addEventListener('input', function () { R.pos = +this.value; R.hold = 0; R.lab = -1; rainDraw(); });
+$('rainShow').addEventListener('click', function () { R.show = !R.show; this.textContent = R.show ? 'Hide rain' : 'Show rain'; this.setAttribute('aria-pressed', R.show ? 'true' : 'false'); cv.style.display = (R.show && R.n >= 6) ? '' : 'none'; if (R.show) rainDraw(); });
+function loadRain() {
+  fetch('rain.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+    if (!RAIN || j.generated_ms !== RAIN.generated_ms) { RAIN = j; }
+    rainSetup();
+  }).catch(function () { rainSetup(); });
+}
+requestAnimationFrame(rainTick);
+
+/* ---------- load and auto-refresh ---------- */
+function load() {
+  fetch('data.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+    if (!D || j.generated_ms !== D.generated_ms) { D = j; renderData(); applyState(); } else { renderNotice(); }
+  }).catch(function () {
+    if (!D) { $('checked').textContent = 'The data could not be loaded. Please reload the page in a minute.'; } else { renderNotice(); }
+  });
+}
+load(); loadRain();
+setInterval(function () { load(); loadRain(); }, REFRESH_MS);
+document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>
