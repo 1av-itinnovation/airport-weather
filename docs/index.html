@@ -953,7 +953,7 @@ header.top{padding:10px 16px;border-radius:10px}
     </div>
   </div>
   <div class="tools">
-    <div class="chip" id="chip">Live, updates about every 20 minutes</div>
+    <div class="chip" id="chip">Live, updates about every 22 minutes</div>
     <button class="helpbtn" id="helpBtn" aria-label="How this dashboard works" title="How this dashboard works"><span>?</span></button>
   </div>
 </header>
@@ -1071,7 +1071,7 @@ header.top{padding:10px 16px;border-radius:10px}
         <li><strong>Rain and thunder animation.</strong> The airport map plays the forecast rain for the next 24 hours by itself, with lightning marks where an official thunderstorm warning or airport forecast applies. Use Stop and Play, or drag the slider to any hour. It is a computer forecast, so the alert levels take priority when the two differ. Lightning marks come from official thunderstorm area warnings and official airport forecasts, so they cover the next few hours and the larger airports only; rain with no lightning mark does not mean no thunder. A more detailed Windy.com map can be opened with the Windy map button: it is a different forecast, so the two can differ, and inside it you press its own play button to step through the hours.</li>
         <li><strong>Earthquakes and typhoons.</strong> Earthquakes cannot be forecast; the list shows what has already happened. The typhoon watch uses storm warnings that look 6 hours ahead only, so it is not a multi-day track. It is a computer forecast, so the alert levels take priority when the two differ.</li>
         <li><strong>Auto-show Danger.</strong> When any airport is at Danger and nobody is using the screen, the map selects each Danger airport in turn, zooms to it and shows its details, then returns to the whole map and repeats. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
-        <li><strong>The time at the top.</strong> It shows when the data was last checked and when the next update is expected. New data is collected on a schedule, and an open page looks for it every minute, so you do not need to reload. The next-update time is an estimate worked out from how often recent updates actually arrived, because the schedule can start late.</li>
+        <li><strong>The time at the top.</strong> It shows when the data was last checked and when the next update is expected. New data is collected on a schedule, and an open page looks for it every minute, so you do not need to reload. The next-update time is calculated automatically: the time of the last update plus the average gap between recent updates. It is an estimate, because the schedule does not run at exact times.</li>
       </ul>
     </div>
     <div class="sec">
@@ -1214,7 +1214,7 @@ function renderNotice() {
     var age = hrs < 2 ? Math.round(ageMin) + ' minutes' : (hrs < 48 ? Math.round(hrs) + ' hours' : Math.round(hrs / 24) + ' days');
     msgs.unshift('This data is about ' + age + ' old. The automatic refresh may be delayed or stopped. Treat the alert levels with care.');
     chip.textContent = 'Data may be out of date'; chip.className = 'chip stale';
-  } else { chip.className = 'chip'; chip.textContent = 'Live, updates about every ' + (Math.round(typicalGap() / 5) * 5 || 5) + ' minutes'; }
+  } else { chip.className = 'chip'; chip.textContent = chipText(); }
   var n = $('notice');
   if (msgs.length) { n.hidden = false; n.innerHTML = '<strong>Please note:</strong>' + msgs.map(esc).join(' '); } else { n.hidden = true; n.innerHTML = ''; }
   fit();
@@ -1341,24 +1341,26 @@ $('wxAll').addEventListener('click', function () { WX.follow = false; wxUpdate()
    bases its estimate on that. */
 var RAINSEEN = 0;
 var CYCLE_MIN = 10;                       // what the schedule file asks for
-var TYPICAL_MIN = 22;                     // what the hosting service actually delivers (from its run history, 7 Oct 2026):
-                                          // scheduled runs arrived 14 to 27 minutes apart, typically 22 to 23
-var PUBLISH_MIN = 1.5;                    // typical delay between a refresh and the page going live
+var PUBLISH_MIN = 2;                      // typical delay between a refresh starting and the page going live
+var START_MIN = 22;                       // used only until two scheduled refreshes have been recorded
+var AVG_OVER = 6;                         // average the gaps between this many recent scheduled refreshes
+// Simple automatic calculation: the data file lists when recent refreshes ran. The page averages the
+// gaps between them and adds that average to the time of the last refresh.
 function typicalGap() {
   var r = ((D && D.recent) || []).slice().sort(function (a, b) { return a - b; }), g = [];
-  for (var i = 1; i < r.length; i++) { var m = (r[i] - r[i - 1]) / 60000; if (m >= 8 && m <= 180) g.push(m); }       // gaps under 8 minutes are manual runs, not the schedule
-  if (g.length < 4) return TYPICAL_MIN;
-  g = g.slice(-8).sort(function (a, b) { return a - b; });
-  var med = g.length % 2 ? g[(g.length - 1) / 2] : (g[g.length / 2 - 1] + g[g.length / 2]) / 2;
-  return Math.max(CYCLE_MIN, Math.min(90, med));
+  for (var i = 1; i < r.length; i++) { var m = (r[i] - r[i - 1]) / 60000; if (m >= 8 && m <= 180) g.push(m); }   // under 8 minutes = a manual run
+  g = g.slice(-AVG_OVER);
+  if (!g.length) return START_MIN;
+  return Math.max(CYCLE_MIN, g.reduce(function (a, b) { return a + b; }, 0) / g.length);
 }
+function chipText() { return 'Live, updates about every ' + Math.round(typicalGap()) + ' minutes'; }
 function nextUpdate() {
   var el = $('nextUp'); if (!D) { el.textContent = ''; return; }
   var gap = typicalGap(), next = D.generated_ms + (gap + PUBLISH_MIN) * 60000, now = Date.now(), mins = Math.ceil((next - now) / 60000);
   var t = new Date(next).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
   el.classList.toggle('late', mins < 1);
-  el.textContent = mins >= 1 ? 'Next update expected about ' + t + ' (in ' + mins + ' min)' : (now - next < gap * 60000 ? 'Next update expected any moment' : 'Update is running late');
-  var chip = $('chip'); if (chip && !chip.classList.contains('stale')) chip.textContent = 'Live, updates about every ' + (Math.round(gap / 5) * 5 || 5) + ' minutes';
+  el.textContent = mins >= 1 ? 'Next update about ' + t + ' (in ' + mins + ' min)' : (now - next < 10 * 60000 ? 'Next update expected any moment' : 'Update is running late');
+  var chip = $('chip'); if (chip && !chip.classList.contains('stale')) chip.textContent = chipText();
 }
 setInterval(nextUpdate, 10000);
 
