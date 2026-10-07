@@ -536,9 +536,9 @@ def kindtext(tok):
     """plain words for one weather group; returns (text, rank, short)"""
     inten='heavy ' if tok.startswith('+') else ('light ' if tok.startswith('-') else '')
     if 'TS' in tok:
-        if re.search(r'RA|DZ|GR',tok): return ('Thunderstorm with heavy rain' if tok.startswith('+') else 'Thunderstorm with rain',3,'Thunderstorm')
+        if re.search(r'RA|DZ|GR',tok): return ('Thunderstorm with '+inten+'rain',3,'Thunderstorm')
         return ('Thunderstorm',3,'Thunderstorm')
-    if 'SH' in tok: return (('Heavy rain showers' if tok.startswith('+') else 'Rain showers'),2,'Rain showers' if not tok.startswith('+') else 'Heavy rain showers')
+    if 'SH' in tok: return (('Heavy rain showers' if tok.startswith('+') else ('Light rain showers' if tok.startswith('-') else 'Rain showers')),2,'Rain showers' if not tok.startswith('+') else 'Heavy rain showers')
     if re.search(r'RA|DZ',tok): 
         t={'heavy ':'Heavy rain','light ':'Light rain','':'Rain'}[inten]; return (t,2,t)
     return (None,0,None)
@@ -584,12 +584,13 @@ def off_row(mt,tf,m):
             if best[1]==0 and wk>=39: best=('Strong winds',1,'Strong winds')
             if best[1]==0: continue
             cert='possible' if (f.get('fcstChange') in ('TEMPO','PROB') or f.get('probability')) else 'expected'
-            periods.append(dict(a=a,b=b,text=best[0],rank=best[1],short=best[2],cert=cert,now=a<=NOW))
+            long_=(f"possible ({f['probability']}% chance)" if f.get('probability') else 'possible at times') if cert=='possible' else 'expected'
+            periods.append(dict(a=a,b=b,text=best[0],rank=best[1],short=best[2],cert=cert,long=long_,now=a<=NOW))
     periods.sort(key=lambda p:p['a'])
     def pspan(p,cap=False):
         if p['now']: return ('Now, until ' if cap else 'now to ')+clock(p['b'])
         return f"{clock(p['a'])} to {clock(p['b'])}"
-    nx=[f"{p['text']} {p['cert']} {pspan(p)}." for p in periods]
+    nx=[f"{p['text']} {p['long']} {pspan(p)}." for p in periods]
     if not tf: nx=['No airport forecast is available for the rest of today.']
     elif not nx: nx=['No thunderstorm or rain expected for the rest of today.']
     if m and m['runs']: nx.append('Estimate (MET Norway): '+' '.join(f"{r['kind']} possible {span(r)}." for r in m['runs']).replace('. m','. M').replace('. h','. H').replace('. s','. S'))
@@ -622,7 +623,8 @@ def off_row(mt,tf,m):
             if best[1]==0 and wk>=39: best=('Strong winds',1,'Strong winds')
             if best[1]==0: continue
             cert='possible' if (f.get('fcstChange') in ('TEMPO','PROB') or f.get('probability')) else 'expected'
-            tp.append((a,f"{best[0]} {cert} {tspan(a,b)}.")); cands.append(dict(a=a,b=b,rank=best[1],est=False,what=f"{best[2]} {cert}"))
+            long_=(f"possible ({f['probability']}% chance)" if f.get('probability') else 'possible at times') if cert=='possible' else 'expected'
+            tp.append((a,f"{best[0]} {long_} {tspan(a,b)}.")); cands.append(dict(a=a,b=b,rank=best[1],est=False,what=f"{best[2]} {cert}"))
         tend=dt.datetime.fromtimestamp(tf['validTimeTo'],dt.timezone.utc)
         if tend<=T0: tm='The airport forecast does not reach tomorrow yet.'
         else:
