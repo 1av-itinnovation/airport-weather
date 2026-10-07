@@ -914,6 +914,10 @@ header.top{padding:10px 16px;border-radius:10px}
   .filters #region{grid-column:span 3}
   .filters #airportPick{grid-column:span 3}
 }
+
+/* ---------- Normal level shown in green ---------- */
+.stat.normal{background:#2E7D32;color:#FFFFFF;border-color:#2E7D32}
+.pill.normal{background:#2E7D32;color:#FFFFFF}
 </style>
 </head>
 <body>
@@ -1107,7 +1111,7 @@ var EST = '<span class="pill est">ESTIMATE</span>';
 
 function dotStyle(a) {
   var lv = a.level, e = a.est;
-  if (lv === 'normal') return 'width:13px;height:13px;background:#CAE2E7;border:' + (e ? '2px dashed #005687' : '2px solid #005687');
+  if (lv === 'normal') return 'width:13px;height:13px;background:#66BB6A;border:' + (e ? '2px dashed #1B5E20' : '2px solid #1B5E20');
   if (lv === 'nodata') return 'width:13px;height:13px;background:#FFFFFF;border:2px solid #0060A7;border-radius:3px';
   if (lv === 'advisory') return 'width:16px;height:16px;background:#FFD600;border:' + (e ? '2px dashed #12303F' : '2px solid #12303F');
   if (lv === 'warning') return 'width:18px;height:18px;background:#F57C00;border:' + (e ? '2px dashed #FFFFFF' : '3px solid #FFFFFF');
@@ -1468,7 +1472,7 @@ function rainDraw() {
   var seen = {};
   (th.airports || []).forEach(function (t) {
     if (!(t.a <= T + 1800000 && T < t.b) || seen[t.id] || !D) return;
-    var ap = byId(t.id); if (!ap || !inRegion(ap)) return; seen[t.id] = 1;
+    var ap = byId(t.id); if (!ap || !inRegion(ap) || !(levelShown(ap.level, true) || ap.id === S.sel)) return; seen[t.id] = 1;
     bolt(PX(ap.x) - 12 * inv, PY(ap.y) - 14 * inv, 18 * inv);
   });
   var hk = Math.round(R.pos);
