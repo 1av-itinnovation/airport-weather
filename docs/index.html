@@ -1330,7 +1330,7 @@ body{background:var(--page);color:var(--ink)}
         <li><strong>Sound.</strong> Press the bell at the top to turn on a short chime for each new alert. Browsers only allow sound after someone has clicked on the page.</li>
         <li><strong>Your nearest airport.</strong> When the page is opened or reloaded, the browser asks once for your location. If you allow it, the map first shows the airport nearest to you. Your location is used only inside your browser; it is not sent anywhere or stored.</li>
         <li><strong>Auto-show Danger.</strong> When any airport is at Danger and nobody is using the screen, the map selects each Danger airport in turn, zooms to it and shows its details, then returns to the whole map and repeats. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
-        <li><strong>The times at the top.</strong> "Checked" is when the data was last collected. "Next update" is that time plus the average gap between recent updates; it is an estimate, because the schedule does not run at exact times. An open page looks for new data every minute, so you never need to reload.</li>
+        <li><strong>The times at the top.</strong> "Checked" is when the data was last collected. "Next update" is that time plus the average gap between recent updates; it is an estimate, because the schedule does not run at exact times. An open page looks for new data by itself, every minute once an update is due, so you never need to reload.</li>
         <li><strong>Yellow notice.</strong> Appears when a backup source is in use or the data is more than 60 minutes old.</li>
       </ul>
     </div>
@@ -2036,7 +2036,15 @@ function load() {
   });
 }
 load(); loadRain();
-setInterval(load, REFRESH_MS);
+/* Looking for new data: every 5 minutes while an update is not due yet, every minute once it is due.
+   New data only arrives about every 20 minutes, so this shows it just as quickly with far fewer downloads. */
+var IDLE_MS = 5 * 60 * 1000;
+function pollDelay() {
+  if (!D) return 15000;
+  var due = D.generated_ms + typicalGap() * 60000;
+  return Date.now() > due - 2 * 60000 ? REFRESH_MS : IDLE_MS;
+}
+(function tick() { setTimeout(function () { load(); tick(); }, pollDelay()); })();
 setInterval(loadRain, RAIN_MS);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
 })();
