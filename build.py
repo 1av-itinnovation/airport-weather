@@ -260,6 +260,28 @@ def load_openmeteo(wanted):
     return out
 EST_LOADERS = {'metno': load_metno, 'openmeteo': load_openmeteo}
 
+# ---------- chance of rain ----------
+# MET Norway gives the expected amount of rain but no percentage chance for the Philippines.
+# Open-Meteo publishes an hourly chance of rain, so it is read here for the hour-by-hour strip only.
+# It never affects alert levels. If it cannot be reached, the strip simply shows no percentage.
+def load_rain_chance():
+    out = {}
+    url = ('https://api.open-meteo.com/v1/forecast?latitude=' + ','.join(f'{a[4]:.4f}' for a in APTS) + '&longitude=' + ','.join(f'{a[5]:.4f}' for a in APTS) +
+           '&hourly=precipitation_probability&timezone=UTC&forecast_days=2')
+    d = fetch(url, tries=2, timeout=30)
+    if d is None: return out
+    if isinstance(d, dict): d = [d]
+    for a, j in zip(APTS, d):
+        try:
+            h = j['hourly']
+            out[a[1]] = {t[:13]: p for t, p in zip(h['time'], h['precipitation_probability']) if p is not None}
+        except Exception as e:
+            print('RAIN CHANCE PARSE ERROR', a[1], e, file=sys.stderr)
+    return out
+try: RAIN_CHANCE = load_rain_chance()
+except Exception as _e:
+    print('RAIN CHANCE ERROR', _e, file=sys.stderr); RAIN_CHANCE = {}
+
 # ---------- earthquakes: every source is reshaped into the same layout ----------
 def _feat(t, lat, lon, depth, mag, place, tsunami=None, felt=None, types=''):
     return {'properties': {'mag': mag, 'place': place, 'time': int(t.timestamp() * 1000), 'tsunami': tsunami, 'felt': felt, 'types': types},
@@ -467,7 +489,8 @@ def met_parse(ic):
         night=not (6<=ph(h['t']).hour<18)
         sky='h' if h['p']>=7.6 else 'r' if h['p']>=2.5 else 'l' if h['p']>=0.2 else ('c' if h['cloud']<25 else 'p' if h['cloud']<75 else 'o')
         return sky+('n' if night else 'd')
-    hourly=[[int(h['t'].timestamp()*1000),round(h['temp']),round(h['p'],1),round(h['w']),pic(h)] for h in hrs[:12]]
+    ch=RAIN_CHANCE.get(ic,{})
+    hourly=[[int(h['t'].timestamp()*1000),round(h['temp']),round(h['p'],1),round(h['w']),pic(h),ch.get(h['t'].strftime('%Y-%m-%dT%H'))] for h in hrs[:12]]
     return dict(upd=upd,cur=hrs[0],runs=runs,later=later,truns=truns,tsum=tsum,days=days,src=m.get('_src','metno'),hourly=hourly)
 def met(ic):
     try: return met_parse(ic)
@@ -869,7 +892,7 @@ data=dict(
     quake_asof=(f"{day(asof)}, {clock_plain(asof)}" if asof else ''),
     quake_count=(f"{len(quakes)} earthquake{'' if len(quakes)==1 else 's'} of magnitude 4.5+ in the past 7 days (purple rings, tap one for details)." if asof else ''),
     ty_text=ty_main, ty_banner=ty_banner, ty_asof=(f"{'Aviation storm warnings' if SIGMET is not None else 'GDACS (backup source)'}, {day(NOW)}, {clock_plain(NOW)}" if tyok else ''),
-    quake_src=QSRC, source_status=SRC_STATUS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
+    quake_src=QSRC, source_status=SRC_STATUS, rain_chance=bool(RAIN_CHANCE), backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
     sources=' '.join(src),
 )
