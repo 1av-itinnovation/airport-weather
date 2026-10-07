@@ -649,11 +649,11 @@ header.top{padding:8px 14px;border-radius:10px;gap:10px;flex:none}
 .zoom{left:6px;bottom:6px;gap:4px}
 .zoom button{width:40px;height:40px;font-size:22px}
 .zoom button.all{font-size:11px}
-.rainbar{width:100%;padding:6px 8px;gap:6px 8px;flex:none}
-.rainbar .btn{min-height:36px;padding:0 10px;font-size:13px}
+.rainbar{width:100%;padding:4px 6px;gap:4px 6px;flex:none}
+.rainbar .btn{min-height:32px;padding:0 9px;font-size:12px}
 .rainbar .info{min-width:0;flex:1 1 90px}
 .rainbar .info .k{font-size:10px}.rainbar .info .v{font-size:13px}
-.rainbar input[type=range]{min-height:24px}
+.rainbar input[type=range]{min-height:20px}
 .rainbar .keys{font-size:11px;gap:3px 9px}
 .selbar{display:none;width:100%;border:2px solid #0077C8;border-radius:10px;background:#F1F7F9;padding:6px 8px;align-items:center;gap:8px;flex:none}
 .selbar .nm{font-weight:900;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1156,14 +1156,14 @@ function fit() {
    */
   var maxW = narrow
     ? Math.max(160, cols.clientWidth - padX)
-    : Math.max(320, Math.min(cols.clientWidth * 0.48, 720));
+    : Math.max(320, Math.min(cols.clientWidth * 0.56, 820));
   var w = Math.max(160, Math.min(maxW, availH * 1000 / 1506));
   $('vp').style.width = w + 'px';
   $('vp').style.height = (w * 1506 / 1000) + 'px';
 
   if (!narrow) {
     var mapTrack = Math.round(w + padX + 2);
-    cols.style.gridTemplateColumns = mapTrack + 'px minmax(0,0.85fr) minmax(0,0.85fr)';
+    cols.style.gridTemplateColumns = mapTrack + 'px minmax(0,0.72fr) minmax(0,0.72fr)';
   }
   if (!fit.again) { fit.again = true; requestAnimationFrame(function () { fit(); fit.again = false; }); }
 }
