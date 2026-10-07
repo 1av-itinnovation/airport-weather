@@ -2,8 +2,10 @@ name: Refresh Airport Weather Data
 
 on:
   schedule:
-    # Run every 10 minutes
-    - cron: "*/10 * * * *"
+    # Every 10 minutes, at minutes 7, 17, 27, 37, 47 and 57.
+    # GitHub advises against the start of the hour, when scheduled jobs are most often
+    # delayed or dropped, so this avoids :00 and the other round minutes.
+    - cron: "7,17,27,37,47,57 * * * *"
   workflow_dispatch:
 
 permissions:
