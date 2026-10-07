@@ -863,6 +863,41 @@ header.top{padding:10px 16px;border-radius:10px}
 /* large monitors: a gentle enlargement only */
 @media (min-width:2200px) and (min-height:1100px){.app{zoom:1.15;height:calc(100vh / 1.15);height:calc(100dvh / 1.15)}}
 @media (min-width:3200px) and (min-height:1700px){.app{zoom:1.6;height:calc(100vh / 1.6);height:calc(100dvh / 1.6)}}
+
+/* ---------- help window: source notes as a list that opens on request ---------- */
+.srcnotes details{border:1px solid #DCE7EB;border-radius:8px;background:#F8FBFC}
+.srcnotes summary{cursor:pointer;padding:10px 12px;font-size:12.5px;font-weight:600;color:#005687;list-style-position:inside}
+.srcnotes ul{margin:0;padding:0 14px 10px 30px}
+.srcnotes li{font-size:12.5px;line-height:1.5;margin:0 0 6px 0;color:#3F5563}
+#modal .help-data > .small{border-top:none;padding-top:0}
+
+/* ---------- help and Windy windows on phones ---------- */
+@media (max-width:640px){
+  .modal{padding:0}
+  .modal .box,#wxModal .box.wide{width:100%;max-width:none;height:100vh;height:100dvh;max-height:none;border-radius:0}
+  .modal .mh{padding:10px 14px}
+  .modal .mh h2{font-size:16px}
+  .modal .mh .btn{min-height:36px;padding:0 14px}
+  .modal .box > p{padding:12px 14px 2px;font-size:13px;line-height:1.5;color:#3F5563}
+  .modal .sec{padding:14px 14px 4px;gap:8px;border-top:1px solid #E6EEF1;margin-top:10px}
+  .modal h3{font-size:14px}
+  .modal p,.modal li,.modal .t{font-size:13px;line-height:1.5}
+  .modal ul{padding-left:18px}
+  .modal li{margin:0 0 8px 0}
+  /* alert levels: tag on its own line, text below, each in a light card */
+  #modal .box > .sec:nth-of-type(2) .lv{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:0;padding:9px 11px;border:1px solid #E6EEF1;border-radius:8px;background:#F8FBFC}
+  #modal .box > .sec:nth-of-type(2) .lv .c{width:auto;min-width:0;flex:none}
+  #modal .box > .sec:nth-of-type(2) > ul{margin-top:6px}
+  /* sources: each in a light card */
+  #modal .box > .sec:nth-of-type(3) .src{padding:9px 11px;border:1px solid #E6EEF1;border-radius:8px;background:#F8FBFC;gap:3px}
+  .modal .src b{font-size:13px}
+  #modal .help-data-copy p{font-size:12.5px;color:#3F5563}
+  #modal .srcbox{padding:11px}
+  .srcbox .u{font-size:13px}
+  .srcbox .c{font-size:12px;gap:8px}
+  .tag{font-size:9px;padding:3px 7px}
+  #modal .box > .sec:nth-of-type(6){padding-bottom:28px}
+}
 </style>
 </head>
 <body>
@@ -1026,7 +1061,7 @@ header.top{padding:10px 16px;border-radius:10px}
         </div>
         <div class="srcgrid" id="srcGrid"></div>
       </div>
-      <p class="small" id="sources"></p>
+      <div class="small srcnotes" id="sources"></div>
     </div>
     <div class="sec">
       <h3>5. What it cannot do</h3>
@@ -1108,7 +1143,11 @@ function renderData() {
   $('qList').innerHTML = ql;
   $('tyAsof').textContent = D.ty_asof;
   $('tyText').textContent = D.ty_text;
-  $('sources').textContent = D.sources;
+  // the long source note becomes a short list that opens on request
+  var parts = [], rest = String(D.sources || '').replace(/^Sources:\s*/, ''), m;
+  while ((m = rest.match(/^(.*?\.)\s+(?=[A-Z])/))) { parts.push(m[1]); rest = rest.slice(m[0].length); }
+  if (rest) parts.push(rest);
+  $('sources').innerHTML = '<details><summary>Full source notes</summary><ul>' + parts.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></details>';
   var TAG = { used: 'USED NOW', standby: 'BACKUP READY', failed: 'NOT REACHED' }, sg = '';
   var tagOf = function (c) { return (c.state === 'standby' && c.tested === 'failed') ? '<span class="tag failed">TEST FAILED</span>' : '<span class="tag ' + esc(c.state) + '">' + (TAG[c.state] || '') + '</span>'; };
   (D.source_status || []).forEach(function (g) {
