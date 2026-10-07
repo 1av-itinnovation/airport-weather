@@ -4,6 +4,8 @@ A view-only dashboard that watches the weather at the 36 Philippine airports ser
 and Cebgo, together with nearby earthquakes and typhoons. It shows which airports need attention,
 why, and how reliable each reading is.
 
+Created under 1AV IT Innovation by Jake V Borras.
+
 ## How to read the dashboard
 
 | Level | Meaning | What to do |
@@ -19,8 +21,12 @@ why, and how reliable each reading is.
   tomorrow, days ahead, what to do, confidence, update time and source.
 - **Rain layer.** The map plays the forecast rain for the next 24 hours by itself, with lightning
   marks where an official thunderstorm warning or airport forecast applies.
-- **Lists.** Latest alerts and Airport status show only airports needing attention. Tomorrow outlook
-  shows airports where bad weather is forecast for the next day.
+- **One screen.** Everything fits on a single screen: map on the left, airport list in the middle,
+  details on the right. On a phone these become three tabs.
+- **Filters.** The coloured boxes at the top filter the map and list by level and show the count at
+  each level. Today and Tomorrow switch the list between today's alerts and tomorrow's forecast.
+  Region narrows everything to Luzon, Visayas or Mindanao.
+- **Earthquakes and Typhoon.** Tabs in the right-hand panel.
 - **Help.** The ? at the top of the page explains everything in plain language and shows which
   source supplied the data at the latest check.
 
@@ -100,3 +106,6 @@ The optional detailed rain map is provided by Windy.com.
 © 2026 1Aviation Groundhandling Services, Corp. All rights reserved.
 
 Created under 1AV IT Innovation by Jake V Borras.
+
+The dashboard design, code and alert rules may not be copied or reused without permission. The 1AV
+name and logo are the property of 1Aviation Groundhandling Services, Corp.

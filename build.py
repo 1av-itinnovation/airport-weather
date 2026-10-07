@@ -2,6 +2,9 @@
 """
 1AV Airport Weather Monitoring - data builder.
 
+Copyright (c) 2026 1Aviation Groundhandling Services, Corp. All rights reserved.
+Created under 1AV IT Innovation by Jake V Borras.
+
 Pulls public weather and earthquake data, applies the dashboard's alert rules,
 and writes docs/data.json, which docs/index.html reads.
 
