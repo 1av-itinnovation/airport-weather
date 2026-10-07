@@ -1071,7 +1071,7 @@ header.top{padding:10px 16px;border-radius:10px}
         <li><strong>Rain and thunder animation.</strong> The airport map plays the forecast rain for the next 24 hours by itself, with lightning marks where an official thunderstorm warning or airport forecast applies. Use Stop and Play, or drag the slider to any hour. It is a computer forecast, so the alert levels take priority when the two differ. Lightning marks come from official thunderstorm area warnings and official airport forecasts, so they cover the next few hours and the larger airports only; rain with no lightning mark does not mean no thunder. A more detailed Windy.com map can be opened with the Windy map button: it is a different forecast, so the two can differ, and inside it you press its own play button to step through the hours.</li>
         <li><strong>Earthquakes and typhoons.</strong> Earthquakes cannot be forecast; the list shows what has already happened. The typhoon watch uses storm warnings that look 6 hours ahead only, so it is not a multi-day track. It is a computer forecast, so the alert levels take priority when the two differ.</li>
         <li><strong>Auto-show Danger.</strong> When any airport is at Danger and nobody is using the screen, the map selects each Danger airport in turn, zooms to it and shows its details, then returns to the whole map and repeats. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
-        <li><strong>The time at the top.</strong> It shows when the data was last checked and when the next update is expected. The page updates itself about every 10 minutes; you do not need to reload it. The next-update time is an estimate, because the scheduled refresh can start a few minutes late.</li>
+        <li><strong>The time at the top.</strong> It shows when the data was last checked and when the next update is expected. New data is collected on a schedule, and an open page looks for it every minute, so you do not need to reload. The next-update time is an estimate worked out from how often recent updates actually arrived, because the schedule can start late.</li>
       </ul>
     </div>
     <div class="sec">
@@ -1120,7 +1120,8 @@ header.top{padding:10px 16px;border-radius:10px}
 <script>
 (function () {
 'use strict';
-var REFRESH_MS = 5 * 60 * 1000;      // how often the page looks for new data
+var REFRESH_MS = 60 * 1000;          // how often the page looks for new data (the data file is small)
+var RAIN_MS = 10 * 60 * 1000;        // how often the page looks for a new rain forecast
 var STALE_MIN = 60;                  // warn when the data is older than this
 var D = null;
 var S = { filter: 'alerts', region: '', sel: '', qk: '', view: null, drag: false, day: 'today', tab: 'details', pane: 'map' };
@@ -1334,14 +1335,28 @@ $('wxToggle').addEventListener('click', function () { wxOpen(true); });
 $('wxClose').addEventListener('click', function () { wxOpen(false); }); $('wxBack').addEventListener('click', function () { wxOpen(false); });
 Array.prototype.forEach.call(document.querySelectorAll('.seg[data-layer]'), function (b) { b.addEventListener('click', function () { WX.layer = b.getAttribute('data-layer'); wxUpdate(); }); });
 $('wxAll').addEventListener('click', function () { WX.follow = false; wxUpdate(); });
-/* ---------- next update time ---------- */
-var CYCLE_MIN = 10;                       // how often GitHub refreshes the data (must match the schedule file)
+/* ---------- next update time ----------
+   The hosting schedule is asked to run every CYCLE_MIN minutes but often starts late. The data file
+   carries the times of recent refreshes, so the page works out how often they really happen and
+   bases its estimate on that. */
+var RAINSEEN = 0;
+var CYCLE_MIN = 10;                       // the intended refresh interval (must match the schedule file)
+var PUBLISH_MIN = 1.5;                    // typical delay between a refresh and the page going live
+function typicalGap() {
+  var r = ((D && D.recent) || []).slice().sort(function (a, b) { return a - b; }), g = [];
+  for (var i = 1; i < r.length; i++) { var m = (r[i] - r[i - 1]) / 60000; if (m >= 3 && m <= 180) g.push(m); }
+  if (g.length < 3) return CYCLE_MIN;
+  g = g.slice(-8).sort(function (a, b) { return a - b; });
+  var med = g.length % 2 ? g[(g.length - 1) / 2] : (g[g.length / 2 - 1] + g[g.length / 2]) / 2;
+  return Math.max(CYCLE_MIN, Math.min(90, med));
+}
 function nextUpdate() {
   var el = $('nextUp'); if (!D) { el.textContent = ''; return; }
-  var next = D.generated_ms + CYCLE_MIN * 60000, now = Date.now(), mins = Math.ceil((next - now) / 60000);
+  var gap = typicalGap(), next = D.generated_ms + (gap + PUBLISH_MIN) * 60000, now = Date.now(), mins = Math.ceil((next - now) / 60000);
   var t = new Date(next).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
   el.classList.toggle('late', mins < 1);
-  el.textContent = mins >= 1 ? 'Next update about ' + t + ' (in ' + mins + ' min)' : (now - next < 20 * 60000 ? 'Next update due any moment' : 'Next update is overdue');
+  el.textContent = mins >= 1 ? 'Next update expected about ' + t + ' (in ' + mins + ' min)' : (now - next < gap * 60000 ? 'Next update expected any moment' : 'Update is running late');
+  var chip = $('chip'); if (chip && !chip.classList.contains('stale')) chip.textContent = 'Live, updates about every ' + (Math.round(gap / 5) * 5 || 5) + ' minutes';
 }
 setInterval(nextUpdate, 10000);
 
@@ -1578,9 +1593,10 @@ requestAnimationFrame(rainTick);
 
 /* ---------- load and auto-refresh ---------- */
 function load() {
-  fetch('data.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+  fetch('data.json?t=' + Math.floor(Date.now() / 30000), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
     var first = !D;
     if (!D || j.generated_ms !== D.generated_ms) { D = j; renderData(); applyState(); } else { renderNotice(); }
+    if (j.generated_ms !== RAINSEEN) { RAINSEEN = j.generated_ms; if (RAIN && j.generated_ms - RAIN.generated_ms > 3 * 3600000) loadRain(); }
     nextUpdate(); tourLabel();
     if (first) { clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 8000); }
   }).catch(function () {
@@ -1588,7 +1604,8 @@ function load() {
   });
 }
 load(); loadRain();
-setInterval(function () { load(); loadRain(); }, REFRESH_MS);
+setInterval(load, REFRESH_MS);
+setInterval(loadRain, RAIN_MS);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
 })();
 </script>
