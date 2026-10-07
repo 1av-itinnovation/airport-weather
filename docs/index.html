@@ -941,6 +941,23 @@ header.top{padding:10px 16px;border-radius:10px}
   .tour{top:auto;bottom:6px;left:54px;max-width:calc(100% - 62px)}
   .tour button{height:30px}
 }
+
+/* ---------- hour-by-hour strip in the airport details ---------- */
+.hrs{overflow-x:auto;border:1px solid #DCE7EB;border-radius:8px;background:#FFFFFF;scrollbar-width:thin}
+.hrs-in{position:relative;display:flex;padding:8px 4px 6px}
+.hr{flex:none;width:48px;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.hr .ht{font-size:10.5px;color:#5B7180;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hr .hi{width:26px;height:26px;position:relative}
+.hr .hi svg{width:26px;height:26px;display:block}
+.hr .hi .hb{position:absolute;right:-5px;bottom:-3px;width:11px;height:14px;background:#FFD600;clip-path:polygon(56% 0,10% 58%,44% 58%,32% 100%,90% 38%,56% 38%);filter:drop-shadow(0 0 1px #12303F)}
+.hr .hd{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.hr .hl{height:26px;width:100%}
+.hr .hp{font-size:10.5px;color:#5B7180;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hr .hp.wet{color:#0060A7;font-weight:600}
+.hr .hp.bad{color:#C2410C;font-weight:700}
+.hr.now .ht{color:#005687;font-weight:700}
+.hrs svg.line{position:absolute;left:4px;pointer-events:none}
+.hcap{font-size:11px;color:#5B7180;line-height:1.4;margin-top:3px}
 </style>
 </head>
 <body>
@@ -1249,6 +1266,45 @@ function applyView() {
 }
 
 /* ---------- everything that depends on what is selected or filtered ---------- */
+/* hour-by-hour strip: small weather pictures, temperature line, rain per hour */
+var HPIC = (function () {
+  var sun = '<circle cx="12" cy="12" r="4.6" fill="#F5A623"/><g stroke="#F5A623" stroke-width="1.7" stroke-linecap="round"><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.4 5.4l1.6 1.6M17 17l1.6 1.6M5.4 18.6L7 17M17 7l1.6-1.6"/></g>';
+  var moon = '<path d="M15.8 14.9A6.6 6.6 0 0 1 9.1 4.6a7.4 7.4 0 1 0 9.9 9.3 6.6 6.6 0 0 1-3.2 1z" fill="#8FA3B5"/>';
+  var cloud = function (f, y) { return '<path transform="translate(0,' + (y || 0) + ')" d="M7.4 18.4a4.1 4.1 0 0 1-.5-8.2 5.3 5.3 0 0 1 10.2 1 3.6 3.6 0 0 1-.6 7.2z" fill="' + f + '"/>'; };
+  var smallSun = '<circle cx="16.8" cy="7.6" r="3.4" fill="#F5A623"/>', smallMoon = '<path d="M19.6 9.6a4 4 0 0 1-4.1-6.2 4.5 4.5 0 1 0 6 5.6 4 4 0 0 1-1.9.6z" fill="#8FA3B5"/>';
+  var drops = function (n, c) { var x = n === 2 ? [9.5, 14] : n === 3 ? [8, 12, 16] : [7, 10.3, 13.6, 17], o = ''; x.forEach(function (v) { o += '<path d="M' + v + ' 17.6l-1.2 3.4" stroke="' + c + '" stroke-width="1.7" stroke-linecap="round"/>'; }); return o; };
+  var wrap = function (inner) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + inner + '</svg>'; };
+  return function (code) {
+    var k = code.charAt(0), n = code.charAt(1) === 'n';
+    if (k === 'c') return wrap(n ? moon : sun);
+    if (k === 'p') return wrap((n ? smallMoon : smallSun) + cloud('#B4C5D1', 1));
+    if (k === 'o') return wrap(cloud('#9FB1BF', 0));
+    if (k === 'l') return wrap(cloud('#9FB1BF', -3) + drops(2, '#0077C8'));
+    if (k === 'r') return wrap(cloud('#8395A3', -3) + drops(3, '#0060A7'));
+    return wrap(cloud('#66798A', -3) + drops(4, '#005687'));
+  };
+})();
+var HWORD = { c: 'Clear', p: 'Partly cloudy', o: 'Cloudy', l: 'Light rain', r: 'Moderate rain', h: 'Heavy rain' };
+function hoursStrip(a) {
+  var H = a.hours || []; if (H.length < 3) return '';
+  var W = 48, n = H.length, tmin = 99, tmax = -99, now = Date.now();
+  H.forEach(function (h) { tmin = Math.min(tmin, h[1]); tmax = Math.max(tmax, h[1]); });
+  var ts = ((D.thunder && D.thunder.airports) || []).filter(function (t) { return t.id === a.id; }), anyTs = false;
+  var pts = [], cols = '';
+  H.forEach(function (h, i) {
+    var y = 5 + (tmax === tmin ? 8 : (1 - (h[1] - tmin) / (tmax - tmin)) * 16); pts.push((i * W + W / 2) + ',' + y.toFixed(1));
+    var th = ts.some(function (t) { return t.a < h[0] + 3600000 && h[0] < t.b; }); if (th) anyTs = true;
+    var lab = i === 0 && h[0] <= now ? 'Now' : new Date(h[0]).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric' }).replace(' ', '\u202F');
+    var p = h[2], pc = p >= 7.6 ? ' bad' : (p >= 2.5 ? ' bad' : (p >= 0.2 ? ' wet' : ''));
+    cols += '<div class="hr' + (i === 0 ? ' now' : '') + '" title="' + esc(HWORD[h[4].charAt(0)] + (th ? ', thunderstorm possible' : '') + ', ' + h[1] + '°C, ' + p + ' mm rain, wind ' + h[3] + ' km/h') + '">' +
+      '<span class="ht">' + lab + '</span><span class="hi">' + HPIC(h[4]) + (th ? '<span class="hb"></span>' : '') + '</span><span class="hd">' + h[1] + '°</span><span class="hl"></span>' +
+      '<span class="hp' + pc + '">' + (p >= 0.1 ? p.toFixed(1) + ' mm' : '0 mm') + '</span></div>';
+  });
+  var dots = pts.map(function (q) { var c = q.split(','); return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="2.6" fill="#FFFFFF" stroke="#0077C8" stroke-width="1.6"/>'; }).join('');
+  var line = '<svg class="line" style="top:73px" width="' + (n * W) + '" height="26" viewBox="0 0 ' + (n * W) + ' 26"><polyline points="' + pts.join(' ') + '" fill="none" stroke="#0077C8" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity=".55"/>' + dots + '</svg>';
+  return '<div class="f"><span class="k">Next ' + n + ' hours</span><div class="hrs"><div class="hrs-in" style="width:' + (n * W + 8) + 'px">' + line + cols + '</div></div>' +
+    '<span class="hcap">Computer forecast for this location (' + esc(a.estsrc || 'MET Norway') + '): temperature and rain per hour.' + (anyTs ? ' The lightning mark shows hours when the official airport forecast says a thunderstorm is possible.' : '') + '</span></div>';
+}
 function field(k, v) { return '<div class="f"><span class="k">' + k + '</span><span class="v">' + esc(v) + '</span></div>'; }
 function applyState() {
   if (!D) return;
@@ -1293,7 +1349,7 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null;
   if (a) {
     d.innerHTML = '<div class="detail"><div class="hd"><div class="ttl"><h3>' + esc(a.name) + '</h3>' + pill(a.level) + (a.est ? EST : '') + '</div><button class="btn" data-close="1">Close</button></div>' +
-      field('Right now', a.now) + field('Rest of today', a.next) + field('Tomorrow', a.tmr) + field('Days ahead', a.days) + field('What to do', a.todo) +
+      field('Right now', a.now) + field('Rest of today', a.next) + hoursStrip(a) + field('Tomorrow', a.tmr) + field('Days ahead', a.days) + field('What to do', a.todo) +
       field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src) + '</div>';
   } else if (q) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(q.title) + '</h3><span class="pill quake">EARTHQUAKE</span></div><button class="btn" data-close="1">Close</button></div>' +
