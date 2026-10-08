@@ -7,6 +7,11 @@ on:
     # delayed or dropped, so this avoids :00 and the other round minutes.
     - cron: "7,17,27,37,47,57 * * * *"
   workflow_dispatch:
+    inputs:
+      test_email:
+        description: "Send a test email now"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -67,6 +72,21 @@ jobs:
         # Does nothing until the SMTP_HOST and MAIL_TO secrets are set. Never stops the refresh.
         continue-on-error: true
         env:
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+        run: python3 notify.py
+
+      - name: Send test email
+        # Only runs when "Send a test email now" is ticked on the Run workflow button.
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.test_email }}
+        env:
+          NOTIFY_TEST: "1"
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
