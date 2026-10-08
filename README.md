@@ -48,11 +48,14 @@ why, and how reliable each reading is.
 **Alerts and automatic behaviour**
 
 - **Alert bar** for Danger airports, strong earthquakes and possible tsunami, with a warning sign in
-  the browser tab and an optional chime.
+  the browser tab and an optional soft two-note chime. Earthquake alerts show the time it happened
+  and how long ago.
 - **Nearest airport first.** On opening, the browser asks once for the viewer's location and shows
   the nearest airport. The location is used only in the browser and is not sent or stored.
-- **Auto-show Danger.** With nobody using the screen, the map cycles through each Danger airport,
-  then returns to the whole map and repeats.
+- **Auto-show alerts.** With nobody using the screen, the map zooms to each earthquake alert, then
+  each Danger airport, then returns to the whole map and repeats.
+- **Early earthquake notice.** Between updates, an open page asks USGS once a minute and shows a
+  qualifying earthquake at once, until the next update confirms it.
 - **Next update time.** Worked out from the average gap between recent updates.
 - **Yellow notice** when a backup source is in use or the data is more than 60 minutes old.
 
@@ -103,6 +106,11 @@ used. Idle backups are tested every 6 hours and the result is shown in Help.
 - **Earthquakes shown** are magnitude 4.5 or stronger in the Philippine area over the past 7 days.
 - **Earthquake alerts** cover the last 24 hours: magnitude 5.0 or stronger within 100 km of an
   airport, or magnitude 6.0 or stronger anywhere in the Philippine area.
+- **Aftershocks** (below magnitude 5.0, within 100 km of a main earthquake of 5.0 or stronger, in
+  the 72 hours after it) are grouped with the main earthquake: small dots on the map, one list in
+  its details.
+- **Two agencies.** For strong earthquakes the USGS figure is shown beside the PHIVOLCS figure, and
+  the more cautious of the two positions decides whether an airport is within 100 km.
 - **Possible tsunami** is shown for an earthquake of magnitude 6.5 or stronger no deeper than 70 km,
   or one that USGS has flagged for tsunami information. It is a prompt to check PHIVOLCS bulletins,
   not an official tsunami warning.
@@ -115,8 +123,9 @@ used. Idle backups are tested every 6 hours and the result is shown in Help.
 - Estimates show rain and wind only and cannot confirm thunderstorms.
 - Earthquakes cannot be predicted; only past ones are shown.
 - Forecasts for tomorrow and the days ahead are less certain than today.
-- Agencies can report slightly different magnitudes for the same earthquake. The rules are applied
-  to whichever source is in use.
+- Agencies report different magnitudes for the same earthquake, and first figures are often
+  revised. The dashboard shows the PHIVOLCS figure and follows its revisions.
+- No earthquake source is instant: agencies usually publish 5 to 20 minutes after the event.
 - PAGASA's public typhoon bulletins are not published as data, so they are not read directly.
   Confirm typhoon decisions against PAGASA.
 
