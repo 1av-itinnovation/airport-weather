@@ -149,37 +149,57 @@ def teams_text(new_q, new_d):
     return '<br><br>'.join(out) + (f'<br><br><a href="{esc(url)}">Open the dashboard</a>' if url else '')
 
 def teams_card(d, new_q, new_d, test=False):
-    """The alert as a Teams card (Adaptive Card): a header, one block per alert, and a button to the dashboard.
-    Teams only offers a few fixed colours: red is used for Danger and amber for earthquakes."""
+    """The alert as a Teams card (Adaptive Card), in the dashboard's colours: navy header with the logo, then one
+    block per alert with a coloured rule and tag (purple = earthquake, red = Danger), and a button to the dashboard.
+    Teams cards cannot take custom colours directly, so small pictures in docs/assets (card-*.png) supply the
+    navy header, the coloured rule above each alert and the coloured tags. If those files are missing, the card falls back to Teams' own colours."""
+    url = dashboard_url()
+    have = bool(url) and all(os.path.exists(os.path.join(HERE, 'docs', 'assets', f'card-{c}.png')) for c in ('navy', 'bar-purple', 'bar-red', 'bar-darkred', 'tag-earthquake', 'tag-danger', 'tag-tsunami', 'button'))
+    def bg(c): return {'url': f'{url}assets/card-{c}.png', 'fillMode': 'Repeat'}
     def tb(text, **kw): return dict({'type': 'TextBlock', 'text': str(text or ''), 'wrap': True}, **kw)
-    def facts(pairs): return {'type': 'FactSet', 'spacing': 'Small', 'facts': [{'title': k, 'value': str(v)} for k, v in pairs if v]}
-    def block(style, tag, colour, title, pairs, action):
-        items = [tb(tag.upper(), size='Small', weight='Bolder', color=colour), tb(title, size='Large', weight='Bolder', spacing='None'), facts(pairs)]
-        if action: items.append(tb('**What to do.** ' + action, spacing='Medium'))
-        return {'type': 'Container', 'style': style, 'spacing': 'Medium', 'items': items}
+    def line(label, value):
+        return {'type': 'ColumnSet', 'spacing': 'Small', 'columns': [
+            {'type': 'Column', 'width': '120px', 'items': [tb(label, size='Small', isSubtle=True)]},
+            {'type': 'Column', 'width': 'stretch', 'items': [tb(value)]}]}
+    def block(colour, fallback, tag, title, pairs, action):
+        key = {'Earthquake': 'earthquake', 'Danger': 'danger', 'Possible tsunami': 'tsunami'}[tag]
+        if have:
+            top = [{'type': 'Image', 'url': f'{url}assets/card-bar-{colour}.png', 'size': 'Stretch', 'altText': ''},
+                   {'type': 'Image', 'url': f'{url}assets/card-tag-{key}.png', 'height': '22px', 'altText': tag, 'spacing': 'Medium'}]
+        else:
+            top = [tb(tag.upper(), size='Small', weight='Bolder', color=fallback)]
+        items = top + [tb(title, size='Large', weight='Bolder', spacing='Small')] + [line(k, v) for k, v in pairs if v]
+        if action: items.append({'type': 'Container', 'style': 'emphasis', 'spacing': 'Medium', 'items': [tb('**What to do.** ' + action)]})
+        return {'type': 'Container', 'spacing': 'Large', 'separator': not have, 'items': items}
     checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
     n = len(new_q) + len(new_d)
-    body = [{'type': 'Container', 'style': 'accent', 'bleed': True, 'items': [
-                tb('Airport Weather Monitoring', size='Large', weight='Bolder'),
-                tb(f'Alert notification \u00b7 {checked} (Philippine time)', size='Small', isSubtle=True, spacing='None')]}]
-    if test: body.append({'type': 'Container', 'style': 'warning', 'items': [tb('**THIS IS A TEST.** It shows what an alert looks like, using what is on the dashboard now. It is not a new alert.', size='Small')]})
+    head = [tb('Airport Weather Monitoring', size='Large', weight='Bolder', color='Light' if have else 'Default'),
+            tb(f'Alert notification \u00b7 {checked} (Philippine time)', size='Small', spacing='None', color='Light' if have else 'Default', isSubtle=not have)]
+    if have:
+        header = {'type': 'Container', 'bleed': True, 'backgroundImage': bg('navy'), 'items': [{'type': 'ColumnSet', 'columns': [
+            {'type': 'Column', 'width': 'auto', 'verticalContentAlignment': 'Center', 'items': [{'type': 'Image', 'url': f'{url}assets/logo.png', 'height': '30px', 'altText': '1Aviation'}]},
+            {'type': 'Column', 'width': 'stretch', 'verticalContentAlignment': 'Center', 'items': head}]}]}
+    else:
+        header = {'type': 'Container', 'style': 'accent', 'bleed': True, 'items': head}
+    body = [header]
+    if test: body.append({'type': 'Container', 'style': 'warning', 'items': [tb('**THIS IS A TEST.** It uses what is on the dashboard now. It is not a new alert.', size='Small')]})
     body.append(tb('A new alert has been raised on the dashboard.' if n == 1 else f'{n} new alerts have been raised on the dashboard.'))
     for a, q in new_q:
-        tsu = a['kind'] == 'tsunami'
+        tsu = a['kind'] == 'tsunami'; colour = 'darkred' if tsu else 'purple'; tag = 'Possible tsunami' if tsu else 'Earthquake'
         if q:
             when = f"{clock(q['ms'])} (Philippine time)" if q.get('ms') else q.get('when')
-            body.append(block('attention' if tsu else 'warning', 'Possible tsunami' if tsu else 'Earthquake', 'Attention' if tsu else 'Warning', f"Magnitude {q['mag']:.1f} earthquake",
+            body.append(block(colour, 'Attention' if tsu else 'Accent', tag, f"Magnitude {q['mag']:.1f} earthquake",
                 [('Time it happened', when), ('Where', q.get('where')), ('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), ('Depth', q.get('depth')), ('Nearest airport', q.get('near')),
                  ('Tsunami', q.get('tsu')), ('Aftershocks', q.get('after')), ('Source', q.get('src'))], q.get('todo')))
         else:
-            body.append(block('attention' if tsu else 'warning', 'Possible tsunami' if tsu else 'Earthquake', 'Attention' if tsu else 'Warning', 'Earthquake alert', [('Details', a.get('text'))], ''))
+            body.append(block(colour, 'Attention' if tsu else 'Accent', tag, 'Earthquake alert', [('Details', a.get('text'))], ''))
     for a in new_d:
-        body.append(block('attention', 'Danger', 'Attention', a['name'], [('Right now', a.get('now')), ('Rest of today', a.get('next')), ('Confidence', a.get('conf')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo')))
-    body.append(tb('Automatic message, sent once for each new alert when the dashboard collects its data (about every 20 minutes). Earthquake figures are first reports and are often revised. '
-                   'This supports, and does not replace, official PHIVOLCS and PAGASA bulletins and the station\'s own safety procedures. Developed by the 1AV IT Department.', size='Small', isSubtle=True, separator=True, spacing='Medium'))
+        body.append(block('red', 'Attention', 'Danger', a['name'], [('Right now', a.get('now')), ('Rest of today', a.get('next')), ('Confidence', a.get('conf')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo')))
     card = {'type': 'AdaptiveCard', '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json', 'version': '1.4', 'msteams': {'width': 'Full'}, 'body': body}
-    url = dashboard_url()
-    if url: card['actions'] = [{'type': 'Action.OpenUrl', 'title': 'Open the dashboard', 'url': url}]
+    if url and have:        # a picture of a button in the dashboard's blue, because Teams draws its own buttons in its own colours
+        body.append({'type': 'Image', 'url': f'{url}assets/card-button.png', 'height': '36px', 'altText': 'Open the dashboard', 'spacing': 'Large',
+                     'selectAction': {'type': 'Action.OpenUrl', 'title': 'Open the dashboard', 'url': url}})
+    elif url: card['actions'] = [{'type': 'Action.OpenUrl', 'title': 'Open the dashboard', 'url': url, 'style': 'positive'}]
     return json.dumps(card, ensure_ascii=False)
 
 def fragment(body):
