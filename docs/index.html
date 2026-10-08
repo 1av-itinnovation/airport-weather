@@ -972,6 +972,17 @@ header.top{padding:10px 16px;border-radius:10px}
 .modal .about .cr{font-size:11px;margin-top:3px}
 @media (max-width:640px){.modal .about{margin:14px 14px 22px;padding:12px 14px}}
 
+.pin.qs button{width:22px;height:22px;margin:-11px 0 0 -11px;position:absolute;border:none;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pin.qs i{display:block;border-radius:50%;background:rgba(106,27,154,.7);border:1px solid #FFFFFF;box-shadow:0 0 0 1px rgba(106,27,154,.35)}
+.pin.q.early .qring{border-style:dashed}
+.al .ago{flex:none;font-weight:500;font-size:12px;opacity:.92;white-space:nowrap}
+.al.early{background:#4A2A6B;box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}
+.tour.quake{border-color:#6A1B9A}.tour.quake .tdot{background:#6A1B9A}
+.shocks{display:flex;flex-direction:column;gap:0;margin-top:2px}
+.shocks div{display:flex;gap:8px;font-size:12px;line-height:1.4;padding:4px 0;border-top:1px solid var(--line,#E6EEF1)}
+.shocks b{flex:none;width:36px;font-weight:600;color:#6A1B9A;font-variant-numeric:tabular-nums}
+.shocks span{flex:1;min-width:0}.shocks em{font-style:normal;color:var(--muted,#5B7180);display:block}
+@media (max-width:640px){#alertBar .al.quake,#alertBar .al.tsunami{flex-wrap:wrap;row-gap:4px}#alertBar .al.quake .tx,#alertBar .al.tsunami .tx{order:5;flex:none;width:100%;-webkit-line-clamp:3}#alertBar .al .ago{margin-left:auto}}
 /* ---------- alert bar: Danger airports, strong earthquakes, possible tsunami ---------- */
 .alertbar{display:flex;flex-direction:column;gap:4px;flex:none}
 .al{display:flex;align-items:center;gap:10px;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;line-height:1.35;color:#FFFFFF;background:#C62828}
@@ -1344,9 +1355,9 @@ body{background:var(--page);color:var(--ink)}
       <p class="subh">Alerts and what the page does by itself</p>
       <ul>
         <li><strong>Alert bar.</strong> A coloured bar appears under the title when an airport is at Danger, a strong earthquake has happened, or a tsunami is possible. The browser tab shows a warning sign as well. Tap a name or Details in the bar to go to it.</li>
-        <li><strong>Sound.</strong> Press the bell at the top to turn on a short chime for each new alert. Browsers only allow sound after someone has clicked on the page.</li>
+        <li><strong>Sound.</strong> Press the bell at the top to turn on a soft two-note chime, played once for each new alert. It is quiet on purpose: it asks for attention without causing alarm. Browsers only allow sound after someone has clicked on the page.</li>
         <li><strong>Your nearest airport.</strong> When the page is opened or reloaded, the browser asks once for your location. If you allow it, the map first shows the airport nearest to you. Your location is used only inside your browser; it is not sent anywhere or stored.</li>
-        <li><strong>Auto-show Danger.</strong> When any airport is at Danger and nobody is using the screen, the map selects each Danger airport in turn, zooms to it and shows its details, then returns to the whole map and repeats. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
+        <li><strong>Auto-show alerts.</strong> When there is an earthquake alert or an airport at Danger and nobody is using the screen, the map shows each one in turn: earthquakes first, then Danger airports. It zooms in, shows the details, then returns to the whole map and repeats. A new earthquake alert is shown straight away. Earthquakes stay in the rotation for 6 hours. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
         <li><strong>The times at the top.</strong> "Checked" is when the data was last collected. "Next update" is that time plus the average gap between recent updates; it is an estimate, because the schedule does not run at exact times. An open page looks for new data by itself, every minute once an update is due, so you never need to reload.</li>
         <li><strong>Yellow notice.</strong> Appears when a backup source is in use or the data is more than 60 minutes old.</li>
       </ul>
@@ -1371,6 +1382,9 @@ body{background:var(--page);color:var(--ink)}
         <li><strong>How heavy.</strong> Light is under 2.5 mm of rain in an hour, Moderate is 2.5 mm or more, Heavy is 7.6 mm or more.</li>
         <li><strong>Area warnings.</strong> An airport inside an official thunderstorm or tropical cyclone area warning is raised to Warning.</li>
         <li><strong>Earthquakes shown</strong> are magnitude 4.5 or stronger in the Philippine area over the past 7 days.</li>
+        <li><strong>Aftershocks.</strong> Smaller earthquakes (below magnitude 5.0) within 100 km of a main earthquake of magnitude 5.0 or stronger, in the 72 hours after it, are grouped with it. Each is a small purple dot on the map, and the main earthquake's details list them together.</li>
+        <li><strong>Why magnitudes differ.</strong> Each agency measures with its own instruments and method, so PHIVOLCS, USGS and phone alerts can show different figures for the same earthquake, and first figures are often revised. The dashboard shows the PHIVOLCS figure, shows the USGS figure beside it for strong earthquakes, and uses the more cautious of the two positions when deciding whether an airport is within 100 km.</li>
+        <li><strong>Early notice.</strong> The data is collected about every 20 minutes. In between, an open page asks USGS once a minute. An earthquake that meets the alert rules is shown at once as an early notice, then replaced by the confirmed figures at the next update. USGS usually publishes within about 10 to 20 minutes of an earthquake, so no source is instant.</li>
         <li><strong>Earthquake alerts</strong> cover the last 24 hours: magnitude 5.0 or stronger within 100 km of an airport, or magnitude 6.0 or stronger anywhere in the Philippine area.</li>
         <li><strong>Possible tsunami</strong> is shown for an earthquake of magnitude 6.5 or stronger no deeper than 70 km, or one that USGS has flagged for tsunami information. It is a prompt to check PHIVOLCS bulletins, not an official tsunami warning.</li>
         <li><strong>Which source wins.</strong> When sources differ, the dashboard uses the more reliable one, in this order: official airport report, official airport forecast, official area warning, then Estimate.</li>
@@ -1436,7 +1450,17 @@ function dotStyle(a) {
   return 'width:20px;height:20px;background:#C62828;border:3px solid #FFFFFF';
 }
 function byId(id) { for (var i = 0; i < D.airports.length; i++) { if (D.airports[i].id === id) return D.airports[i]; } return null; }
-function quakeById(id) { for (var i = 0; i < D.quakes.length; i++) { if (D.quakes[i].id === id) return D.quakes[i]; } return null; }
+var LIVE = [];                             // early notices read straight from USGS, not yet in the scheduled data
+function allQuakes() { return LIVE.concat((D && D.quakes) || []); }
+function quakeById(id) { var L = allQuakes(); for (var i = 0; i < L.length; i++) { if (L[i].id === id) return L[i]; } return null; }
+function agoText(ms) {
+  if (!ms) return ''; var m = Math.max(0, Math.round((Date.now() - ms) / 60000));
+  if (m < 1) return 'just now'; if (m < 60) return m + ' min ago';
+  var h = Math.floor(m / 60); if (h < 24) return h + ' hr ' + (m % 60 ? (m % 60) + ' min ' : '') + 'ago';
+  var d = Math.floor(h / 24); return d + (d === 1 ? ' day ago' : ' days ago');
+}
+function phTime(ms) { return new Date(ms).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' }); }
+function phDay(ms) { return new Date(ms).toLocaleDateString('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' }); }
 function inRegion(a) { return !S.region || a.region === S.region; }
 function levelShown(lv, forMap) {
   if (S.filter === 'alerts') return forMap ? true : ORDER.indexOf(lv) >= 0;
@@ -1453,10 +1477,16 @@ function renderData() {
   $('airportPick').innerHTML = opts;
 
   var h = '';
-  D.quakes.forEach(function (q) {
+  allQuakes().forEach(function (q) {
+    (q.shocks || []).forEach(function (k) {
+      var ds = k[2] >= 4 ? 10 : k[2] >= 3 ? 8 : 7, sl = 'Aftershock, magnitude ' + k[2].toFixed(1) + ', ' + phTime(k[3]);
+      h += '<div class="pin q qs" data-q="' + esc(q.id) + '" style="left:' + k[0].toFixed(2) + '%;top:' + k[1].toFixed(2) + '%;opacity:' + q.op + '"><button aria-label="' + esc(sl) + '" title="' + esc(sl) + '"><i style="width:' + ds + 'px;height:' + ds + 'px"></i></button></div>';
+    });
+  });
+  allQuakes().forEach(function (q) {
     if (!q.onmap) return;
     var s = q.size, hs = s + 12, lab = 'Magnitude ' + q.mag.toFixed(1) + ' earthquake, ' + q.place;
-    h += '<div class="pin q" data-q="' + esc(q.id) + '" style="left:' + q.x.toFixed(1) + '%;top:' + q.y.toFixed(1) + '%;opacity:' + q.op + '">' +
+    h += '<div class="pin q' + (q.early ? ' early' : '') + '" data-q="' + esc(q.id) + '" style="left:' + q.x.toFixed(1) + '%;top:' + q.y.toFixed(1) + '%;opacity:' + q.op + '">' +
       '<span class="qsel" style="left:' + (-hs / 2) + 'px;top:' + (-hs / 2) + 'px;width:' + hs + 'px;height:' + hs + 'px"></span>' +
       '<button aria-label="' + esc(lab) + '" title="' + esc(lab) + '"><span class="qring" style="width:' + s + 'px;height:' + s + 'px"></span></button>' +
       '<span class="qlab" style="top:' + (s / 2 + 1) + 'px">M' + q.mag.toFixed(1) + '</span></div>';
@@ -1477,7 +1507,7 @@ function renderData() {
   $('qFlag').textContent = D.flag;
   $('qCount').textContent = D.quake_count;
   var ql = '';
-  D.quakes.forEach(function (q) { ql += '<button class="qline" data-q="' + esc(q.id) + '"><b>M' + q.mag.toFixed(1) + '</b> ' + esc(q.line) + '</button>'; });
+  allQuakes().forEach(function (q) { ql += '<button class="qline" data-q="' + esc(q.id) + '"><b>M' + q.mag.toFixed(1) + '</b> ' + esc(q.line) + (q.nshock ? ' ' + q.nshock + (q.nshock === 1 ? ' aftershock.' : ' aftershocks.') : '') + (q.early ? ' Early notice.' : '') + '</button>'; });
   $('qList').innerHTML = ql;
   $('tyAsof').textContent = D.ty_asof;
   $('tyText').textContent = D.ty_text;
@@ -1625,7 +1655,7 @@ function applyState() {
     el.style.display = (inRegion(a) && (levelShown(a.level, true) || a.id === S.sel)) ? '' : 'none';
     el.classList.toggle('sel', a.id === S.sel);
   });
-  Array.prototype.forEach.call(document.querySelectorAll('.pin.q'), function (el) { el.classList.toggle('sel', el.getAttribute('data-q') === S.qk); });
+  Array.prototype.forEach.call(document.querySelectorAll('.pin.q:not(.qs)'), function (el) { el.classList.toggle('sel', el.getAttribute('data-q') === S.qk); });
 
   var al = '', n = 0;
   if (S.day === 'today') {
@@ -1657,8 +1687,10 @@ function applyState() {
       field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src) + '</div>';
   } else if (q) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(q.title) + '</h3><span class="pill quake">Earthquake</span></div><button class="btn" data-close="1">Close</button></div>' +
-      field('Where', q.where) + field('When', q.when) + field('Depth', q.depth) + field('Nearest airport', q.near) + field('Tsunami', q.tsu) + field('Aftershocks', q.after) +
-      field('What to do', q.todo) + field('Source', q.src) + '</div>';
+      field('Time it happened', q.ms ? phDay(q.ms) + ', ' + phTime(q.ms) + ' Philippine time (' + agoText(q.ms) + ').' : q.when) + field('Where', q.where) +
+      (q.magnote ? field('Magnitude', q.magnote) : '') + field('Depth', q.depth) + field('Nearest airport', q.near) + field('What to do', q.todo) + field('Tsunami', q.tsu) +
+      '<div class="f"><span class="k">Aftershocks</span><span class="v">' + esc(q.after) + '</span>' + ((q.slist || []).length ? '<div class="shocks">' + q.slist.map(function (r) { return '<div><b>M' + r[1].toFixed(1) + '</b><span>' + esc(r[0]) + '<em>' + esc(r[2]) + '</em></span></div>'; }).join('') + (q.nshock > q.slist.length ? '<div><span><em>and ' + (q.nshock - q.slist.length) + ' earlier.</em></span></div>' : '') + '</div>' : '') + '</div>' +
+      field('Source', q.src) + '</div>';
   } else {
     d.innerHTML = '<div class="hint">Select an airport or earthquake to see its details here.</div>';
   }
@@ -1707,13 +1739,17 @@ try { SOUND = localStorage.getItem('awm-sound') === 'on'; } catch (e) {}
 var AICON = { danger: '<svg viewBox="0 0 24 24"><path d="M13 2L4.500 13.500H11L10 22l8.500-11.500H12z" fill="#FFD600" stroke="#12303F" stroke-width="1"/></svg>',
               quake: '<svg viewBox="0 0 24 24"><path d="M2 12h3l2-6 3 12 3-9 2 6 2-3h5" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
               tsunami: '<svg viewBox="0 0 24 24"><path d="M2 17c2 0 2-1.500 4-1.500S8 17 10 17s2-1.500 4-1.500S16 17 18 17s2-1.500 4-1.500M3 12c3 0 4-6 9-6 3 0 4.500 2 4.500 4-1.500-1-3.500-.500-3.500 1.500" fill="none" stroke="#FFD600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' };
+/* A soft two-note chime (like a public-address tone), low volume, played once per new alert. It is meant to
+   draw attention calmly, not to alarm. CHIME_VOL sets the loudness (0 to 1). */
+var CHIME_VOL = 0.14;
 function beep() {
   try {
     ACTX = ACTX || new (window.AudioContext || window.webkitAudioContext)(); if (ACTX.state === 'suspended') ACTX.resume();
-    [0, 0.28, 0.56].forEach(function (d, i) {
-      var o = ACTX.createOscillator(), g = ACTX.createGain(), t = ACTX.currentTime + d;
-      o.type = 'sine'; o.frequency.value = i === 2 ? 1175 : 880; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-      o.connect(g); g.connect(ACTX.destination); o.start(t); o.stop(t + 0.24);
+    [[0, 659.25], [0.42, 523.25]].forEach(function (n) {
+      var t = ACTX.currentTime + n[0], g = ACTX.createGain();
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(CHIME_VOL, t + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
+      g.connect(ACTX.destination);
+      [1, 2].forEach(function (m) { var o = ACTX.createOscillator(), og = ACTX.createGain(); o.type = 'sine'; o.frequency.value = n[1] * m; og.gain.value = m === 1 ? 1 : 0.18; o.connect(og); og.connect(g); o.start(t); o.stop(t + 1.35); });
     });
   } catch (e) {}
 }
@@ -1724,9 +1760,11 @@ function renderAlerts() {
   if (!D) return;
   var bar = $('alertBar'), h = '', keys = [], title = '';
   var eq = D.eq_alerts || (/^Earthquake flag/.test(D.flag || '') ? [{ kind: 'flag', q: '', text: D.flag }] : []);
+  eq = LIVE.map(function (q) { return { kind: 'early', q: q.id, ms: q.ms, text: q.alert }; }).concat(eq);
   eq.forEach(function (a) {
-    var ts = a.kind === 'tsunami'; keys.push(a.kind + ':' + a.text.slice(0, 60));
-    h += '<div class="al ' + (ts ? 'tsunami' : 'quake') + '" data-k="' + esc(keys[keys.length - 1]) + '"><span class="ai">' + AICON[ts ? 'tsunami' : 'quake'] + '</span><span class="tag">' + (ts ? 'Possible tsunami' : 'Earthquake') + '</span><span class="tx">' + esc(a.text.replace(/^(Possible tsunami|Strong earthquake|Earthquake flag): /, '')) + '</span>' +
+    var ts = a.kind === 'tsunami', early = a.kind === 'early'; keys.push(a.kind + ':' + (a.ms || a.text.slice(0, 60)));
+    h += '<div class="al ' + (ts ? 'tsunami' : 'quake') + (early ? ' early' : '') + '" data-k="' + esc(keys[keys.length - 1]) + '"><span class="ai">' + AICON[ts ? 'tsunami' : 'quake'] + '</span><span class="tag">' + (ts ? 'Possible tsunami' : early ? 'Earthquake, early notice' : 'Earthquake') + '</span><span class="tx">' + esc(a.text.replace(/^(Possible tsunami|Strong earthquake|Earthquake flag): /, '').replace(/^m/, 'M')) + '</span>' +
+      (a.ms ? '<span class="ago" data-ago="' + a.ms + '">' + agoText(a.ms) + '</span>' : '') +
       '<button class="go" data-q="' + esc(a.q || '') + '">Details</button></div>';
     if (!title) title = ts ? 'POSSIBLE TSUNAMI' : 'EARTHQUAKE';
   });
@@ -1742,6 +1780,7 @@ function renderAlerts() {
   if (fresh.length) {
     Array.prototype.forEach.call(bar.querySelectorAll('.al'), function (el) { if (fresh.indexOf(el.getAttribute('data-k')) >= 0) el.classList.add('new'); });
     if (SOUND) beep();
+    if (ALERT_SEEN && fresh.some(function (k) { return k.indexOf('danger:') !== 0; }) && TOUR.on) { TOUR.idx = -1; TOUR.active = false; clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 800); }     // a new earthquake alert is shown straight away
   }
   ALERT_SEEN = keys;
   document.title = (title ? '\u26A0 ' + title + ' \u00B7 ' : '') + BASE_TITLE;
@@ -1815,14 +1854,26 @@ function locateHome() {
   } catch (e) { finish(); }
 }
 function dangerList() { return D ? sorted(D.airports.filter(function (a) { return a.level === 'danger' && inRegion(a); })) : []; }
+/* Earthquakes with an alert are shown first in each round, for QUAKE_TOUR_HOURS after they happen. */
+var QUAKE_TOUR_HOURS = 6;
+function quakeTourList() {
+  if (!D) return []; var seen = {}, out = [];
+  LIVE.map(function (q) { return q.id; }).concat((D.eq_alerts || []).map(function (a) { return a.q; })).forEach(function (id) {
+    var q = id && quakeById(id); if (!q || !q.onmap || seen[id] || (q.ms && Date.now() - q.ms > QUAKE_TOUR_HOURS * 3600000)) return; seen[id] = 1; out.push(q);
+  });
+  return out;
+}
+function tourList() { return quakeTourList().map(function (q) { return { q: q.id }; }).concat(dangerList().map(function (a) { return { a: a.id }; })); }
 function tourLabel() {
-  var bar = $('tourBar'), n = dangerList().length;
+  var bar = $('tourBar'), L = tourList(), n = L.length, nq = quakeTourList().length, nd = n - nq, cur = TOUR.active ? L[TOUR.idx] : null;
+  bar.classList.toggle('quake', !HOME.active && !!(cur ? cur.q : nq));
   bar.classList.toggle('home', HOME.active); $('tourBtn').hidden = HOME.active;
   if (HOME.active) { var h = byId(HOME.id); bar.hidden = false; bar.classList.remove('off'); bar.classList.add('run'); $('tourText').textContent = 'Your nearest airport: ' + (h ? h.name : ''); return; }
   if (!n) { bar.hidden = true; return; }
   bar.hidden = false; bar.classList.toggle('off', !TOUR.on); bar.classList.toggle('run', TOUR.on && TOUR.active);
   $('tourBtn').textContent = TOUR.on ? 'Turn off' : 'Turn on'; $('tourBtn').setAttribute('aria-pressed', TOUR.on ? 'true' : 'false');
-  $('tourText').textContent = !TOUR.on ? 'Auto-show Danger is off' : (TOUR.active ? 'Showing Danger airport ' + (TOUR.idx + 1) + ' of ' + n : 'Auto-show Danger: ' + n + (n === 1 ? ' airport' : ' airports'));
+  var what = (nq ? nq + (nq === 1 ? ' earthquake' : ' earthquakes') : '') + (nq && nd ? ', ' : '') + (nd ? nd + (nd === 1 ? ' Danger airport' : ' Danger airports') : '');
+  $('tourText').textContent = !TOUR.on ? 'Auto-show alerts is off' : (cur ? (cur.q ? 'Showing earthquake ' + (TOUR.idx + 1) + ' of ' + nq : 'Showing Danger airport ' + (TOUR.idx + 1 - nq) + ' of ' + nd) : 'Auto-show: ' + what);
 }
 function tourStep() {
   clearTimeout(TOUR.timer);
@@ -1830,11 +1881,11 @@ function tourStep() {
   if (!D || !TOUR.on) { TOUR.active = false; TOUR.idx = -1; tourLabel(); return; }
   var blocked = document.hidden || modal.classList.contains('open') || WX.open || S.day !== 'today' || !(S.filter === 'alerts' || S.filter === 'danger');
   if (blocked || Date.now() - TOUR.lastUser < TOUR_IDLE_MS) { TOUR.active = false; TOUR.idx = -1; tourLabel(); TOUR.timer = setTimeout(tourStep, 5000); return; }
-  var list = dangerList();
+  var list = tourList();
   if (!list.length) { if (TOUR.active) { TOUR.active = false; clearSel(); } TOUR.idx = -1; tourLabel(); TOUR.timer = setTimeout(tourStep, 10000); return; }
   TOUR.idx++;
   if (TOUR.idx >= list.length) { TOUR.idx = -1; TOUR.active = false; clearSel(); tourLabel(); TOUR.timer = setTimeout(tourStep, TOUR_REST_MS); return; }
-  TOUR.active = true; selectAirport(list[TOUR.idx].id); tourLabel(); TOUR.timer = setTimeout(tourStep, TOUR_SHOW_MS);
+  TOUR.active = true; if (list[TOUR.idx].q) selectQuake(list[TOUR.idx].q); else selectAirport(list[TOUR.idx].a); tourLabel(); TOUR.timer = setTimeout(tourStep, TOUR_SHOW_MS);
 }
 function tourUser(e) {
   if (e && e.target && e.target.closest && e.target.closest('#tourBar')) return;
@@ -1865,7 +1916,7 @@ $('detail').addEventListener('click', function (e) { if (e.target.closest('[data
 $('list').addEventListener('click', function (e) { var b = e.target.closest('[data-a]'); if (b) { S.pane = 'side'; selectAirport(b.getAttribute('data-a')); } });
 $('qList').addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) { selectQuake(b.getAttribute('data-q')); } });
 $('airportPick').addEventListener('change', function () { if (S.sel) { S.pane = 'side'; applyState(); } });
-$('zIn').addEventListener('click', function () { var v = viewNow(); setView(Math.min(6, v.z * 1.5), v.cx, v.cy, false); });
+$('zIn').addEventListener('click', function () { var v = viewNow(), p = selPoint(), nz = Math.min(6, v.z * 1.5); if (p && !S.drag) setView(nz, 50 + (p.x - 50) * FITX, 50 + (p.y - 50) * FITY, false); else setView(nz, v.cx, v.cy, false); });     // keep the selected point in view
 $('zOut').addEventListener('click', function () { var v = viewNow(); setView(Math.max(1, v.z / 1.5), v.cx, v.cy, false); });
 $('zAll').addEventListener('click', clearSel);
 var modal = $('modal');
@@ -2053,7 +2104,7 @@ requestAnimationFrame(rainTick);
 function load() {
   fetch('data.json?t=' + Math.floor(Date.now() / 30000), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
     var first = !D;
-    if (!D || j.generated_ms !== D.generated_ms) { D = j; renderData(); applyState(); } else { renderNotice(); }
+    if (!D || j.generated_ms !== D.generated_ms) { D = j; if (S.qk && !quakeById(S.qk)) S.qk = ''; renderData(); applyState(); liveQuakes(); } else { renderNotice(); }
     if (j.generated_ms !== RAINSEEN) { RAINSEEN = j.generated_ms; if (RAIN && j.generated_ms - RAIN.generated_ms > 3 * 3600000) loadRain(); }
     nextUpdate(); tourLabel();
     if (first) { locateHome(); clearTimeout(TOUR.timer); TOUR.timer = setTimeout(tourStep, 8000); }
@@ -2061,6 +2112,41 @@ function load() {
     if (!D) { $('checked').textContent = 'The data could not be loaded. Please reload the page in a minute.'; } else { renderNotice(); }
   });
 }
+/* ---------- early earthquake notice ----------
+   The scheduled data arrives about every 20 minutes. So that a strong earthquake is not missed in between, the page
+   itself asks USGS once a minute. An earthquake that meets the alert rules and is not yet in the scheduled data is
+   shown as an "early notice" until the scheduled data (PHIVOLCS first) confirms it. */
+var QUAKE_LIVE_MS = 60000, QUAKE_LIVE_HOURS = 3;
+var QP = { cx: [8.69278161, -1008.33883896], cy: [-5.91775171, 125.45788502] };      // map position from longitude and latitude (same figures as build.py)
+function nearestAirport(la, lo) { var best = null, bk = 1e9; D.airports.forEach(function (a) { if (typeof a.lat !== 'number') return; var k = kmBetween(la, lo, a.lat, a.lon); if (k < bk) { bk = k; best = a; } }); return { a: best, km: bk }; }
+function liveQuakes() {
+  if (!D || document.hidden) return;
+  var since = new Date(Date.now() - QUAKE_LIVE_HOURS * 3600000).toISOString().slice(0, 19);
+  fetch('https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minmagnitude=5&minlatitude=3&maxlatitude=22&minlongitude=114&maxlongitude=130&starttime=' + since).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+    var out = [];
+    (j.features || []).forEach(function (f) {
+      var p = f.properties, c = f.geometry.coordinates, lo = c[0], la = c[1], dep = Math.max(0, Math.round(c[2] || 0)), mag = +p.mag;
+      if (!(mag >= 5)) return;
+      if (D.quakes.some(function (q) { return q.ms && Math.abs(q.ms - p.time) <= 5 * 60000 && kmBetween(la, lo, q.lat, q.lon) <= 300; })) return;   // already in the scheduled data
+      if (p.time < D.generated_ms - 45 * 60000) return;          // old enough that the main source has had its chance and does not list it at this size
+      var n = nearestAirport(la, lo), km = Math.round(n.km / 10) * 10, flag = n.km <= 100, strong = mag >= 6;
+      if (!flag && !strong) return;
+      var x = QP.cx[0] * lo + QP.cx[1], y = QP.cy[0] * la + QP.cy[1], place = String(p.place || 'Philippine area').replace(/, Philippines$/, ''), when = phDay(p.time) + ', ' + phTime(p.time);
+      out.push({ id: 'L' + f.id, early: true, ms: p.time, lat: la, lon: lo, mag: mag, place: place, x: x, y: y, onmap: x >= 0 && x <= 100 && y >= 0 && y <= 100, op: '1', size: Math.round(14 + (mag - 4.5) * 16),
+        title: 'Magnitude ' + mag.toFixed(1) + ' earthquake', where: place + '.', when: when + ' (Philippine time).', depth: 'About ' + dep + ' km below ground.',
+        near: (n.a ? n.a.name : '') + ', about ' + km + ' km away.', nshock: 0, shocks: [], slist: [],
+        magnote: 'USGS first figure: magnitude ' + mag.toFixed(1) + '. This is an early notice. PHIVOLCS, the official Philippine agency, has not been read yet and may report a different magnitude and position. First figures are often revised.',
+        tsu: p.tsunami ? 'USGS has flagged this earthquake for tsunami information. Check PHIVOLCS tsunami bulletins now.' : 'No tsunami flag from USGS so far. For a strong earthquake at sea, check PHIVOLCS tsunami bulletins.',
+        after: 'Smaller earthquakes can follow in the same area.', todo: flag ? 'Early notice. Check runways, buildings and equipment at ' + n.a.name + ' as a precaution, and wait for the confirmed figures at the next update.' : 'Early notice. No airport is within 100 km. Wait for the confirmed figures at the next update.',
+        src: 'USGS (earthquake.usgs.gov), read directly by this page. Not yet confirmed by PHIVOLCS.', line: place + '. ' + when + '. Nearest airport: ' + (n.a ? n.a.name : '') + ', about ' + km + ' km away.',
+        alert: 'Magnitude ' + mag.toFixed(1) + ' (USGS first figure), ' + place + ' (' + when + '). Nearest airport: ' + (n.a ? n.a.name : '') + ', about ' + km + ' km away. Waiting for PHIVOLCS confirmation.' });
+    });
+    var sig = function (L) { return L.map(function (q) { return q.id + q.mag; }).join('|'); };
+    if (sig(out) !== sig(LIVE)) { if (S.qk && S.qk.charAt(0) === 'L' && !out.some(function (q) { return q.id === S.qk; })) S.qk = ''; LIVE = out; renderData(); applyState(); tourLabel(); }
+  }).catch(function () {});
+}
+setInterval(liveQuakes, QUAKE_LIVE_MS);
+setInterval(function () { Array.prototype.forEach.call(document.querySelectorAll('[data-ago]'), function (el) { el.textContent = agoText(+el.getAttribute('data-ago')); }); }, 30000);
 load(); loadRain();
 /* Looking for new data: every 5 minutes while an update is not due yet, every minute once it is due.
    New data only arrives about every 20 minutes, so this shows it just as quickly with far fewer downloads. */
