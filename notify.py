@@ -20,7 +20,7 @@ If SMTP_HOST or MAIL_TO is missing, nothing is sent and the refresh carries on a
 
 Instead of a mail server, the alert can be handed to a Power Automate flow, which sends it from Outlook:
   ALERT_WEBHOOK_URL   the address of the flow's "When a Teams webhook request is received" trigger
-When this is set it is used, and the SMTP settings are ignored. The flow receives subject, html, text, teams (short message) and card (a Teams card).
+When this is set it is used, and the SMTP settings are ignored. The flow receives subject, html, text, teams (short message), card (a Teams card) and tier (alert, headsup or briefing).
 
 Developed by the 1AV IT Department. (c) 2026 1Aviation Groundhandling Services, Corp.
 """
@@ -35,6 +35,14 @@ STATE = os.path.join(HERE, 'notify_state.json')
 DANGER_REPEAT_HOURS = 3      # an airport that leaves Danger and returns is emailed again only after this long
 QUAKE_MAX_AGE_HOURS = 6      # do not email about an earthquake older than this (for example on the very first run)
 KEEP_DAYS = 3                # how long sent-alert records are kept
+# Only the most critical messages are sent: an airport at Danger, an earthquake alert, a possible tsunami.
+# The two optional kinds below are switched off. Change False to True to switch one on.
+SEND_HEADSUP = False         # advance notice: thunderstorm expected within the hour, typhoon entering the area
+SEND_BRIEFING = False        # the whole picture at fixed times each day
+HEADSUP_REPEAT_HOURS = 3     # an airport is not put in a second heads-up within this long
+BRIEF_HOURS = (5, 13)        # daily briefing times, Philippine time (24-hour clock): 5:00 AM and 1:00 PM
+CARD_ROWS_TODAY = 18; CARD_ROWS_TOMORROW = 8     # Teams cards have a size limit, so long lists are cut short there (the email shows all)
+BRIEF_WINDOW_HOURS = 2       # a briefing is sent at the first refresh in this window after its time, never later
 
 PHT = dt.timezone(dt.timedelta(hours=8))
 def pht(ms): return dt.datetime.fromtimestamp(ms / 1000, PHT)
@@ -215,20 +223,20 @@ def fragment(body):
     f = re.sub(r'<(table|td)((?:\s[^>]*)?)>', bg, f)
     return ' '.join(f.split())
 
-def send_webhook(subject, plain, body, teams, card=''):
+def send_webhook(subject, plain, body, teams, card='', tier='alert'):
     """Hand the email to a Power Automate flow, which sends it from Outlook (and can post to Teams)."""
     import urllib.request
     url = os.environ.get('ALERT_WEBHOOK_URL', '').strip()
     if not url: return False
-    payload = json.dumps({'subject': subject, 'html': fragment(body), 'text': plain, 'teams': teams, 'card': card, 'dashboard': dashboard_url()}).encode('utf-8')
+    payload = json.dumps({'subject': subject, 'html': fragment(body), 'text': plain, 'teams': teams, 'card': card, 'tier': tier, 'dashboard': dashboard_url()}).encode('utf-8')
     req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/json'}, method='POST')
     with urllib.request.urlopen(req, timeout=30) as r:
         print(f'Alert handed to the Power Automate flow (reply {r.status}): {subject}')
     return True
 
-def deliver(subject, plain, body, teams='', card=''):
+def deliver(subject, plain, body, teams='', card='', tier='alert'):
     """Power Automate flow if ALERT_WEBHOOK_URL is set, otherwise the mail server."""
-    if os.environ.get('ALERT_WEBHOOK_URL', '').strip(): return send_webhook(subject, plain, body, teams, card)
+    if os.environ.get('ALERT_WEBHOOK_URL', '').strip(): return send_webhook(subject, plain, body, teams, card, tier)
     return send(subject, plain, body)
 
 def send(subject, plain, body):
@@ -252,6 +260,190 @@ def send(subject, plain, body):
             s.send_message(m)
     print(f'Email sent to {len(to)} recipient(s): {subject}'); return True
 
+# =====================================================================================
+# HEADS-UP (advance notice) and DAILY BRIEFING
+# Alert    : something is happening now (Danger airport, earthquake, possible tsunami).  Sent at once.
+# Heads-up : a thunderstorm is expected at an airport within the hour, or a typhoon has entered the
+#            Philippine area. All new ones from one refresh go out together as ONE message.
+# Briefing : the whole picture, at fixed times each day (BRIEF_HOURS).
+# =====================================================================================
+AMBER = '#F57C00'; YELLOW = '#B58900'
+LEVEL_NAME = {'danger': 'Danger', 'warning': 'Warning', 'advisory': 'Advisory'}
+LEVEL_HEX = {'danger': RED, 'warning': AMBER, 'advisory': YELLOW}
+
+def typhoon_active(d): return bool(d.get('ty_banner')) and not str(d['ty_banner']).lower().startswith('no typhoon')
+
+def find_headsup(d, state, now_ms):
+    """Airports that have just moved to Warning because of a thunderstorm, and a typhoon newly in the area."""
+    sent = state.setdefault('sent', {}); cur_w = state.setdefault('warn', {})
+    now_set = {a['id']: a for a in d.get('airports', []) if a.get('level') == 'warning' and 'thunderstorm' in str(a.get('what', '')).lower()}
+    out = []
+    for aid, a in now_set.items():
+        if aid not in cur_w and now_ms - sent.get('hu:' + aid, 0) > HEADSUP_REPEAT_HOURS * 3600000:
+            out.append(a); sent['hu:' + aid] = now_ms
+        cur_w[aid] = now_ms
+    for aid in [k for k in cur_w if k not in now_set]: del cur_w[aid]
+    ty = typhoon_active(d); new_ty = ty and not state.get('ty')
+    state['ty'] = bool(ty)
+    return sorted(out, key=lambda a: a['name']), new_ty
+
+def brief_slot(state, now_ms):
+    """Returns the briefing that is due now ('2026-10-09-5'), or None."""
+    t = pht(now_ms)
+    for h in BRIEF_HOURS:
+        if h <= t.hour < h + BRIEF_WINDOW_HOURS:
+            key = f"{t.strftime('%Y-%m-%d')}-{h}"
+            if key not in state.setdefault('briefs', []): return key
+    return None
+
+def _table(headers, rows_, widths):
+    th = ''.join(f'<td style="padding:6px 8px 6px 0;{FONT};font-size:11.5px;color:{MUTED};width:{w}">{esc(h)}</td>' for h, w in zip(headers, widths))
+    body = ''
+    for r in rows_:
+        body += '<tr>' + ''.join(f'<td style="padding:7px 8px 7px 0;border-top:1px solid #E6EEF1;{FONT};font-size:13px;line-height:1.45;color:{INK};vertical-align:top">{c}</td>' for c in r) + '</tr>'
+    return f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>{th}</tr>{body}</table>'
+
+def _section(colour, tag, title, inner, note=''):
+    return (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;border:1px solid #DCE7EB;border-left:5px solid {colour};border-radius:6px;background:#FFFFFF"><tr><td style="padding:16px 18px 14px">'
+            + (f'<span style="display:inline-block;background:{colour};color:#FFFFFF;{FONT};font-size:11px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:4px;text-transform:uppercase">{esc(tag)}</span>' if tag else '')
+            + f'<div style="{FONT};font-size:17px;font-weight:600;color:{INK};margin:{"9px" if tag else "0"} 0 8px;line-height:1.3">{esc(title)}</div>{inner}'
+            + (f'<div style="margin-top:12px;background:#F3F8FA;border-radius:5px;padding:10px 12px;{FONT};font-size:13.5px;line-height:1.5;color:{INK}">{note}</div>' if note else '')
+            + '</td></tr></table>')
+
+def _shell(d, subject, kicker, intro, inner):
+    """The email frame shared by heads-ups and briefings (same look as the alert email)."""
+    url = dashboard_url(); checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
+    button = (f'<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 6px"><tr><td style="background:{BLUE};border-radius:5px">'
+              f'<a href="{esc(url)}" style="display:inline-block;padding:10px 20px;{FONT};font-size:14px;font-weight:600;color:#FFFFFF;text-decoration:none">Open the dashboard</a></td></tr></table>') if url else ''
+    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F3F7F9">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3F7F9"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px">
+<tr><td style="background:{NAVY};border-radius:8px 8px 0 0;padding:18px 24px">
+<div style="{FONT};font-size:18px;font-weight:600;color:#FFFFFF">Airport Weather Monitoring</div>
+<div style="{FONT};font-size:12.5px;color:{TINT};margin-top:3px">{esc(kicker)} &middot; {esc(checked)} (Philippine time)</div></td></tr>
+<tr><td style="background:#FFFFFF;padding:22px 24px 8px;border-left:1px solid #DCE7EB;border-right:1px solid #DCE7EB">
+<div style="{FONT};font-size:14px;line-height:1.55;color:{INK};margin:0 0 16px">{esc(intro)}</div>
+{inner}
+{button}
+</td></tr>
+<tr><td style="background:#FFFFFF;border:1px solid #DCE7EB;border-top:none;border-radius:0 0 8px 8px;padding:14px 24px 20px">
+<div style="{FONT};font-size:11.5px;line-height:1.55;color:{MUTED};border-top:1px solid #E6EEF1;padding-top:12px">
+Developed by the 1AV IT Department. &copy; 2026 1Aviation Groundhandling Services, Corp.</div></td></tr>
+</table></td></tr></table></body></html>"""
+
+# ----- Teams card pieces shared by heads-ups and briefings -----
+def _tb(text, **kw): return dict({'type': 'TextBlock', 'text': str(text or ''), 'wrap': True}, **kw)
+def _cols(cells, widths, **kw):
+    return dict({'type': 'ColumnSet', 'spacing': 'Small', 'columns': [{'type': 'Column', 'width': w, 'items': [c if isinstance(c, dict) else _tb(c)]} for c, w in zip(cells, widths)]}, **kw)
+def _have(names):
+    url = dashboard_url()
+    return bool(url) and all(os.path.exists(os.path.join(HERE, 'docs', 'assets', f'card-{n}.png')) for n in names)
+def _card(d, kicker, intro, blocks, test=False):
+    url = dashboard_url(); have = _have(('navy', 'button')); checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
+    head = [_tb('Airport Weather Monitoring', size='Large', weight='Bolder', color='Light' if have else 'Default'),
+            _tb(f'{kicker} · {checked} (Philippine time)', size='Small', spacing='None', color='Light' if have else 'Default', isSubtle=not have)]
+    if have:
+        header = {'type': 'Container', 'bleed': True, 'backgroundImage': {'url': f'{url}assets/card-navy.png', 'fillMode': 'Repeat'}, 'items': [{'type': 'ColumnSet', 'columns': [
+            {'type': 'Column', 'width': 'auto', 'verticalContentAlignment': 'Center', 'items': [{'type': 'Image', 'url': f'{url}assets/logo.png', 'height': '30px', 'altText': '1Aviation'}]},
+            {'type': 'Column', 'width': 'stretch', 'verticalContentAlignment': 'Center', 'items': head}]}]}
+    else:
+        header = {'type': 'Container', 'style': 'accent', 'bleed': True, 'items': head}
+    body = [header]
+    if test: body.append({'type': 'Container', 'style': 'warning', 'items': [_tb('**THIS IS A TEST.** It uses what is on the dashboard now. It is not a new message.', size='Small')]})
+    body.append(_tb(intro)); body += blocks
+    card = {'type': 'AdaptiveCard', '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json', 'version': '1.4', 'msteams': {'width': 'Full'}, 'body': body}
+    if url and have:
+        body.append({'type': 'Image', 'url': f'{url}assets/card-button.png', 'height': '36px', 'altText': 'Open the dashboard', 'spacing': 'Large', 'selectAction': {'type': 'Action.OpenUrl', 'title': 'Open the dashboard', 'url': url}})
+    elif url: card['actions'] = [{'type': 'Action.OpenUrl', 'title': 'Open the dashboard', 'url': url, 'style': 'positive'}]
+    return json.dumps(card, ensure_ascii=False)
+def _block(colour, tag_key, tag, title, items):
+    url = dashboard_url()
+    if _have((f'bar-{colour}', f'tag-{tag_key}')):
+        top = [{'type': 'Image', 'url': f'{url}assets/card-bar-{colour}.png', 'size': 'Stretch', 'altText': ''},
+               {'type': 'Image', 'url': f'{url}assets/card-tag-{tag_key}.png', 'height': '22px', 'altText': tag, 'spacing': 'Medium'}]
+        sep = False
+    else:
+        top = [_tb(tag.upper(), size='Small', weight='Bolder', color='Warning' if colour == 'amber' else 'Accent')]; sep = True
+    return {'type': 'Container', 'spacing': 'Large', 'separator': sep, 'items': top + ([_tb(title, size='Large', weight='Bolder', spacing='Small')] if title else []) + items}
+def _sub(title): return _tb(title, weight='Bolder', spacing='Large', separator=True)
+
+HEADSUP_TODO = 'As a precaution, be ready to pause ramp work. Stay alert and work carefully.'
+
+def headsup_message(d, airports, new_ty, test=False):
+    """One message for every new heads-up found at this refresh."""
+    parts = []; text = []; blocks = []; subj = []
+    if airports:
+        rows_ = [[f'<strong>{esc(a["name"])}</strong>' + (' <span style="color:' + MUTED + ';font-size:11.5px">(estimate)</span>' if a.get('est') else ''), esc(a.get('what')), esc(a.get('when'))] for a in airports]
+        title = 'Thunderstorm expected at ' + (airports[0]['name'] if len(airports) == 1 else f'{len(airports)} airports')
+        parts.append(_section(AMBER, 'Heads-up', title, _table(['Airport', 'What is expected', 'When'], rows_, ['34%', '38%', '28%']), f'<strong>What to do.</strong> {esc(HEADSUP_TODO)}'))
+        text.append('HEADS-UP: ' + title + '\n' + '\n'.join(f"- {a['name']}: {a.get('what')}, {a.get('when')}" for a in airports) + f'\nWhat to do: {HEADSUP_TODO}\n')
+        items = [_cols([_tb('Airport', size='Small', isSubtle=True), _tb('What is expected', size='Small', isSubtle=True), _tb('When', size='Small', isSubtle=True)], ['34', '38', '28'])]
+        items += [_cols([_tb('**' + a['name'] + '**' + (' (estimate)' if a.get('est') else '')), a.get('what'), a.get('when')], ['34', '38', '28']) for a in airports]
+        items.append({'type': 'Container', 'style': 'emphasis', 'spacing': 'Medium', 'items': [_tb('**What to do.** ' + HEADSUP_TODO)]})
+        blocks.append(_block('amber', 'headsup', 'Heads-up', title, items))
+        subj.append('Thunderstorm expected: ' + (', '.join(a['name'] for a in airports) if len(airports) <= 2 else f'{len(airports)} airports'))
+    if new_ty:
+        parts.append(_section(AMBER, 'Heads-up', str(d.get('ty_banner')), f'<div style="{FONT};font-size:13.5px;line-height:1.55;color:{INK}">{esc(d.get("ty_text"))}</div>'))
+        text.append('HEADS-UP: ' + str(d.get('ty_banner')) + '\n' + str(d.get('ty_text')) + '\n')
+        blocks.append(_block('amber', 'headsup', 'Heads-up', str(d.get('ty_banner')), [_tb(d.get('ty_text'))]))
+        subj.append('Typhoon watch')
+    n = len(airports) + (1 if new_ty else 0)
+    intro = 'Advance notice from the Airport Weather Monitoring dashboard. This is a forecast, not something happening at the airport yet.'
+    subject = ('TEST | ' if test else '') + 'Airport Weather heads-up: ' + ' | '.join(subj)
+    if len(subject) > 90: subject = subject[:87] + '...'
+    body = _shell(d, subject, 'Heads-up', intro, ''.join(parts))
+    url = dashboard_url()
+    teams = '<b>Heads-up.</b> ' + '<br>'.join(esc(t).replace('\n', '<br>') for t in text) + (f'<br><a href="{esc(url)}">Open the dashboard</a>' if url else '')
+    return subject, intro + '\n\n' + '\n'.join(text) + (f'\nDashboard: {url}\n' if url else ''), body, teams, _card(d, 'Heads-up', intro, blocks, test)
+
+def briefing_message(d, slot_hour, now_ms, test=False):
+    """The whole picture: today, tomorrow, typhoon watch and recent earthquakes."""
+    A = d.get('airports', []); order = {'danger': 0, 'warning': 1, 'advisory': 2}
+    att = sorted([a for a in A if a.get('level') in order], key=lambda a: (order[a['level']], a['name']))
+    cnt = {lv: sum(1 for a in A if a.get('level') == lv) for lv in ('danger', 'warning', 'advisory', 'normal')}
+    tmr = sorted([a for a in A if a.get('t')], key=lambda a: (a.get('tsort', 9), a['name']))
+    recent = [q for q in d.get('quakes', []) if q.get('ms') and now_ms - q['ms'] <= 24 * 3600000]
+    name = 'Morning briefing' if slot_hour < 12 else 'Afternoon briefing'
+    day_ = pht(now_ms); daytxt = f"{day_.strftime('%A')}, {day_.strftime('%b')} {day_.day}"
+    summary = f"{cnt['danger']} Danger, {cnt['warning']} Warning, {cnt['advisory']} Advisory, {cnt['normal']} Normal"
+    pill = lambda lv: f'<span style="display:inline-block;background:{LEVEL_HEX[lv]};color:#FFFFFF;{FONT};font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:4px;text-transform:uppercase">{LEVEL_NAME[lv]}</span>'
+    est = lambda a: ' <span style="color:' + MUTED + ';font-size:11.5px">(estimate)</span>' if a.get('est') else ''
+    parts = []; blocks = []; text = [f'{name.upper()}, {daytxt}', f'Today: {summary}.', '']
+    # today
+    if att:
+        inner = _table(['Level', 'Airport', 'What', 'When'], [[pill(a['level']), f'<strong>{esc(a["name"])}</strong>{est(a)}', esc(a.get('what')), esc(a.get('when'))] for a in att], ['17%', '29%', '30%', '24%'])
+        items = [_cols([_tb(LEVEL_NAME[a['level']], weight='Bolder', color={'danger': 'Attention', 'warning': 'Warning', 'advisory': 'Default'}[a['level']]), _tb('**' + a['name'] + '**'), a.get('what'), a.get('when')], ['18', '28', '30', '24']) for a in att[:CARD_ROWS_TODAY]]
+        if len(att) > CARD_ROWS_TODAY: items.append(_tb(f'and {len(att) - CARD_ROWS_TODAY} more on the dashboard.', size='Small', isSubtle=True))
+        text += ['TODAY'] + [f"- {LEVEL_NAME[a['level']]}: {a['name']}. {a.get('what')}, {a.get('when')}" for a in att] + ['']
+    else:
+        inner = f'<div style="{FONT};font-size:13.5px;color:{INK}">All 36 airports are Normal.</div>'; items = [_tb('All 36 airports are Normal.')]; text += ['TODAY', 'All airports are Normal.', '']
+    parts.append(_section(NAVY, 'Daily briefing', f'Today: {summary}', inner))
+    blocks.append(_block('navy', 'briefing', 'Daily briefing', f'Today: {summary}', items))
+    # tomorrow
+    if tmr:
+        parts.append(_section(NAVY, '', 'Tomorrow (forecast, less certain)', _table(['Airport', 'What', 'When'], [[f'<strong>{esc(a["name"])}</strong>', esc(a.get('twhat')), esc(a.get('twhen'))] for a in tmr], ['34%', '38%', '28%'])))
+        blocks.append({'type': 'Container', 'items': [_sub('Tomorrow (forecast, less certain)')] + [_cols(['**' + a['name'] + '**', a.get('twhat'), a.get('twhen')], ['34', '38', '28']) for a in tmr[:CARD_ROWS_TOMORROW]] +
+                       ([_tb(f'and {len(tmr) - CARD_ROWS_TOMORROW} more on the dashboard.', size='Small', isSubtle=True)] if len(tmr) > CARD_ROWS_TOMORROW else [])})
+        text += ['TOMORROW'] + [f"- {a['name']}: {a.get('twhat')}, {a.get('twhen')}" for a in tmr] + ['']
+    # typhoon
+    ty = str(d.get('ty_text') or d.get('ty_banner') or '')
+    if ty:
+        parts.append(_section(AMBER if typhoon_active(d) else NAVY, '', 'Typhoon watch', f'<div style="{FONT};font-size:13.5px;line-height:1.55;color:{INK}">{esc(ty)}</div>'))
+        blocks.append({'type': 'Container', 'items': [_sub('Typhoon watch'), _tb(ty)]}); text += ['TYPHOON WATCH', ty, '']
+    # earthquakes
+    if recent:
+        qrows = [[f'<strong>M{q["mag"]:.1f}</strong>', esc(q.get('place')), esc(clock(q['ms'])), esc(q.get('near'))] for q in recent]
+        parts.append(_section(PURPLE, '', 'Earthquakes in the last 24 hours', _table(['Size', 'Where', 'When', 'Nearest airport'], qrows, ['11%', '37%', '22%', '30%']), esc(d.get('flag'))))
+        blocks.append({'type': 'Container', 'items': [_sub('Earthquakes in the last 24 hours')] + [_cols([f"**M{q['mag']:.1f}**", q.get('place'), clock(q['ms']), q.get('near')], ['12', '38', '22', '28']) for q in recent] + [_tb(d.get('flag'), size='Small', isSubtle=True)]})
+        text += ['EARTHQUAKES, LAST 24 HOURS'] + [f"- M{q['mag']:.1f}, {q.get('place')}, {clock(q['ms'])}. Nearest airport: {q.get('near')}" for q in recent] + ['']
+    intro = f'{name} for {daytxt}: the weather picture across the 36 airports, with tomorrow\'s outlook.'
+    subject = ('TEST | ' if test else '') + f"Airport Weather {name.lower()}, {day_.strftime('%b')} {day_.day}: {cnt['danger']} Danger, {cnt['warning']} Warning"
+    body = _shell(d, subject, name, intro, ''.join(parts))
+    url = dashboard_url()
+    teams = '<br>'.join(esc(t) for t in text) + (f'<br><a href="{esc(url)}">Open the dashboard</a>' if url else '')
+    return subject, '\n'.join(text) + (f'\nDashboard: {url}\n' if url else ''), body, teams, _card(d, name, intro, blocks, test)
+
 def main():
     d = json.load(open(DATA, encoding='utf-8'))
     try: state = json.load(open(STATE, encoding='utf-8'))
@@ -274,6 +466,12 @@ def main():
             sys.exit(f'TEST FAILED: the mail server refused the sign-in ({e.smtp_code}). Check SMTP_USER and SMTP_PASS; for Microsoft 365 the mailbox needs Authenticated SMTP switched on; for Gmail use an app password.')
         except Exception as e:
             sys.exit(f'TEST FAILED: {type(e).__name__}: {e}')
+        try:
+            wa = [a for a in d.get('airports', []) if a.get('level') == 'warning' and 'thunderstorm' in str(a.get('what', '')).lower()][:4] or [a for a in d.get('airports', []) if a.get('level') == 'warning'][:2]
+            if wa and SEND_HEADSUP: deliver(*headsup_message(d, wa, False, test=True), tier='headsup')
+            if SEND_BRIEFING: deliver(*briefing_message(d, pht(now_ms).hour, now_ms, test=True), tier='briefing')
+        except Exception as e:
+            sys.exit(f'TEST FAILED on the heads-up or briefing sample: {type(e).__name__}: {e}')
         print('TEST PASSED: the sample alert was accepted. Check the inbox and the junk folder (and the flow run history if you use Power Automate).')
         return
     preview = os.environ.get('NOTIFY_PREVIEW')
@@ -291,6 +489,27 @@ def main():
                 return                                                           # state not saved, so it is tried again next run
     else:
         print('No new alerts to email.')
+    # heads-up and daily briefing
+    before = json.loads(json.dumps(state)); fresh = 'warn' not in state
+    hu, new_ty = find_headsup(d, state, now_ms)
+    hu = [a for a in hu if a['id'] not in {x['id'] for x in new_d}]
+    slot = brief_slot(state, now_ms) if SEND_BRIEFING else None
+    if first or fresh or not SEND_HEADSUP: hu, new_ty = [], False   # the first run with this feature only records what is already there
+    try:
+        if hu or new_ty:
+            m = headsup_message(d, hu, new_ty)
+            if preview: open(preview + '.headsup.html', 'w', encoding='utf-8').write(m[2]); print('Preview written:', m[0])
+            else: deliver(*m, tier='headsup')
+        if slot:
+            m = briefing_message(d, int(slot.rsplit('-', 1)[1]), now_ms)
+            if preview: open(preview + '.briefing.html', 'w', encoding='utf-8').write(m[2]); print('Preview written:', m[0])
+            else: deliver(*m, tier='briefing')
+            state['briefs'] = (state.get('briefs', []) + [slot])[-6:]
+    except Exception as e:
+        print('HEADS-UP OR BRIEFING ERROR:', type(e).__name__, e, file=sys.stderr)       # tried again at the next refresh
+        before.setdefault('warn', {})
+        json.dump(before, open(STATE, 'w', encoding='utf-8'), separators=(',', ':'))     # keeps the alerts already sent in this run
+        return
     json.dump(state, open(STATE, 'w', encoding='utf-8'), separators=(',', ':'))
 
 if __name__ == '__main__':
