@@ -62,12 +62,26 @@ jobs:
               )
           PY
 
+      - name: Email new alerts
+        # Sends one email for each new earthquake alert or new Danger airport.
+        # Does nothing until the SMTP_HOST and MAIL_TO secrets are set. Never stops the refresh.
+        continue-on-error: true
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+        run: python3 notify.py
+
       - name: Commit updated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add docs/data.json docs/rain.json
+          if [ -f notify_state.json ]; then git add notify_state.json; fi
 
           if git diff --cached --quiet; then
             echo "No generated data changes to commit."
