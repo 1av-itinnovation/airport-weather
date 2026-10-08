@@ -54,6 +54,11 @@ why, and how reliable each reading is.
   the nearest airport. The location is used only in the browser and is not sent or stored.
 - **Auto-show alerts.** With nobody using the screen, the map zooms to each earthquake alert, then
   each Danger airport, then returns to the whole map and repeats.
+- **Fast earthquake watch.** Every 5 minutes a light check reads only the earthquake sources. A new
+  strong earthquake triggers a full refresh and the alert at once, without waiting for the next
+  scheduled refresh.
+- **Notifications by Teams and email** for the most critical events only: an airport at Danger, an
+  earthquake alert, or a possible tsunami. Each is sent once.
 - **Early earthquake notice.** Between updates, an open page asks USGS once a minute and shows a
   qualifying earthquake at once, until the next update confirms it.
 - **Next update time.** Worked out from the average gap between recent updates.
