@@ -2157,6 +2157,20 @@ function pollDelay() {
   return Date.now() > due - 2 * 60000 ? REFRESH_MS : IDLE_MS;
 }
 (function tick() { setTimeout(function () { load(); tick(); }, pollDelay()); })();
+/* A very light check every 30 seconds: it asks only whether the data file has changed (no download).
+   When it has, the new data is loaded at once, so the dashboard keeps pace with the Teams and email alerts. */
+var PEEK_MS = 30000, PEEK_TAG = null;
+function peek() {
+  if (document.hidden || !D) return;
+  fetch('data.json?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' }).then(function (r) {
+    if (!r.ok) return;
+    var tag = r.headers.get('etag') || r.headers.get('last-modified') || r.headers.get('content-length');
+    if (!tag) return;
+    if (PEEK_TAG && tag !== PEEK_TAG) load();
+    PEEK_TAG = tag;
+  }).catch(function () {});
+}
+setInterval(peek, PEEK_MS); setTimeout(peek, 4000);
 setInterval(loadRain, RAIN_MS);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
 })();
