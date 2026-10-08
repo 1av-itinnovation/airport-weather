@@ -80,12 +80,27 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add docs/data.json docs/rain.json
-          if [ -f notify_state.json ]; then git add notify_state.json; fi
+          FILES="docs/data.json docs/rain.json notify_state.json"
 
-          if git diff --cached --quiet; then
-            echo "No generated data changes to commit."
-          else
-            git commit -m "chore: refresh airport weather data"
-            git push || (git pull --rebase && git push)
-          fi
+          # If something else was pushed while this run was working (a file upload, or another run),
+          # start again from the newest version and put this run's fresh data on top. The data files
+          # are always replaced whole, so there is never anything to merge.
+          for attempt in 1 2 3; do
+            for f in $FILES; do if [ -f "$f" ]; then git add "$f"; fi; done
+            if git diff --cached --quiet; then
+              echo "No generated data changes to commit."
+              exit 0
+            fi
+            git commit -q -m "chore: refresh airport weather data"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push was refused (attempt $attempt); taking the newest version and trying again."
+            mkdir -p /tmp/fresh
+            for f in $FILES; do if [ -f "$f" ]; then cp "$f" "/tmp/fresh/$(basename "$f")"; fi; done
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            for f in $FILES; do if [ -f "/tmp/fresh/$(basename "$f")" ]; then cp "/tmp/fresh/$(basename "$f")" "$f"; fi; done
+          done
+          echo "Could not save the data after 3 attempts."
+          exit 1
