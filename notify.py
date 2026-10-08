@@ -18,6 +18,10 @@ this file, because this repository is public:
   MAIL_FROM   optional; defaults to SMTP_USER
 If SMTP_HOST or MAIL_TO is missing, nothing is sent and the refresh carries on as normal.
 
+Instead of a mail server, the alert can be handed to a Power Automate flow, which sends it from Outlook:
+  ALERT_WEBHOOK_URL   the address of the flow's "When a Teams webhook request is received" trigger
+When this is set it is used, and the SMTP settings are ignored. The flow receives subject, html, text, teams.
+
 Developed by the 1AV IT Department. (c) 2026 1Aviation Groundhandling Services, Corp.
 """
 import datetime as dt, html, json, os, smtplib, ssl, sys
@@ -133,6 +137,33 @@ Developed by the 1AV IT Department. &copy; 2026 1Aviation Groundhandling Service
     plain = intro + '\n\n' + '\n'.join(text) + (f'\nDashboard: {url}\n' if url else '') + '\nAutomatic message from Airport Weather Monitoring. Developed by the 1AV IT Department.'
     return subject, plain, body
 
+def teams_text(new_q, new_d):
+    """A short version for a Teams channel message."""
+    out = []
+    for a, q in new_q:
+        if q: out.append(f"<b>{'Possible tsunami' if a['kind'] == 'tsunami' else 'Earthquake'}: magnitude {q['mag']:.1f}</b>, {esc(q.get('place'))}<br>Happened: {esc(clock(q['ms']) if q.get('ms') else q.get('when'))} (Philippine time)<br>Nearest airport: {esc(q.get('near'))}<br>What to do: {esc(q.get('todo'))}")
+        else: out.append(esc(a.get('text')))
+    for a in new_d:
+        out.append(f"<b>Danger: {esc(a['name'])}</b><br>{esc(a.get('now'))}<br>What to do: {esc(a.get('todo'))}")
+    url = dashboard_url()
+    return '<br><br>'.join(out) + (f'<br><br><a href="{esc(url)}">Open the dashboard</a>' if url else '')
+
+def send_webhook(subject, plain, body, teams):
+    """Hand the email to a Power Automate flow, which sends it from Outlook (and can post to Teams)."""
+    import urllib.request
+    url = os.environ.get('ALERT_WEBHOOK_URL', '').strip()
+    if not url: return False
+    payload = json.dumps({'subject': subject, 'html': body, 'text': plain, 'teams': teams, 'dashboard': dashboard_url()}).encode('utf-8')
+    req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/json'}, method='POST')
+    with urllib.request.urlopen(req, timeout=30) as r:
+        print(f'Alert handed to the Power Automate flow (reply {r.status}): {subject}')
+    return True
+
+def deliver(subject, plain, body, teams=''):
+    """Power Automate flow if ALERT_WEBHOOK_URL is set, otherwise the mail server."""
+    if os.environ.get('ALERT_WEBHOOK_URL', '').strip(): return send_webhook(subject, plain, body, teams)
+    return send(subject, plain, body)
+
 def send(subject, plain, body):
     host = os.environ.get('SMTP_HOST', '').strip(); to = [x.strip() for x in os.environ.get('MAIL_TO', '').replace(';', ',').split(',') if x.strip()]
     if not host or not to:
@@ -161,13 +192,33 @@ def main():
     first = not state
     now_ms = int(d.get('generated_ms') or dt.datetime.now(dt.timezone.utc).timestamp() * 1000)
     new_q, new_d = find_new(d, state, now_ms)
+    if os.environ.get('NOTIFY_TEST', '').lower() in ('1', 'true', 'yes'):
+        # Test button: sends a sample email built from whatever is on the dashboard now. Nothing is recorded as sent.
+        tq = [(a, {q['id']: q for q in d.get('quakes', [])}.get(a.get('q'))) for a in d.get('eq_alerts', [])][:1]
+        if not tq and d.get('quakes'): tq = [(dict(kind='strong', q=d['quakes'][0]['id'], text=''), d['quakes'][0])]
+        td = [a for a in d.get('airports', []) if a.get('level') == 'danger'][:1] or [a for a in d.get('airports', []) if a.get('level') == 'warning'][:1]
+        subject, plain, body = build_email(d, tq, td)
+        subject = '[TEST] ' + subject
+        note = 'THIS IS A TEST. It shows what an alert email looks like, using what is on the dashboard now. It is not a new alert.'
+        body = body.replace('<div style="' + FONT + ';font-size:14px;line-height:1.55;color:' + INK + ';margin:0 0 16px">', '<div style="' + FONT + ';font-size:13.5px;font-weight:600;line-height:1.5;color:#7A4B00;background:#FFF4D6;border-radius:5px;padding:10px 12px;margin:0 0 14px">' + note + '</div><div style="' + FONT + ';font-size:14px;line-height:1.55;color:' + INK + ';margin:0 0 16px">', 1)
+        try:
+            if not deliver(subject, note + '\n\n' + plain, body, '<b>TEST, not a new alert.</b><br><br>' + teams_text(tq, td)): sys.exit('TEST FAILED: nothing is set up. Add the ALERT_WEBHOOK_URL secret (Power Automate), or SMTP_HOST and MAIL_TO (mail server).')
+        except smtplib.SMTPAuthenticationError as e:
+            sys.exit(f'TEST FAILED: the mail server refused the sign-in ({e.smtp_code}). Check SMTP_USER and SMTP_PASS; for Microsoft 365 the mailbox needs Authenticated SMTP switched on; for Gmail use an app password.')
+        except Exception as e:
+            sys.exit(f'TEST FAILED: {type(e).__name__}: {e}')
+        print('TEST PASSED: the sample alert was accepted. Check the inbox and the junk folder (and the flow run history if you use Power Automate).')
+        return
     preview = os.environ.get('NOTIFY_PREVIEW')
     if (new_q or new_d) and not (first and not preview and os.environ.get('NOTIFY_SKIP_FIRST') == '1'):
         subject, plain, body = build_email(d, new_q, new_d)
         if preview:
             open(preview, 'w', encoding='utf-8').write(body); print('Preview written:', subject)
         else:
-            try: send(subject, plain, body)
+            try: deliver(subject, plain, body, teams_text(new_q, new_d))
+            except smtplib.SMTPAuthenticationError as e:
+                print(f'EMAIL NOT SENT: the mail server refused the sign-in ({e.smtp_code}). Check SMTP_USER and SMTP_PASS. It will be tried again at the next refresh.', file=sys.stderr)
+                return
             except Exception as e:
                 print('EMAIL ERROR:', type(e).__name__, e, file=sys.stderr)      # never stop the data refresh because of email
                 return                                                           # state not saved, so it is tried again next run
