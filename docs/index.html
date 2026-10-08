@@ -1172,6 +1172,23 @@ body{background:var(--page);color:var(--ink)}
 /* ---------- help window: sub-headings inside section 1 ---------- */
 #modal .box > .sec .subh{margin:10px 0 0;padding:0;font-size:13px;font-weight:600;color:#12303F;border:none}
 #modal .box > .sec .subh + ul{margin-top:4px}
+
+/* ---------- filters wrap onto a second line when the window is not wide enough (no sideways scrollbar) ---------- */
+@media (min-width:901px){
+  .app .filters{flex-wrap:wrap;overflow:visible;padding-bottom:0;row-gap:8px}
+}
+@media (min-width:901px) and (max-width:1180px){
+  .app .filters .spacer{display:none}
+  .app .filters .daysw{margin-left:auto}
+}
+
+/* ---------- tall, medium-width windows: map with the details under it, airport list alongside ---------- */
+@media (min-width:901px) and (max-width:1100px){
+  .app .cols.tall{grid-template-columns:minmax(0,1.15fr) minmax(300px,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .app .cols.tall .col.map{grid-column:1;grid-row:1}
+  .app .cols.tall .col.side{grid-column:1;grid-row:2}
+  .app .cols.tall .col.list{grid-column:2;grid-row:1 / 3}
+}
 </style>
 </head>
 <body>
@@ -1860,7 +1877,16 @@ document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') retu
 /* fit the map to the space available so the whole dashboard stays on one screen */
 var FITX = 1, FITY = 1, GEO = { sl: 0, st: 0, sw: 480, sh: 723 };
 function fit() {
-  var v = $('vp'), st = $('stage'); if (!v || !st || !v.clientHeight || !v.clientWidth) return;
+  var v = $('vp'), st = $('stage'), col = $('mapCol'), grid = $('cols'); if (!v || !st || !v.clientWidth) return;
+  // On tall, narrow windows the panel would be much taller than the map needs. In that case the
+  // map panel stops at the map's own height, so no empty band is left above and below it.
+  var cs = getComputedStyle(col), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+  var used = 0, kids = 0; Array.prototype.forEach.call(col.children, function (el) { if (el !== v && el.offsetParent !== null) { used += el.offsetHeight; kids++; } });
+  var avail = grid.clientHeight - pad - used - kids * (parseFloat(cs.rowGap) || 8), natural = v.clientWidth * 1506 / 1000;
+  if (avail > natural + 2) { v.style.flex = '0 0 auto'; v.style.height = Math.round(natural) + 'px'; col.style.alignSelf = window.matchMedia('(max-width:900px)').matches ? '' : 'start'; }
+  else { v.style.flex = ''; v.style.height = ''; col.style.alignSelf = ''; }
+  grid.classList.toggle('tall', avail > natural + 340);          // enough spare height to put the details under the map
+  if (!v.clientHeight) return;
   var W = v.clientWidth, H = v.clientHeight, sw = Math.min(W, H * 1000 / 1506), sh = sw * 1506 / 1000;
   [st, $('pins')].forEach(function (el) { el.style.width = sw + 'px'; el.style.height = sh + 'px'; el.style.left = ((W - sw) / 2) + 'px'; el.style.top = ((H - sh) / 2) + 'px'; });
   // the rain canvas covers the whole panel; GEO says where the map image sits inside it, in canvas pixels
