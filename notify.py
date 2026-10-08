@@ -148,12 +148,26 @@ def teams_text(new_q, new_d):
     url = dashboard_url()
     return '<br><br>'.join(out) + (f'<br><br><a href="{esc(url)}">Open the dashboard</a>' if url else '')
 
+def fragment(body):
+    """The email design as a plain block of tables, for mail systems that reject a whole web page
+    (Power Automate's Outlook step drops the content when it is given a full page with its own head and body)."""
+    import re
+    i = body.find('<table'); j = body.rfind('</table>')
+    f = body[i:j + 8] if i >= 0 and j > i else body
+    f = f.replace(' role="presentation"', '')
+    def bg(m):                                   # older mail programs only honour the bgcolor attribute
+        tag, rest = m.group(1), m.group(2)
+        c = re.search(r'background:(#[0-9A-Fa-f]{6})', rest)
+        return f'<{tag} bgcolor="{c.group(1)}"{rest}>' if c and 'bgcolor=' not in rest else m.group(0)
+    f = re.sub(r'<(table|td)((?:\s[^>]*)?)>', bg, f)
+    return ' '.join(f.split())
+
 def send_webhook(subject, plain, body, teams):
     """Hand the email to a Power Automate flow, which sends it from Outlook (and can post to Teams)."""
     import urllib.request
     url = os.environ.get('ALERT_WEBHOOK_URL', '').strip()
     if not url: return False
-    payload = json.dumps({'subject': subject, 'html': body, 'text': plain, 'teams': teams, 'dashboard': dashboard_url()}).encode('utf-8')
+    payload = json.dumps({'subject': subject, 'html': fragment(body), 'text': plain, 'teams': teams, 'dashboard': dashboard_url()}).encode('utf-8')
     req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/json'}, method='POST')
     with urllib.request.urlopen(req, timeout=30) as r:
         print(f'Alert handed to the Power Automate flow (reply {r.status}): {subject}')
