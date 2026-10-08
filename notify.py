@@ -72,7 +72,7 @@ def find_new(d, state, now_ms):
         last = danger_now.get(aid)
         if last is None and now_ms - sent.get('dg:' + aid, 0) > DANGER_REPEAT_HOURS * 3600000:
             new_d.append(a); sent['dg:' + aid] = now_ms
-        danger_now[aid] = now_ms
+        danger_now.setdefault(aid, now_ms)          # kept unchanged while it stays at Danger, so the record is not rewritten every run
     for aid in [k for k in danger_now if k not in current]: del danger_now[aid]
     for k in [k for k, v in sent.items() if now_ms - v > KEEP_DAYS * 86400000]: del sent[k]
     return new_q, new_d
@@ -281,7 +281,7 @@ def find_headsup(d, state, now_ms):
     for aid, a in now_set.items():
         if aid not in cur_w and now_ms - sent.get('hu:' + aid, 0) > HEADSUP_REPEAT_HOURS * 3600000:
             out.append(a); sent['hu:' + aid] = now_ms
-        cur_w[aid] = now_ms
+        cur_w.setdefault(aid, now_ms)
     for aid in [k for k in cur_w if k not in now_set]: del cur_w[aid]
     ty = typhoon_active(d); new_ty = ty and not state.get('ty')
     state['ty'] = bool(ty)
@@ -450,6 +450,15 @@ def main():
     except Exception: state = {}
     first = not state
     now_ms = int(d.get('generated_ms') or dt.datetime.now(dt.timezone.utc).timestamp() * 1000)
+    if os.environ.get('NOTIFY_CHECK'):
+        # Only answers "is there anything to send at this refresh?" and records nothing. The workflow uses this to
+        # publish the dashboard first, so that the alert and the dashboard agree when someone opens the link.
+        q_, d_ = find_new(d, json.loads(json.dumps(state)), now_ms)
+        pending = bool(q_ or d_)
+        print('Alerts waiting to be sent:', len(q_) + len(d_))
+        out = os.environ.get('GITHUB_OUTPUT')
+        if out: open(out, 'a').write(f"pending={'true' if pending else 'false'}\n")
+        return
     new_q, new_d = find_new(d, state, now_ms)
     if os.environ.get('NOTIFY_TEST', '').lower() in ('1', 'true', 'yes'):
         # Test button: sends a sample email built from whatever is on the dashboard now. Nothing is recorded as sent.
