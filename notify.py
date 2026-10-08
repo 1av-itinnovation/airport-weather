@@ -20,7 +20,7 @@ If SMTP_HOST or MAIL_TO is missing, nothing is sent and the refresh carries on a
 
 Instead of a mail server, the alert can be handed to a Power Automate flow, which sends it from Outlook:
   ALERT_WEBHOOK_URL   the address of the flow's "When a Teams webhook request is received" trigger
-When this is set it is used, and the SMTP settings are ignored. The flow receives subject, html, text, teams.
+When this is set it is used, and the SMTP settings are ignored. The flow receives subject, html, text, teams (short message) and card (a Teams card).
 
 Developed by the 1AV IT Department. (c) 2026 1Aviation Groundhandling Services, Corp.
 """
@@ -148,6 +148,40 @@ def teams_text(new_q, new_d):
     url = dashboard_url()
     return '<br><br>'.join(out) + (f'<br><br><a href="{esc(url)}">Open the dashboard</a>' if url else '')
 
+def teams_card(d, new_q, new_d, test=False):
+    """The alert as a Teams card (Adaptive Card): a header, one block per alert, and a button to the dashboard.
+    Teams only offers a few fixed colours: red is used for Danger and amber for earthquakes."""
+    def tb(text, **kw): return dict({'type': 'TextBlock', 'text': str(text or ''), 'wrap': True}, **kw)
+    def facts(pairs): return {'type': 'FactSet', 'spacing': 'Small', 'facts': [{'title': k, 'value': str(v)} for k, v in pairs if v]}
+    def block(style, tag, colour, title, pairs, action):
+        items = [tb(tag.upper(), size='Small', weight='Bolder', color=colour), tb(title, size='Large', weight='Bolder', spacing='None'), facts(pairs)]
+        if action: items.append(tb('**What to do.** ' + action, spacing='Medium'))
+        return {'type': 'Container', 'style': style, 'spacing': 'Medium', 'items': items}
+    checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
+    n = len(new_q) + len(new_d)
+    body = [{'type': 'Container', 'style': 'accent', 'bleed': True, 'items': [
+                tb('Airport Weather Monitoring', size='Large', weight='Bolder'),
+                tb(f'Alert notification \u00b7 {checked} (Philippine time)', size='Small', isSubtle=True, spacing='None')]}]
+    if test: body.append({'type': 'Container', 'style': 'warning', 'items': [tb('**THIS IS A TEST.** It shows what an alert looks like, using what is on the dashboard now. It is not a new alert.', size='Small')]})
+    body.append(tb('A new alert has been raised on the dashboard.' if n == 1 else f'{n} new alerts have been raised on the dashboard.'))
+    for a, q in new_q:
+        tsu = a['kind'] == 'tsunami'
+        if q:
+            when = f"{clock(q['ms'])} (Philippine time)" if q.get('ms') else q.get('when')
+            body.append(block('attention' if tsu else 'warning', 'Possible tsunami' if tsu else 'Earthquake', 'Attention' if tsu else 'Warning', f"Magnitude {q['mag']:.1f} earthquake",
+                [('Time it happened', when), ('Where', q.get('where')), ('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), ('Depth', q.get('depth')), ('Nearest airport', q.get('near')),
+                 ('Tsunami', q.get('tsu')), ('Aftershocks', q.get('after')), ('Source', q.get('src'))], q.get('todo')))
+        else:
+            body.append(block('attention' if tsu else 'warning', 'Possible tsunami' if tsu else 'Earthquake', 'Attention' if tsu else 'Warning', 'Earthquake alert', [('Details', a.get('text'))], ''))
+    for a in new_d:
+        body.append(block('attention', 'Danger', 'Attention', a['name'], [('Right now', a.get('now')), ('Rest of today', a.get('next')), ('Confidence', a.get('conf')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo')))
+    body.append(tb('Automatic message, sent once for each new alert when the dashboard collects its data (about every 20 minutes). Earthquake figures are first reports and are often revised. '
+                   'This supports, and does not replace, official PHIVOLCS and PAGASA bulletins and the station\'s own safety procedures. Developed by the 1AV IT Department.', size='Small', isSubtle=True, separator=True, spacing='Medium'))
+    card = {'type': 'AdaptiveCard', '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json', 'version': '1.4', 'msteams': {'width': 'Full'}, 'body': body}
+    url = dashboard_url()
+    if url: card['actions'] = [{'type': 'Action.OpenUrl', 'title': 'Open the dashboard', 'url': url}]
+    return json.dumps(card, ensure_ascii=False)
+
 def fragment(body):
     """The email design as a plain block of tables, for mail systems that reject a whole web page
     (Power Automate's Outlook step drops the content when it is given a full page with its own head and body)."""
@@ -162,20 +196,20 @@ def fragment(body):
     f = re.sub(r'<(table|td)((?:\s[^>]*)?)>', bg, f)
     return ' '.join(f.split())
 
-def send_webhook(subject, plain, body, teams):
+def send_webhook(subject, plain, body, teams, card=''):
     """Hand the email to a Power Automate flow, which sends it from Outlook (and can post to Teams)."""
     import urllib.request
     url = os.environ.get('ALERT_WEBHOOK_URL', '').strip()
     if not url: return False
-    payload = json.dumps({'subject': subject, 'html': fragment(body), 'text': plain, 'teams': teams, 'dashboard': dashboard_url()}).encode('utf-8')
+    payload = json.dumps({'subject': subject, 'html': fragment(body), 'text': plain, 'teams': teams, 'card': card, 'dashboard': dashboard_url()}).encode('utf-8')
     req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/json'}, method='POST')
     with urllib.request.urlopen(req, timeout=30) as r:
         print(f'Alert handed to the Power Automate flow (reply {r.status}): {subject}')
     return True
 
-def deliver(subject, plain, body, teams=''):
+def deliver(subject, plain, body, teams='', card=''):
     """Power Automate flow if ALERT_WEBHOOK_URL is set, otherwise the mail server."""
-    if os.environ.get('ALERT_WEBHOOK_URL', '').strip(): return send_webhook(subject, plain, body, teams)
+    if os.environ.get('ALERT_WEBHOOK_URL', '').strip(): return send_webhook(subject, plain, body, teams, card)
     return send(subject, plain, body)
 
 def send(subject, plain, body):
@@ -216,7 +250,7 @@ def main():
         note = 'THIS IS A TEST. It shows what an alert email looks like, using what is on the dashboard now. It is not a new alert.'
         body = body.replace('<div style="' + FONT + ';font-size:14px;line-height:1.55;color:' + INK + ';margin:0 0 16px">', '<div style="' + FONT + ';font-size:13.5px;font-weight:600;line-height:1.5;color:#7A4B00;background:#FFF4D6;border-radius:5px;padding:10px 12px;margin:0 0 14px">' + note + '</div><div style="' + FONT + ';font-size:14px;line-height:1.55;color:' + INK + ';margin:0 0 16px">', 1)
         try:
-            if not deliver(subject, note + '\n\n' + plain, body, '<b>TEST, not a new alert.</b><br><br>' + teams_text(tq, td)): sys.exit('TEST FAILED: nothing is set up. Add the ALERT_WEBHOOK_URL secret (Power Automate), or SMTP_HOST and MAIL_TO (mail server).')
+            if not deliver(subject, note + '\n\n' + plain, body, '<b>TEST, not a new alert.</b><br><br>' + teams_text(tq, td), teams_card(d, tq, td, test=True)): sys.exit('TEST FAILED: nothing is set up. Add the ALERT_WEBHOOK_URL secret (Power Automate), or SMTP_HOST and MAIL_TO (mail server).')
         except smtplib.SMTPAuthenticationError as e:
             sys.exit(f'TEST FAILED: the mail server refused the sign-in ({e.smtp_code}). Check SMTP_USER and SMTP_PASS; for Microsoft 365 the mailbox needs Authenticated SMTP switched on; for Gmail use an app password.')
         except Exception as e:
@@ -229,7 +263,7 @@ def main():
         if preview:
             open(preview, 'w', encoding='utf-8').write(body); print('Preview written:', subject)
         else:
-            try: deliver(subject, plain, body, teams_text(new_q, new_d))
+            try: deliver(subject, plain, body, teams_text(new_q, new_d), teams_card(d, new_q, new_d))
             except smtplib.SMTPAuthenticationError as e:
                 print(f'EMAIL NOT SENT: the mail server refused the sign-in ({e.smtp_code}). Check SMTP_USER and SMTP_PASS. It will be tried again at the next refresh.', file=sys.stderr)
                 return
