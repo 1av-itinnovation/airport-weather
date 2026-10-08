@@ -97,7 +97,8 @@ def build_email(d, new_q, new_d):
             rows = [row('Time it happened', when), row('Where', q.get('where')), row('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), row('Depth', q.get('depth')),
                     row('Nearest airport', q.get('near')), row('Tsunami', q.get('tsu')), row('Aftershocks', q.get('after')), row('Source', q.get('src'))]
             action = q.get('todo'); place = q.get('place', '')
-            subj.append(('Possible tsunami: ' if tsu else 'Earthquake ') + f"M{q['mag']:.1f}, {place}" + (f" ({pht(q['ms']).strftime('%I:%M %p').lstrip('0')})" if q.get('ms') else ''))
+            nearname = (q.get('near') or '').split(',')[0].strip()
+            subj.append(('Possible tsunami, ' if tsu else 'Earthquake ') + f"M{q['mag']:.1f}" + (f" near {nearname}" if nearname else ''))
             text.append(f"{'POSSIBLE TSUNAMI' if tsu else 'EARTHQUAKE'}: {title}\nTime it happened: {when}\nWhere: {q.get('where')}\nMagnitude: {q.get('magnote') or q['mag']}\nNearest airport: {q.get('near')}\nTsunami: {q.get('tsu')}\nWhat to do: {action}\n")
         else:
             title = 'Possible tsunami' if tsu else 'Earthquake alert'; rows = [row('Details', a['text'])]; action = ''
@@ -107,9 +108,9 @@ def build_email(d, new_q, new_d):
         rows = [row('Right now', a.get('now')), row('Rest of today', a.get('next')), row('Confidence', a.get('conf')), row('Updated', a.get('upd')), row('Source', a.get('src'))]
         cards.append(card(RED, 'Danger', a['name'], rows, a.get('todo')))
         text.append(f"DANGER: {a['name']}\nRight now: {a.get('now')}\nRest of today: {a.get('next')}\nWhat to do: {a.get('todo')}\nUpdated: {a.get('upd')}\n")
-    if new_d: subj.append('Danger: thunderstorm at ' + ', '.join(a['name'] for a in new_d))
-    subject = '[Airport Weather] ' + ' | '.join(subj)
-    if len(subject) > 150: subject = subject[:147] + '...'
+    if new_d: subj.append('Danger: ' + (', '.join(a['name'] for a in new_d) if len(new_d) <= 2 else f'{len(new_d)} airports'))
+    subject = 'Airport Weather: ' + ' | '.join(subj)
+    if len(subject) > 90: subject = subject[:87] + '...'
     checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
     n = len(new_q) + len(new_d)
     intro = ('A new alert has been raised on the Airport Weather Monitoring dashboard.' if n == 1 else f'{n} new alerts have been raised on the Airport Weather Monitoring dashboard.')
@@ -130,8 +131,6 @@ def build_email(d, new_q, new_d):
 </td></tr>
 <tr><td style="background:#FFFFFF;border:1px solid #DCE7EB;border-top:none;border-radius:0 0 8px 8px;padding:14px 24px 20px">
 <div style="{FONT};font-size:11.5px;line-height:1.55;color:{MUTED};border-top:1px solid #E6EEF1;padding-top:12px">
-This is an automatic message. It is sent once for each new alert, when the dashboard collects its data (about every 20 minutes), so it can arrive some minutes after the event.
-Earthquake figures are first reports and are often revised. This message supports, and does not replace, official PHIVOLCS and PAGASA bulletins and the station's own safety procedures.<br><br>
 Developed by the 1AV IT Department. &copy; 2026 1Aviation Groundhandling Services, Corp.</div></td></tr>
 </table></td></tr></table></body></html>"""
     plain = intro + '\n\n' + '\n'.join(text) + (f'\nDashboard: {url}\n' if url else '') + '\nAutomatic message from Airport Weather Monitoring. Developed by the 1AV IT Department.'
@@ -266,7 +265,7 @@ def main():
         if not tq and d.get('quakes'): tq = [(dict(kind='strong', q=d['quakes'][0]['id'], text=''), d['quakes'][0])]
         td = [a for a in d.get('airports', []) if a.get('level') == 'danger'][:1] or [a for a in d.get('airports', []) if a.get('level') == 'warning'][:1]
         subject, plain, body = build_email(d, tq, td)
-        subject = '[TEST] ' + subject
+        subject = 'TEST | ' + subject
         note = 'THIS IS A TEST. It shows what an alert email looks like, using what is on the dashboard now. It is not a new alert.'
         body = body.replace('<div style="' + FONT + ';font-size:14px;line-height:1.55;color:' + INK + ';margin:0 0 16px">', '<div style="' + FONT + ';font-size:13.5px;font-weight:600;line-height:1.5;color:#7A4B00;background:#FFF4D6;border-radius:5px;padding:10px 12px;margin:0 0 14px">' + note + '</div><div style="' + FONT + ';font-size:14px;line-height:1.55;color:' + INK + ';margin:0 0 16px">', 1)
         try:
