@@ -57,6 +57,9 @@ why, and how reliable each reading is.
 - **Fast earthquake watch.** Every 5 minutes a light check reads only the earthquake sources. A new
   strong earthquake triggers a full refresh and the alert at once, without waiting for the next
   scheduled refresh.
+- **Volcanoes.** Triangles on the map for the monitored volcanoes, a brown dashed area for an official
+  ash cloud warning, and a Volcano tab. Volcano alerts appear in the alert bar and the auto-show, and
+  are sent by Teams and email.
 - **Notifications by Teams and email** for the most critical events only: an airport at Danger, an
   earthquake alert, or a possible tsunami. Each is sent once.
 - **Early earthquake notice.** Between updates, an open page asks USGS once a minute and shows a
@@ -88,6 +91,8 @@ The moving rain layer is built separately every 3 hours and saved.
 | Chance of rain and the 7-day outlook | Open-Meteo | none; the items are left out |
 | Typhoon watch and thunderstorm area warnings | Aviation storm warnings (aviationweather.gov) | GDACS (position only) |
 | Earthquakes | PHIVOLCS | USGS, then EMSC |
+| Volcanic ash and eruptions | Aviation ash warnings (SIGMET), aviationweather.gov | None yet |
+| Volcano alert levels | PHIVOLCS volcano bulletins | Levels entered by hand in `volcano_levels.json` |
 | Rain on the map | MET Norway forecast grid | none |
 | Detailed rain map (optional) | Windy.com embedded map | none |
 
@@ -116,6 +121,13 @@ used. Idle backups are tested every 6 hours and the result is shown in Help.
   its details.
 - **Two agencies.** For strong earthquakes the USGS figure is shown beside the PHIVOLCS figure, and
   the more cautious of the two positions decides whether an airport is within 100 km.
+- **Volcanoes** raise their own alerts, like earthquakes, and never change an airport's weather level.
+  A volcano counts as near an airport within 150 km (no official standard exists; this covers about
+  half of past airport disruptions in a US Geological Survey study).
+- **Volcanic ash alert:** an official aviation ash warning area covers an airport, at any distance.
+- **Eruption alert:** an official ash warning reports an eruption within 150 km of an airport.
+- **Volcano Alert Level** (PHIVOLCS, 0 to 5): Level 3 or higher within 150 km of an airport raises an
+  alert on the dashboard.
 - **Possible tsunami** is shown for an earthquake of magnitude 6.5 or stronger no deeper than 70 km,
   or one that USGS has flagged for tsunami information. It is a prompt to check PHIVOLCS bulletins,
   not an official tsunami warning.

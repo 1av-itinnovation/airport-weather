@@ -1032,6 +1032,187 @@ try:
 except Exception:
     RECENT = []
 RECENT = sorted(set(RECENT + [int(NOW.timestamp()*1000)]))[-13:]
+# =====================================================================================
+# VOLCANOES
+# Works like the earthquake part: it never changes an airport's weather level. It adds
+# volcano markers, an ash-cloud layer, and volcano alerts for the alert bar and notifications.
+#
+# Sources
+#   Ash clouds and eruptions : official aviation volcanic-ash warnings (SIGMET) from aviationweather.gov,
+#                              the same feed already read for typhoons and thunderstorm areas.
+#   Volcano Alert Level (0-5): PHIVOLCS volcano bulletins. If they cannot be read with confidence,
+#                              the levels typed into volcano_levels.json are used instead.
+#
+# Rules (see the Help Centre)
+#   VOLC_KM       : a volcano is "near" an airport within this distance. There is no official
+#                   standard; 150 km covers about half of all past airport disruptions (USGS study).
+#   Ash alert     : an official ash-warning area covers an airport, at any distance from the volcano.
+#   Eruption alert: an ash warning names an eruption at a volcano within VOLC_KM of an airport.
+#   Level alert   : a volcano within VOLC_KM of an airport is at LEVEL_ALERT or higher.
+# =====================================================================================
+VOLC_KM = 150
+LEVEL_ALERT = 3
+VOLCANOES = [   # id, name, latitude, longitude, shown on the map at all times (the closely monitored ones)
+    ('mayon', 'Mayon', 13.257, 123.685, True), ('taal', 'Taal', 14.002, 120.993, True), ('kanlaon', 'Kanlaon', 10.412, 123.132, True),
+    ('bulusan', 'Bulusan', 12.770, 124.050, True), ('pinatubo', 'Pinatubo', 15.130, 120.350, True), ('hibokhibok', 'Hibok-Hibok', 9.203, 124.673, True),
+    ('parker', 'Parker', 6.113, 124.892, False), ('matutum', 'Matutum', 6.370, 125.070, False), ('banahaw', 'Banahaw', 14.070, 121.480, False),
+    ('iriga', 'Iriga', 13.457, 123.457, False), ('isarog', 'Isarog', 13.658, 123.380, False), ('biliran', 'Biliran', 11.523, 124.535, False),
+    ('cabalian', 'Cabalian', 10.287, 125.221, False), ('musuan', 'Musuan', 7.877, 125.068, False), ('makaturing', 'Makaturing', 7.647, 124.320, False),
+    ('ragang', 'Ragang', 7.690, 124.500, False), ('leonardkniaseff', 'Leonard Kniaseff', 7.382, 126.047, False), ('buddajo', 'Bud Dajo', 6.013, 121.057, False),
+    ('cagua', 'Cagua', 18.222, 122.123, False), ('camiguindebabuyanes', 'Camiguin de Babuyanes', 18.830, 121.860, False), ('didicas', 'Didicas', 19.077, 122.202, False),
+    ('babuyanclaro', 'Babuyan Claro', 19.523, 121.940, False), ('iraya', 'Iraya', 20.469, 122.010, False),
+]
+LEVEL_WORDS = {0: 'Normal. Quiet, no eruption expected soon.', 1: 'Low-level unrest. Small steam or gas-driven bursts are possible near the crater.',
+               2: 'Increasing unrest. Activity is rising and could lead to an eruption.', 3: 'High unrest. A hazardous eruption is possible within weeks.',
+               4: 'Hazardous eruption imminent, possible within hours to days.', 5: 'Hazardous eruption in progress.'}
+VOLC_LEVELS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'volcano_levels.json')
+
+def _phiv_volcano_levels():
+    """Try to read the current Alert Level of each volcano from the PHIVOLCS bulletin pages.
+    Returns {volcano id: (level, 'as of' text)}. Anything not read with confidence is left out."""
+    out = {}
+    base = 'https://wovodat.phivolcs.dost.gov.ph'
+    page = fetch(base + '/bulletin/list-of-bulletin', tries=1, text=True, insecure_ok=True, timeout=30)
+    if not page:
+        print('VOLCANO: PHIVOLCS bulletin list not reached.', file=sys.stderr); return out
+    anchors = re.findall(r'<a\b[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', page, flags=re.S | re.I)
+    print(f'VOLCANO: bulletin list read, {len(page)} characters, {len(anchors)} links.', file=sys.stderr)
+    tried = 0
+    for vid, vname, _la, _lo, _main in VOLCANOES:
+        link = None
+        for href, label in anchors:
+            lab = ' '.join(re.sub(r'<[^>]+>', ' ', label).split())
+            if re.search(r'\b' + re.escape(vname) + r'\b', lab, re.I) and re.search(r'summary|observation|bulletin|advisory', lab, re.I): link = href; break
+        if not link:
+            m = re.search(re.escape(vname) + r'\s+Volcano\s+Summary', page, re.I)
+            if m:
+                near = re.findall(r'href=["\']([^"\']+)["\']', page[max(0, m.start() - 600):m.end() + 900])
+                near = [h for h in near if re.search(r'bulletin|activity|vhub|bid=|\.pdf', h, re.I)]
+                if near: link = near[0]
+        if not link or tried >= 8: continue
+        tried += 1
+        url = link if link.startswith('http') else base + ('' if link.startswith('/') else '/') + link
+        if url.lower().endswith('.pdf'): print(f'VOLCANO: {vname} bulletin is a PDF, not read: {url}', file=sys.stderr); continue
+        body = fetch(url, tries=1, text=True, insecure_ok=True, timeout=30)
+        if not body: print(f'VOLCANO: {vname} bulletin not reached: {url}', file=sys.stderr); continue
+        txt = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', body, flags=re.S | re.I); txt = ' '.join(re.sub(r'<[^>]+>', ' ', txt).replace('&nbsp;', ' ').split())
+        lv = re.findall(r'Alert\s+Level\s*:?\s*([0-5])\b', txt, re.I)
+        dm = re.search(r'(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})', txt)
+        print(f"VOLCANO: {vname}: levels seen {lv[:6]}, date {dm.group(0) if dm else None}, text sample: {txt[:160]!r}", file=sys.stderr)
+        if not lv or not dm: continue
+        try: bd = dt.datetime.strptime(dm.group(0), '%d %B %Y').replace(tzinfo=PHT)
+        except Exception: continue
+        if abs((NOW - bd).days) > 4: print(f'VOLCANO: {vname} bulletin is not recent ({dm.group(0)}); not used.', file=sys.stderr); continue
+        if len(set(lv[:3])) != 1: print(f'VOLCANO: {vname} bulletin mentions several levels; not used.', file=sys.stderr); continue
+        out[vid] = (int(lv[0]), f"PHIVOLCS bulletin, {dm.group(0)}")
+    return out
+
+def _manual_volcano_levels():
+    """Levels typed by hand into volcano_levels.json (used when PHIVOLCS cannot be read)."""
+    out = {}
+    try:
+        j = json.load(open(VOLC_LEVELS_FILE, encoding='utf-8'))
+        for vid, vname, _la, _lo, _main in VOLCANOES:
+            e = (j.get('levels') or {}).get(vname)
+            if isinstance(e, dict) and isinstance(e.get('level'), int) and 0 <= e['level'] <= 5:
+                out[vid] = (e['level'], 'entered by hand' + (f", as of {e['as_of']}" if e.get('as_of') else ''))
+    except FileNotFoundError: pass
+    except Exception as e: print('VOLCANO: volcano_levels.json could not be read:', e, file=sys.stderr)
+    return out
+
+volcanoes = []; ASH_AREAS = []; VOL_ALERTS = []; vol_ok = True; vol_level_src = ''
+try:
+    _auto = {}
+    try: _auto = _phiv_volcano_levels()
+    except Exception as _e: print('VOLCANO LEVEL ERROR', _e, file=sys.stderr)
+    _manual = _manual_volcano_levels()
+    V = {}
+    for vid, vname, la, lo, main in VOLCANOES:
+        lvl = _auto.get(vid) or _manual.get(vid)
+        V[vid] = dict(id=vid, name=vname, lat=la, lon=lo, main=main, level=(lvl[0] if lvl else None), level_asof=(lvl[1] if lvl else ''), erupt=False, ash=[], until=None, ms=0, hits=[])
+    vol_level_src = 'PHIVOLCS volcano bulletins' if _auto else ('levels entered by hand (volcano_levels.json)' if _manual else '')
+    if SIGMET is None: vol_ok = False
+    for x in (SIGMET or []):
+        if x.get('hazard') != 'VA': continue
+        if not (x.get('validTimeFrom', 0) <= NOW.timestamp() + 3600 and x.get('validTimeTo', 0) > NOW.timestamp()): continue
+        raw = ' '.join((x.get('rawSigmet') or '').split())
+        if re.search(r'\bCNL\b|\bCANCEL', raw): continue
+        nm = re.search(r'\bMT\.? ([A-Z][A-Z\' -]*?)(?= PSN| LOC| VA | OBS|$)', (x.get('qualifier') or '') + ' ' + raw)
+        vname = ' '.join(w.capitalize() for w in nm.group(1).replace('-', ' - ').split()).replace(' - ', '-') if nm else ''
+        ps = re.search(r'PSN ([NS])(\d{4}) ?([EW])(\d{5})', raw); pos = ll(ps) if ps else None
+        polys = []; cs = x.get('coords') or []
+        if cs:
+            for pc in (cs if isinstance(cs[0], list) else [cs]):
+                pp = [(c['lat'], c['lon']) for c in pc if isinstance(c, dict) and c.get('lat') is not None and c.get('lon') is not None]
+                if len(pp) >= 3: polys.append(pp)
+        pts = [q for pp in polys for q in pp] + ([pos] if pos else [])
+        if not (x.get('firId') == 'RPHI' or any(2 <= la <= 23 and 112 <= lo <= 132 for la, lo in pts)): continue
+        # which volcano
+        vid = None; key = re.sub(r'[^a-z]', '', vname.lower())
+        for v in V.values():
+            if key and (key == re.sub(r'[^a-z]', '', v['name'].lower()) or key in re.sub(r'[^a-z]', '', v['name'].lower())): vid = v['id']; break
+        if vid is None and pos:
+            best = min(V.values(), key=lambda v: hav(pos[0], pos[1], v['lat'], v['lon']))
+            if hav(pos[0], pos[1], best['lat'], best['lon']) <= 30: vid = best['id']
+        if vid is None:
+            if not pos and not polys: continue
+            # a volcano outside the Philippines is only of interest when its ash is within reach of one of our airports
+            if min(hav(la, lo, r['lat'], r['lon']) for la, lo in pts for r in rows) > 300: continue
+            p0 = pos or polys[0][0]; vid = 'x' + (key or 'unnamed')
+            V.setdefault(vid, dict(id=vid, name=vname or 'Unnamed volcano', lat=p0[0], lon=p0[1], main=False, level=None, level_asof='', erupt=False, ash=[], until=None, ms=0, hits=[]))
+        v = V[vid]; vt = dt.datetime.fromtimestamp(x['validTimeTo'], dt.timezone.utc)
+        v['erupt'] = True; v['ms'] = max(v['ms'], int(x.get('validTimeFrom', 0)) * 1000)
+        if v['until'] is None or vt > v['until']: v['until'] = vt
+        top = x.get('top'); mv = DIRW.get(x.get('dir') or ''); sp = round(float(x['spd']) * 1.852) if str(x.get('spd') or '').replace('.', '', 1).isdigit() else None
+        desc = ('Ash cloud' + (f" up to about {int(round(float(top) * 0.3048 / 100) * 100):,} m high" if top else '') + (f", moving {mv}" + (f" at {sp} km/h" if sp else '') if mv else '') + '.')
+        if desc not in v['ash']: v['ash'].append(desc)
+        for pp in polys:
+            if any(0 <= la <= 25 and 110 <= lo <= 135 for la, lo in pp):
+                ASH_AREAS.append(dict(v=vid, name=v['name'], b=int(x['validTimeTo']) * 1000, p=[[round(P['cx'][0] * lo + P['cx'][1], 1), round(P['cy'][0] * la + P['cy'][1], 1)] for la, lo in pp]))
+            for r in rows:
+                if r['name'] not in v['hits'] and inside(r['lat'], r['lon'], pp): v['hits'].append(r['name'])
+    for v in V.values():
+        nearby = sorted([(hav(v['lat'], v['lon'], r['lat'], r['lon']), r['name']) for r in rows]); close = [(d_, n_) for d_, n_ in nearby if d_ <= VOLC_KM]
+        neartxt = (', '.join(f"{n_} (about {max(10, int(round(d_ / 10) * 10))} km)" for d_, n_ in close) + '.') if close else f"No airport within {VOLC_KM} km. Nearest: {nearby[0][1]}, about {km(nearby[0][0])} km away."
+        lvl = v['level']; until = f"{day(v['until'])}, {clock(v['until'])}" if v['until'] else ''
+        status = 'erupting' if v['erupt'] else ('unknown' if lvl is None else 'high' if lvl >= 4 else 'raised' if lvl == 3 else 'unrest' if lvl >= 1 else 'quiet')
+        x_ = P['cx'][0] * v['lon'] + P['cx'][1]; y_ = P['cy'][0] * v['lat'] + P['cy'][1]
+        names = [n_ for _d, n_ in close]; alert = False
+        if v['hits']:
+            alert = True
+            VOL_ALERTS.append(dict(kind='ash', key='ash:' + v['id'] + ':' + ','.join(sorted(v['hits'])), v=v['id'], ms=v['ms'],
+                text=f"Volcanic ash warning covers {', '.join(v['hits'])}: ash from {v['name']} Volcano, warning in force until {until}. Expect runway and aircraft checks, and follow CAAP and airline instructions."))
+        elif v['erupt'] and close:
+            alert = True
+            VOL_ALERTS.append(dict(kind='eruption', key='eruption:' + v['id'], v=v['id'], ms=v['ms'],
+                text=f"Eruption at {v['name']} Volcano: official ash warning in force until {until}. Airports within {VOLC_KM} km: {neartxt} Ash is not over an airport at this check."))
+        elif lvl is not None and lvl >= LEVEL_ALERT and close:
+            alert = True
+            VOL_ALERTS.append(dict(kind='level', key=f"level:{v['id']}:{lvl}", v=v['id'], ms=int(NOW.timestamp() * 1000),
+                text=f"{v['name']} Volcano is at Alert Level {lvl}: {LEVEL_WORDS[lvl]} Airports within {VOLC_KM} km: {neartxt}"))
+        if v['hits']: todo = 'Volcanic ash warning over ' + ', '.join(v['hits']) + '. Check runways, aircraft and equipment for ash before normal work continues, and follow CAAP and airline instructions.'
+        elif v['erupt'] and close: todo = 'Eruption reported. Stations at ' + ', '.join(names) + ' should watch for ashfall, keep equipment covered where possible, and be ready for flight changes.'
+        elif lvl is not None and lvl >= LEVEL_ALERT and close: todo = 'Raised alert level. Stations at ' + ', '.join(names) + ' should review their ashfall plans and watch PHIVOLCS bulletins.'
+        else: todo = 'No action needed.'
+        volcanoes.append(dict(id=v['id'], name=v['name'], lat=v['lat'], lon=v['lon'], x=x_, y=y_, onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100), show=bool(v['main'] or v['erupt'] or (lvl or 0) >= 1),
+            level=lvl, status=status, alert=alert, ms=v['ms'], title=v['name'] + ' Volcano',
+            levelline=(f"Alert Level {lvl}. {LEVEL_WORDS[lvl]} ({v['level_asof']}.)" if lvl is not None else 'Alert level not available at this check. See the PHIVOLCS volcano bulletin for the current level.'),
+            ashline=((' '.join(v['ash']) + f" Official ash warning in force until {until}." + (f" The warning area covers {', '.join(v['hits'])}." if v['hits'] else ' The warning area does not cover an airport at this check.')) if v['erupt'] else 'No volcanic ash warning is in force for this volcano.'),
+            near=neartxt, todo=todo,
+            src=('Ash warnings: official aviation SIGMET (aviationweather.gov). ' if vol_ok else 'Ash warnings could not be reached at this check. ') + ('Alert level: ' + v['level_asof'] + '.' if lvl is not None else 'Alert level: PHIVOLCS bulletin could not be read automatically.'),
+            line=f"{v['name']}: " + ('eruption, ash warning in force' if v['erupt'] else (f'Alert Level {lvl}' if lvl is not None else 'no ash warning')) + '. ' + (f"Near {', '.join(names)}." if names else 'No airport within ' + str(VOLC_KM) + ' km.')))
+    _rank = {'erupting': 0, 'high': 1, 'raised': 2, 'unrest': 3, 'unknown': 4, 'quiet': 5}
+    volcanoes.sort(key=lambda v: (0 if v['alert'] else 1, _rank[v['status']], 0 if v['show'] else 1, v['name']))
+    VOL_ALERTS.sort(key=lambda a: ({'ash': 0, 'eruption': 1, 'level': 2}[a['kind']], -a['ms']))
+except Exception as _e:
+    vol_ok = False; volcanoes = []; ASH_AREAS = []; VOL_ALERTS = []; print('VOLCANO ERROR', _e, file=sys.stderr)
+_nerupt = sum(1 for v in volcanoes if v['status'] == 'erupting')
+if not vol_ok: vol_flag = 'Volcanic ash warnings could not be reached at this check.'
+elif VOL_ALERTS: vol_flag = VOL_ALERTS[0]['text']
+elif _nerupt: vol_flag = f"{_nerupt} volcano{'' if _nerupt == 1 else 'es'} with an ash warning in force; no airport is affected at this check."
+else: vol_flag = 'No volcanic ash warning in the Philippine area, and no volcano alert for any airport.'
+src.append(f"Volcanoes: ash clouds and eruptions are from official aviation ash warnings (SIGMET) on aviationweather.gov, checked {clock_plain(NOW)}. " + (f"Volcano alert levels are from {vol_level_src}." if vol_level_src else "Volcano alert levels could not be read automatically at this check; see PHIVOLCS volcano bulletins.") if vol_ok else "Volcanoes: the ash warning source could not be reached at this check.")
+
 KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc','week')
 QKEEP=('ms','lat','lon','magnote','shocks','slist','nshock','id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
 data=dict(
@@ -1045,6 +1226,8 @@ data=dict(
     ty_text=ty_main, ty_banner=ty_banner, ty_asof=(f"{'Aviation storm warnings' if SIGMET is not None else 'GDACS (backup source)'}, {day(NOW)}, {clock_plain(NOW)}" if tyok else ''),
     quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],ms=a['ms'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), week_ms=WEEK_MS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
+    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], ash=ASH_AREAS, volcano_ok=vol_ok, volcano_flag=vol_flag,
+    volcano_asof=(f"Aviation ash warnings, {day(NOW)}, {clock_plain(NOW)}" if vol_ok else ''), volcano_km=VOLC_KM,
     sources=' '.join(src),
 )
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -1066,8 +1249,12 @@ for p in PROBLEMS: print('PROBLEM:',p)
 RAIN_OUT = os.path.join(os.path.dirname(OUT), 'rain.json')
 RAIN_EVERY_HOURS = 3          # how often to rebuild the animation
 RAIN_HOURS = 30               # how many hours ahead to store
-# The grid is wider than the map image so the rain layer fills the whole map panel on wide screens.
-GRID = dict(lat0=22.5, lon0=109.25, step=0.75, rows=26, cols=34)    # top-left point, spacing in degrees
+# The grid is much wider than the Philippines so the rain layer fills the whole map panel, even on
+# very wide screens (the neighbouring countries are shown there as a picture). The middle part, over
+# the Philippines, is read at every point. The outer parts are read at every second point and the
+# points in between are filled in from their neighbours, which keeps the number of requests low.
+GRID = dict(lat0=22.5, lon0=79.25, step=0.75, rows=26, cols=114)    # top-left point, spacing in degrees
+GRID_FULL = (40, 73)          # first and last column read at every point (longitude 109.25 to 134)
 
 def build_rain():
     try:
@@ -1079,7 +1266,9 @@ def build_rain():
     if age < RAIN_EVERY_HOURS:
         print(f'Rain animation: still fresh ({age:.1f} hours old), not rebuilt.'); return
     from concurrent.futures import ThreadPoolExecutor
-    pts = [(r, c) for r in range(GRID['rows']) for c in range(GRID['cols'])]
+    allpts = [(r, c) for r in range(GRID['rows']) for c in range(GRID['cols'])]
+    direct = lambda r, c: GRID_FULL[0] <= c <= GRID_FULL[1] or (r % 2 == 0 and c % 2 == 0)
+    pts = [p for p in allpts if direct(*p)]
     h0 = NOW.replace(minute=0, second=0, microsecond=0)
     hours = [h0 + dt.timedelta(hours=i) for i in range(RAIN_HOURS)]
     def one(p):
@@ -1095,15 +1284,31 @@ def build_rain():
         except Exception:
             return None
         return out
-    with ThreadPoolExecutor(max_workers=6) as ex: res = list(ex.map(one, pts))
-    ok = sum(1 for r in res if r)
+    with ThreadPoolExecutor(max_workers=6) as ex: got = dict(zip(pts, ex.map(one, pts)))
+    ok = sum(1 for r in got.values() if r)
+    last_r = (GRID['rows'] - 1) // 2 * 2
+    def near(r, c):
+        # the points read directly that surround an outer point, with how much each one counts
+        r0 = min(r - r % 2, last_r); r1 = min(r0 + 2, last_r); c0 = c - c % 2; c1 = c0 + 2
+        if not (c1 < GRID['cols'] and direct(r0, c1)): c1 = c0
+        fr = (r - r0) / 2.0 if r1 != r0 else 0.0; fc = (c - c0) / 2.0 if c1 != c0 else 0.0
+        return [((r0, c0), (1 - fr) * (1 - fc)), ((r0, c1), (1 - fr) * fc), ((r1, c0), fr * (1 - fc)), ((r1, c1), fr * fc)]
+    def value(p, k):
+        if p in got:
+            v = got[p].get(k) if got[p] else None
+            return v if v else None
+        tot = 0.0; wsum = 0.0
+        for q, w in near(*p):
+            v = got[q].get(k) if (w > 0 and got.get(q)) else None
+            if v: tot += v[0] * w; wsum += w
+        return (tot / wsum, False) if wsum > 0 else None
     if ok < 0.8 * len(pts):
         print(f'Rain animation: only {ok} of {len(pts)} grid points answered, keeping the previous animation.', file=sys.stderr); return
     rain = []; thunder = []
     for h in hours:
         k = h.strftime('%Y-%m-%dT%H'); fr = []; th = []
-        for i, r in enumerate(res):
-            v = r.get(k) if r else None
+        for i, p in enumerate(allpts):
+            v = value(p, k)
             fr.append(round(v[0], 1) if v else 0)
             if v and v[1]: th.append(i)
         rain.append(fr); thunder.append(th)

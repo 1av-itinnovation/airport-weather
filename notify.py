@@ -39,6 +39,9 @@ KEEP_DAYS = 3                # how long sent-alert records are kept
 # The two optional kinds below are switched off. Change False to True to switch one on.
 SEND_HEADSUP = False         # advance notice: thunderstorm expected within the hour, typhoon entering the area
 SEND_BRIEFING = False        # the whole picture at fixed times each day
+SEND_VOLCANO = True          # volcano alerts: ash warning over an airport, eruption within reach of an airport
+SEND_VOLCANO_LEVEL = False   # alert-level alerts (Level 3 and above). Off until the PHIVOLCS level reading has been confirmed on live runs
+VOLCANO_REPEAT_HOURS = 12    # the same volcano alert is not sent again within this long
 HEADSUP_REPEAT_HOURS = 3     # an airport is not put in a second heads-up within this long
 BRIEF_HOURS = (5, 13)        # daily briefing times, Philippine time (24-hour clock): 5:00 AM and 1:00 PM
 CARD_ROWS_TODAY = 18; CARD_ROWS_TOMORROW = 8     # Teams cards have a size limit, so long lists are cut short there (the email shows all)
@@ -56,6 +59,34 @@ def dashboard_url():
     return os.environ.get('DASHBOARD_URL', '')
 
 # ---------- what is new ----------
+NEW_V = []      # volcano alerts found at this refresh (filled by find_volcano, read by the message builders)
+VOLC = '#BF360C'
+VOLC_TAG = {'ash': 'Volcanic ash', 'eruption': 'Eruption', 'level': 'Volcano'}
+
+def find_volcano(d, state, now_ms):
+    """Volcano alerts that have not been sent yet. Works like the Danger rule: once while it lasts, and again
+    only if it stops and comes back after VOLCANO_REPEAT_HOURS."""
+    sent = state.setdefault('sent', {}); cur = state.setdefault('vol', {}); out = []
+    alerts = [a for a in d.get('vol_alerts', []) if SEND_VOLCANO and (a.get('kind') != 'level' or SEND_VOLCANO_LEVEL)]
+    vols = {v['id']: v for v in d.get('volcanoes', [])}
+    for a in alerts:
+        k = a.get('key') or (a.get('kind', '') + ':' + a.get('v', ''))
+        if k not in cur and now_ms - sent.get('vo:' + k, 0) > VOLCANO_REPEAT_HOURS * 3600000:
+            out.append((a, vols.get(a.get('v')))); sent['vo:' + k] = now_ms
+        cur.setdefault(k, now_ms)
+    live = {a.get('key') for a in alerts}
+    for k in [k for k in cur if k not in live]: del cur[k]
+    return out
+
+def _volcano_parts(a, v):
+    """Title, rows and action for one volcano alert, shared by the email, the Teams card and the short Teams text."""
+    name = (v or {}).get('title') or 'Volcano'
+    title = {'ash': 'Volcanic ash warning: ' + name, 'eruption': 'Eruption: ' + name, 'level': name + (f": Alert Level {v['level']}" if v and v.get('level') is not None else '')}[a['kind']]
+    if not v: return title, [('Details', a.get('text'))], ''
+    pairs = [('Volcanic ash', v.get('ashline')), ('Warning issued', (clock(v['ms']) + ' (Philippine time)') if v.get('ms') else ''), ('Alert level', v.get('levelline')),
+             ('Airports within 150 km', v.get('near')), ('Source', v.get('src'))]
+    return title, pairs, v.get('todo')
+
 def find_new(d, state, now_ms):
     sent = state.setdefault('sent', {}); danger_now = state.setdefault('danger', {})
     quakes = {q['id']: q for q in d.get('quakes', [])}
@@ -116,11 +147,16 @@ def build_email(d, new_q, new_d):
         rows = [row('Right now', a.get('now')), row('Rest of today', a.get('next')), row('Confidence', a.get('conf')), row('Updated', a.get('upd')), row('Source', a.get('src'))]
         cards.append(card(RED, 'Danger', a['name'], rows, a.get('todo')))
         text.append(f"DANGER: {a['name']}\nRight now: {a.get('now')}\nRest of today: {a.get('next')}\nWhat to do: {a.get('todo')}\nUpdated: {a.get('upd')}\n")
+    for a, v in NEW_V:
+        title, pairs, action = _volcano_parts(a, v)
+        cards.append(card(VOLC, VOLC_TAG[a['kind']], title, [row(k, val) for k, val in pairs], action))
+        text.append(f"{VOLC_TAG[a['kind']].upper()}: {title}\n" + '\n'.join(f'{k}: {val}' for k, val in pairs if val) + (f'\nWhat to do: {action}' if action else '') + '\n')
+        subj.append(title if len(title) <= 46 else VOLC_TAG[a['kind']] + ': ' + ((v or {}).get('name') or 'volcano'))
     if new_d: subj.append('Danger: ' + (', '.join(a['name'] for a in new_d) if len(new_d) <= 2 else f'{len(new_d)} airports'))
     subject = 'Airport Weather: ' + ' | '.join(subj)
     if len(subject) > 90: subject = subject[:87] + '...'
     checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
-    n = len(new_q) + len(new_d)
+    n = len(new_q) + len(new_d) + len(NEW_V)
     intro = ('A new alert has been raised on the Airport Weather Monitoring dashboard.' if n == 1 else f'{n} new alerts have been raised on the Airport Weather Monitoring dashboard.')
     button = (f'<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 6px"><tr><td style="background:{BLUE};border-radius:5px">'
               f'<a href="{esc(url)}" style="display:inline-block;padding:10px 20px;{FONT};font-size:14px;font-weight:600;color:#FFFFFF;text-decoration:none">Open the dashboard</a></td></tr></table>') if url else ''
@@ -152,6 +188,9 @@ def teams_text(new_q, new_d):
         else: out.append(esc(a.get('text')))
     for a in new_d:
         out.append(f"<b>Danger: {esc(a['name'])}</b><br>{esc(a.get('now'))}<br>What to do: {esc(a.get('todo'))}")
+    for a, v in NEW_V:
+        title, pairs, action = _volcano_parts(a, v)
+        out.append(f"<b>{esc(title)}</b><br>{esc(a.get('text'))}" + (f"<br>What to do: {esc(action)}" if action else ''))
     url = dashboard_url()
     return '<br><br>'.join(out) + (f'<br><br><a href="{esc(url)}">Open the dashboard</a>' if url else '')
 
@@ -169,8 +208,8 @@ def teams_card(d, new_q, new_d, test=False):
             {'type': 'Column', 'width': '120px', 'items': [tb(label, size='Small', isSubtle=True)]},
             {'type': 'Column', 'width': 'stretch', 'items': [tb(value)]}]}
     def block(colour, fallback, tag, title, pairs, action):
-        key = {'Earthquake': 'earthquake', 'Danger': 'danger', 'Possible tsunami': 'tsunami'}[tag]
-        if have:
+        key = {'Earthquake': 'earthquake', 'Danger': 'danger', 'Possible tsunami': 'tsunami', 'Volcanic ash': 'ash', 'Eruption': 'eruption', 'Volcano': 'volcano'}[tag]
+        if have and all(os.path.exists(os.path.join(HERE, 'docs', 'assets', f)) for f in (f'card-bar-{colour}.png', f'card-tag-{key}.png')):
             top = [{'type': 'Image', 'url': f'{url}assets/card-bar-{colour}.png', 'size': 'Stretch', 'altText': ''},
                    {'type': 'Image', 'url': f'{url}assets/card-tag-{key}.png', 'height': '22px', 'altText': tag, 'spacing': 'Medium'}]
         else:
@@ -179,7 +218,7 @@ def teams_card(d, new_q, new_d, test=False):
         if action: items.append({'type': 'Container', 'style': 'emphasis', 'spacing': 'Medium', 'items': [tb('**What to do.** ' + action)]})
         return {'type': 'Container', 'spacing': 'Large', 'separator': not have, 'items': items}
     checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
-    n = len(new_q) + len(new_d)
+    n = len(new_q) + len(new_d) + len(NEW_V)
     head = [tb('Airport Weather Monitoring', size='Large', weight='Bolder', color='Light' if have else 'Default'),
             tb(f'Alert notification \u00b7 {checked} (Philippine time)', size='Small', spacing='None', color='Light' if have else 'Default', isSubtle=not have)]
     if have:
@@ -202,6 +241,9 @@ def teams_card(d, new_q, new_d, test=False):
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, 'Earthquake alert', [('Details', a.get('text'))], ''))
     for a in new_d:
         body.append(block('red', 'Attention', 'Danger', a['name'], [('Right now', a.get('now')), ('Rest of today', a.get('next')), ('Confidence', a.get('conf')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo')))
+    for a, v in NEW_V:
+        title, pairs, action = _volcano_parts(a, v)
+        body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action))
     card = {'type': 'AdaptiveCard', '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json', 'version': '1.4', 'msteams': {'width': 'Full'}, 'body': body}
     if url and have:        # a picture of a button in the dashboard's blue, because Teams draws its own buttons in its own colours
         body.append({'type': 'Image', 'url': f'{url}assets/card-button.png', 'height': '36px', 'altText': 'Open the dashboard', 'spacing': 'Large',
@@ -453,18 +495,22 @@ def main():
     if os.environ.get('NOTIFY_CHECK'):
         # Only answers "is there anything to send at this refresh?" and records nothing. The workflow uses this to
         # publish the dashboard first, so that the alert and the dashboard agree when someone opens the link.
-        q_, d_ = find_new(d, json.loads(json.dumps(state)), now_ms)
-        pending = bool(q_ or d_)
-        print('Alerts waiting to be sent:', len(q_) + len(d_))
+        _copy = json.loads(json.dumps(state))
+        q_, d_ = find_new(d, _copy, now_ms); v_ = find_volcano(d, _copy, now_ms)
+        pending = bool(q_ or d_ or v_)
+        print('Alerts waiting to be sent:', len(q_) + len(d_) + len(v_))
         out = os.environ.get('GITHUB_OUTPUT')
         if out: open(out, 'a').write(f"pending={'true' if pending else 'false'}\n")
         return
     new_q, new_d = find_new(d, state, now_ms)
+    NEW_V[:] = find_volcano(d, state, now_ms)
     if os.environ.get('NOTIFY_TEST', '').lower() in ('1', 'true', 'yes'):
         # Test button: sends a sample email built from whatever is on the dashboard now. Nothing is recorded as sent.
         tq = [(a, {q['id']: q for q in d.get('quakes', [])}.get(a.get('q'))) for a in d.get('eq_alerts', [])][:1]
         if not tq and d.get('quakes'): tq = [(dict(kind='strong', q=d['quakes'][0]['id'], text=''), d['quakes'][0])]
         td = [a for a in d.get('airports', []) if a.get('level') == 'danger'][:1] or [a for a in d.get('airports', []) if a.get('level') == 'warning'][:1]
+        _vols = {v['id']: v for v in d.get('volcanoes', [])}
+        NEW_V[:] = [(a, _vols.get(a.get('v'))) for a in d.get('vol_alerts', [])][:1]
         subject, plain, body = build_email(d, tq, td)
         subject = 'TEST | ' + subject
         note = 'THIS IS A TEST. It shows what an alert email looks like, using what is on the dashboard now. It is not a new alert.'
@@ -484,7 +530,7 @@ def main():
         print('TEST PASSED: the sample alert was accepted. Check the inbox and the junk folder (and the flow run history if you use Power Automate).')
         return
     preview = os.environ.get('NOTIFY_PREVIEW')
-    if (new_q or new_d) and not (first and not preview and os.environ.get('NOTIFY_SKIP_FIRST') == '1'):
+    if (new_q or new_d or NEW_V) and not (first and not preview and os.environ.get('NOTIFY_SKIP_FIRST') == '1'):
         subject, plain, body = build_email(d, new_q, new_d)
         if preview:
             open(preview, 'w', encoding='utf-8').write(body); print('Preview written:', subject)
