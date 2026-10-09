@@ -1578,6 +1578,64 @@ body{background:var(--page);color:var(--ink)}
 @media (min-width:901px){
 }
 
+/* =====================================================================================
+   TWO COLUMNS (desktop and wall screen): the map takes the whole left side, top to bottom,
+   so the Philippines is shown large. Everything else is on the right: key figures on top,
+   then the airport list and the status panel. The rain timeline sits under the map, not on it.
+   ===================================================================================== */
+@media (min-width:901px){
+  .glass .app .cols,.glass .app .cols.tall{grid-template-columns:minmax(0,.86fr) minmax(0,.72fr) minmax(0,.48fr);grid-template-rows:auto minmax(0,1.25fr) minmax(170px,.75fr);gap:12px}
+  .glass .app .cols .col.map,.glass .app .cols.tall .col.map{grid-column:1;grid-row:1 / 4;display:flex;flex-direction:column;gap:8px;padding:8px;background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
+  .glass .app .vp{border-radius:20px;min-height:0}
+  .glass #kpis{grid-column:2 / 4;grid-row:1;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .glass #kpis .k.big{grid-row:auto}
+  .glass .app .cols .col.list,.glass .app .cols.tall .col.list{grid-column:2 / 4;grid-row:2}
+  .glass .app .cols .col.side,.glass .app .cols.tall .col.side{grid-column:2 / 4;grid-row:3}
+  .glass .app .cols.has-sel .col.list{grid-column:2 / 4;grid-row:2 / 4}
+  .glass .app .cols.has-sel .col.side{width:min(460px,38vw)}
+  /* under the map: rain timeline and the auto-show switch */
+  .glass .mapfoot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:none;padding:0 4px 0 2px}
+  .glass .mapfoot .rainbar,.glass .app .mapfoot .rainbar{position:static;flex:1 1 260px;width:auto;max-width:none;margin:0;background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border:none;padding:2px 4px;display:flex;flex-wrap:nowrap;align-items:center;gap:12px}
+  .glass .mapfoot .rainbar[hidden]{display:none}
+  .glass .mapfoot .rainbar #rainPlay{width:36px;min-height:36px;height:36px;padding:0;border:none;border-radius:50%;background:#4D5EE0;color:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none}
+  .glass .mapfoot .rainbar .info{flex:none;min-width:112px}
+  .glass .mapfoot .rainbar input[type=range]{flex:1;min-width:70px;accent-color:#4D5EE0}
+  .glass .app .mapfoot .tour{position:static;flex:none;max-width:100%;border-radius:999px;background:rgba(255,255,255,.9);box-shadow:inset 0 0 0 1px rgba(120,140,180,.2);-webkit-backdrop-filter:none;backdrop-filter:none;padding:6px 8px 6px 12px}
+  .glass .app .mapfoot .tour[hidden]{display:none}
+  /* alerts float over the top of the map and never run past it */
+  .glass #alertBar{left:36px;width:min(440px,calc(var(--mapw,520px) - 150px))}
+  /* a data note is a slim line under the header */
+  .glass.app .notice,.glass .app .notice{position:static;max-width:none;align-self:flex-start;border-radius:999px;padding:5px 14px;box-shadow:none;background:rgba(255,255,255,.7)}
+}
+@media (min-width:1500px){
+  /* room for the airport list and the status panel side by side */
+  .glass .app .cols,.glass .app .cols.tall{grid-template-rows:auto minmax(0,1fr)}
+  .glass .app .cols .col.map,.glass .app .cols.tall .col.map{grid-row:1 / 3}
+  .glass .app .cols .col.list,.glass .app .cols.tall .col.list{grid-column:2;grid-row:2}
+  .glass .app .cols .col.side,.glass .app .cols.tall .col.side{grid-column:3;grid-row:2}
+  .glass .app .cols.has-sel .col.list{grid-column:2 / 4;grid-row:2}
+  .glass #statsBig button{flex-direction:column;align-items:flex-start;gap:2px}
+}
+@media (min-width:901px) and (max-width:1499px){
+  .glass #statsBig .nums{max-width:520px}
+  .glass #statsBig button{flex-direction:row;align-items:baseline;gap:6px}
+}
+@media (min-width:901px) and (max-width:1100px){
+  .glass .app .cols,.glass .app .cols.tall{grid-template-columns:minmax(0,.8fr) minmax(0,.7fr) minmax(0,.5fr)}
+  .glass #kpis{gap:6px}
+  .glass #kpis .k{padding:8px 10px;gap:6px;border-radius:14px}
+  .glass #kpis .k .t{font-size:11px;line-height:1.25}
+  .glass #kpis .k .t br{display:none}
+  .glass #kpis .k .v{font-size:13px}
+  .glass #kpis .k.sm{padding:6px 10px}
+}
+@media (min-width:901px) and (max-height:800px){
+  .glass .app .cols,.glass .app .cols.tall{grid-template-rows:auto minmax(0,1.2fr) minmax(150px,.7fr);gap:10px}
+}
+@media (min-width:1500px) and (max-height:800px){
+  .glass .app .cols,.glass .app .cols.tall{grid-template-rows:auto minmax(0,1fr)}
+}
+
 /* ---------- the preview look on phones and small tablets: same glass style, stacked ---------- */
 @media (max-width:900px){
   body.glass{background:linear-gradient(165deg,#E9F0FB 0%,#E2EBF8 45%,#EEF1FB 100%) fixed}
@@ -1678,11 +1736,17 @@ body{background:var(--page);color:var(--ink)}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab{top:-9px;left:12px;padding:1px 7px;border-radius:7px;box-shadow:0 2px 6px rgba(40,60,110,.14);font-size:11px}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab .bd,.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab em{display:none}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab b{font-weight:500;font-size:11px}
+/* airports on the eastern side open their name card to the left, so it stays inside the map */
+.glass .layer .pin.a.east .lab{left:auto;right:16px;flex-direction:row-reverse;padding:5px 5px 5px 14px;text-align:right}
+.glass .layer .stage.all-labels .pin.a.east:not(.lv-danger):not(.sel):not(:hover) .lab{left:auto;right:12px;padding:1px 7px}
+.glass .app .alert .a1{flex-wrap:nowrap;white-space:nowrap;min-width:0;overflow:hidden}
+@media (min-width:901px){.glass .app .alert{grid-template-columns:minmax(0,1.35fr) minmax(0,1.5fr) auto}}
 @media (max-width:900px){
   .glass .layer .pin.a .lab{left:13px;top:-17px;gap:7px;padding:4px 10px 4px 4px;border-radius:12px}
   .glass .pin.a .lab .bd{width:26px;height:26px;border-radius:9px}
   .glass .pin.a .lab .bd svg{width:14px;height:14px}
   .glass .pin.a .lab em{max-width:120px}
+  .glass .layer .pin.a.east .lab{left:auto;right:13px;padding:4px 4px 4px 10px}
 }
 /* region and airport pickers: one drawn arrow, the same distance from the edge on both */
 .glass .app .filters select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.500-3.500' fill='none' stroke='%231B2B45' stroke-width='1.500' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px 12px;text-overflow:ellipsis}
@@ -1763,6 +1827,7 @@ body{background:var(--page);color:var(--ink)}
       </div>
     </div>
     <div class="selbar" id="selBar"><span class="nm" id="selName"></span><span id="selPill"></span><button class="btn" id="selGo" style="min-height:36px;padding:0 10px">Details</button></div>
+    <div class="mapfoot" id="mapFoot"></div>
     <div class="rainbar" id="rainBar" hidden>
       <button class="btn" id="rainPlay">Stop</button>
       <div class="info"><span class="k">Forecast rain</span><span class="v" id="rainTime"></span></div>
@@ -1848,13 +1913,13 @@ body{background:var(--page);color:var(--ink)}
         <li><strong>Level counts.</strong> The four large numbers (Danger, Warning, Advisory, Normal) show how many airports are at each level. Press one to show only that level on the map and in the list; press it again to go back. On a phone these are the five tiles under the alerts.</li>
         <li><strong>Today and Tomorrow.</strong> At the top. Switches the list between today's alerts and airports with bad weather forecast for tomorrow.</li>
         <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport.</li>
-        <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
+        <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
         <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. ALL shows the whole map again and clears the selection.</li>
-        <li><strong>Airport list.</strong> Under the map on the left. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
-        <li><strong>Key figures.</strong> The strip under the map: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. The smaller tiles show earthquake alerts, volcano alerts and typhoon; one turns red when it has an alert, and pressing it opens that list.</li>
-        <li><strong>Status panel.</strong> Beside the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
+        <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
+        <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. The smaller tiles show earthquake alerts, volcano alerts and typhoon; one turns red when it has an alert, and pressing it opens that list.</li>
+        <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
         <li><strong>Details window.</strong> Selecting an airport, earthquake or volcano opens its details in a window on the right. Press the X to close it.</li>
-        <li><strong>Alerts over the map.</strong> Earthquake, volcano and Danger alerts appear as coloured cards at the top left of the map. Press Details on a card to open it. If there are more than three, press "more" to see the rest.</li>
+        <li><strong>Alerts over the map.</strong> Earthquake, volcano and Danger alerts appear as coloured cards at the top of the map. Press Details on a card to open it. If there are more than three, press "more" to see the rest.</li>
         <li><strong>Bell and question mark.</strong> At the top right. The bell turns the alert chime on or off, and the question mark opens this guide.</li>
         <li><strong>On a phone.</strong> The map, the airport list and the details become three tabs.</li>
       </ul>
@@ -1999,7 +2064,9 @@ function arrange() {
     var top = document.querySelector('header.top');
     if (filters.parentNode !== top) top.insertBefore(filters, tools);
     if ($('sndBtn').parentNode !== tools) { tools.appendChild($('sndBtn')); tools.appendChild($('helpBtn')); }
-    if (rb.parentNode !== vp) vp.appendChild(rb);
+    var mf = $('mapFoot'); if (mf.parentNode !== mapCol) mapCol.appendChild(mf);
+    if (rb.parentNode !== mf) mf.appendChild(rb);
+    if ($('tourBar').parentNode !== mf) mf.appendChild($('tourBar'));
     if (S.tab === 'airports') S.tab = 'details';
   } else if (wide) {
     if (stabs.parentNode !== cols) cols.insertBefore(stabs, list);
@@ -2012,6 +2079,7 @@ function arrange() {
     var appEl2 = document.querySelector('.app'); if (filters.parentNode !== appEl2) appEl2.insertBefore(filters, document.querySelector('.ptabs'));
     if ($('sndBtn').parentNode !== tools) { tools.appendChild($('sndBtn')); tools.appendChild($('helpBtn')); }
     if (rb.parentNode !== mapCol) mapCol.appendChild(rb);
+    var tb = $('tourBar'); if (tb && tb.parentNode !== vp) vp.insertBefore(tb, vp.querySelector('.zoom'));
     if (S.tab === 'airports') S.tab = 'details';
   }
 }
@@ -2089,7 +2157,7 @@ function renderData() {
   });
   ['normal', 'nodata', 'advisory', 'warning', 'danger'].forEach(function (lv) {
     sorted(D.airports.filter(function (a) { return a.level === lv; })).forEach(function (a) {
-      h += '<div class="pin a lv-' + lv + '" data-a="' + esc(a.id) + '" style="left:' + a.x.toFixed(1) + '%;top:' + a.y.toFixed(1) + '%">' +
+      h += '<div class="pin a lv-' + lv + (a.x > 56 ? ' east' : '') + '" data-a="' + esc(a.id) + '" style="left:' + a.x.toFixed(1) + '%;top:' + a.y.toFixed(1) + '%">' +
         (lv === 'danger' ? '<span class="wx-flash"></span><span class="wx-ring"></span><span class="wx-ring wx-ring2"></span><span class="wx-bolt"><i></i></span>' : '') +
         '<span class="selring"></span>' +
         '<button aria-label="' + esc(a.name) + '" title="' + esc(a.name) + '"><span class="dot" style="' + dotStyle(a) + '"></span></button>' +
@@ -2646,7 +2714,7 @@ function fit() {
   grid.classList.toggle('tall', avail > natural + 340);          // enough spare height to put the details under the map
   if (!v.clientHeight) return;
   var W = v.clientWidth, H = v.clientHeight, sw = Math.min(W, H * 1000 / 1506), sh = sw * 1506 / 1000;
-  var appEl = document.querySelector('.app'); if (appEl) appEl.style.setProperty('--maptop', Math.round(v.getBoundingClientRect().top - appEl.getBoundingClientRect().top) + 'px');   // lets floating items line up with the map
+  var appEl = document.querySelector('.app'); if (appEl) { appEl.style.setProperty('--maptop', Math.round(v.getBoundingClientRect().top - appEl.getBoundingClientRect().top) + 'px'); appEl.style.setProperty('--mapw', Math.round(W) + 'px'); }   // lets floating items line up with the map
   [st, $('pins')].forEach(function (el) { el.style.width = sw + 'px'; el.style.height = sh + 'px'; el.style.left = ((W - sw) / 2) + 'px'; el.style.top = ((H - sh) / 2) + 'px'; });
   // the neighbouring countries fill the space beside the Philippines on wide screens (picture only, nothing to press)
   var wm = $('wideMap'); if (wm) { wm.style.left = ((W - sw) / 2 + sw * WIDE_BOX.l) + 'px'; wm.style.top = ((H - sh) / 2 + sh * WIDE_BOX.t) + 'px'; wm.style.width = (sw * WIDE_BOX.w) + 'px'; wm.style.height = (sh * WIDE_BOX.h) + 'px'; }
