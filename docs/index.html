@@ -1526,26 +1526,11 @@ body{background:var(--page);color:var(--ink)}
   .glass .lyr{top:66px;border-radius:18px}
   .glass .app .zoom{border-radius:22px;left:auto;right:14px;bottom:14px;overflow:hidden}
   .glass .app .zoom button{width:44px;height:44px;border-bottom-color:rgba(120,140,180,.18)}
-  .glass .app .tour{top:auto;bottom:14px;left:14px;border-radius:999px}
-  .glass .app .vp>.rainbar{left:14px;right:74px;border-radius:999px;padding:6px 20px 6px 6px}
+  .glass .app .tour{top:auto;bottom:70px;left:14px;right:auto;border-radius:999px;max-width:min(380px,36%)}
+  .glass .app .vp>.rainbar{left:14px;right:auto;bottom:14px;margin:0;width:min(380px,36%);max-width:none;border-radius:999px;padding:6px 18px 6px 6px}
+  .glass .app .vp>.rainbar .info{min-width:0}
   .glass .app .vp>.rainbar #rainPlay{border-radius:50%;background:#4D5EE0}
-  .glass .app .tour~.rainbar{}
-  .glass .pin.a .lab{left:16px;top:-21px;display:none;align-items:center;gap:9px;background:rgba(255,255,255,.80);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:15px;padding:5px 14px 5px 5px;box-shadow:0 8px 20px rgba(40,60,110,.18);font-size:11.5px;line-height:1.25;color:#1B2B45}
-  .glass .layer.zoomed .pin.a .lab{display:none}
-  .glass .layer .pin.a.lv-danger .lab,.glass .layer .pin.a.sel .lab,.glass .layer .pin.a:hover .lab,.glass .layer .stage.all-labels .pin.a .lab,.glass .layer .stage.few-labels .pin.a.lv-warning .lab{display:flex}
-  .glass .pin.a.sel,.glass .pin.a:hover{z-index:6}
-  .glass .pin.a .lab .bd{width:32px;height:32px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:none;color:#FFFFFF;background:linear-gradient(160deg,#7FD08A,#2E9B45)}
-  .glass .pin.a .lab .bd svg{width:17px;height:17px}
-  .glass .pin.a.lv-danger .lab .bd{background:linear-gradient(160deg,#FF6A5E,#D82B2B)}
-  .glass .pin.a.lv-warning .lab .bd{background:linear-gradient(160deg,#FFB14A,#F07F0A)}
-  .glass .pin.a.lv-advisory .lab .bd{background:linear-gradient(160deg,#FFDB5C,#E0AE00)}
-  .glass .pin.a .lab b{display:block;font-weight:600;font-size:12px}
-  .glass .pin.a .lab em{display:block;font-style:normal;color:#56657F;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* ---------- the preview on smaller and larger screens ---------- */
-  .glass .app .tour{max-width:calc(100% - 28px)}
-}
-@media (min-width:901px) and (max-width:1700px){
-  .glass .app .tour{bottom:68px}                         /* sits above the rain bar when there is no room beside it */
 }
 @media (min-width:901px) and (max-width:1400px){
   .glass header.top .filters select{min-width:0;width:146px;padding:0 26px 0 14px}
@@ -1579,7 +1564,6 @@ body{background:var(--page);color:var(--ink)}
   .glass #kpis .k{padding:9px 14px;gap:7px}
   .glass #kpis .k.sm{padding:7px 14px}
   .glass #alertBar{gap:5px}
-  .glass .app .tour{left:auto;right:74px;max-width:46%}
   .glass #alertBar .al{padding:6px 8px 6px 12px;border-radius:14px}
   .glass .col.list .colhead h2{font-size:18px}
   .glass .app .cols .col.list,.glass .app .cols.tall .col.list{padding:12px 18px 10px}
@@ -1676,6 +1660,33 @@ body{background:var(--page);color:var(--ink)}
   .glass .app .filters select{width:100%;max-width:none;font-size:13px;padding:0 26px 0 14px}
   .glass .app .brand .checked .nextup{display:none}
 }
+
+/* ---------- airport callouts on the map (all screen sizes) ----------
+   Only Danger airports, the selected airport and the one under the pointer get a callout,
+   so names never pile up. "All airport names" in Layers shows small name tags instead. */
+.glass .layer .pin.a .lab{display:none;left:16px;top:-21px;align-items:center;gap:9px;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:none;border-radius:15px;padding:5px 14px 5px 5px;box-shadow:0 8px 20px rgba(40,60,110,.18);font-size:11.5px;line-height:1.25;color:#1B2B45;white-space:nowrap}
+.glass .layer .pin.a.lv-danger .lab,.glass .layer .pin.a.sel .lab,.glass .layer .pin.a:hover .lab,.glass .layer .stage.all-labels .pin.a .lab{display:flex}
+.glass .layer .stage.few-labels:not(.all-labels) .pin.a.lv-warning:not(.sel):not(:hover) .lab{display:none}
+.glass .pin.a.lv-danger{z-index:5}.glass .pin.a.sel{z-index:7}.glass .pin.a:hover{z-index:8}
+.glass .pin.a .lab .bd{width:32px;height:32px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:none;color:#FFFFFF;background:linear-gradient(160deg,#7FD08A,#2E9B45)}
+.glass .pin.a .lab .bd svg{width:17px;height:17px;display:block}
+.glass .pin.a.lv-danger .lab .bd{background:linear-gradient(160deg,#FF6A5E,#D82B2B)}
+.glass .pin.a.lv-warning .lab .bd{background:linear-gradient(160deg,#FFB14A,#F07F0A)}
+.glass .pin.a.lv-advisory .lab .bd{background:linear-gradient(160deg,#FFDB5C,#E0AE00)}
+.glass .pin.a .lab b{display:block;font-weight:600;font-size:12px}
+.glass .pin.a .lab em{display:block;font-style:normal;color:#56657F;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab{top:-9px;left:12px;padding:1px 7px;border-radius:7px;box-shadow:0 2px 6px rgba(40,60,110,.14);font-size:11px}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab .bd,.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab em{display:none}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab b{font-weight:500;font-size:11px}
+@media (max-width:900px){
+  .glass .layer .pin.a .lab{left:13px;top:-17px;gap:7px;padding:4px 10px 4px 4px;border-radius:12px}
+  .glass .pin.a .lab .bd{width:26px;height:26px;border-radius:9px}
+  .glass .pin.a .lab .bd svg{width:14px;height:14px}
+  .glass .pin.a .lab em{max-width:120px}
+}
+/* region and airport pickers: one drawn arrow, the same distance from the edge on both */
+.glass .app .filters select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.500-3.500' fill='none' stroke='%231B2B45' stroke-width='1.500' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px 12px;text-overflow:ellipsis}
+@media (max-width:900px){.glass .app .filters select{background-position:right 10px center;background-size:11px 11px}}
 </style>
 </head>
 <body class="glass">
@@ -1998,7 +2009,7 @@ function arrange() {
     if (S.tab === 'details' && !S.sel && !S.qk && !S.vk) S.tab = 'airports';
   } else {
     if (stabs.parentNode !== side) side.insertBefore(stabs, side.firstChild);
-    if (filters.parentNode === list) document.querySelector('.app').insertBefore(filters, document.querySelector('.ptabs'));
+    var appEl2 = document.querySelector('.app'); if (filters.parentNode !== appEl2) appEl2.insertBefore(filters, document.querySelector('.ptabs'));
     if ($('sndBtn').parentNode !== tools) { tools.appendChild($('sndBtn')); tools.appendChild($('helpBtn')); }
     if (rb.parentNode !== mapCol) mapCol.appendChild(rb);
     if (S.tab === 'airports') S.tab = 'details';
@@ -2082,7 +2093,7 @@ function renderData() {
         (lv === 'danger' ? '<span class="wx-flash"></span><span class="wx-ring"></span><span class="wx-ring wx-ring2"></span><span class="wx-bolt"><i></i></span>' : '') +
         '<span class="selring"></span>' +
         '<button aria-label="' + esc(a.name) + '" title="' + esc(a.name) + '"><span class="dot" style="' + dotStyle(a) + '"></span></button>' +
-        (ORDER.indexOf(lv) >= 0 ? (GLASS && WIDE.matches ? '<span class="lab"><i class="bd">' + glassIcon(a) + '</i><span><b>' + esc(a.name) + '</b><em>' + esc(a.what || '') + '</em></span></span>' : '<span class="lab">' + esc(a.name) + '</span>') : '') + '</div>';
+        (ORDER.indexOf(lv) >= 0 ? (GLASS ? '<span class="lab"><i class="bd">' + glassIcon(a) + '</i><span><b>' + esc(a.name) + '</b><em>' + esc(a.what || '') + '</em></span></span>' : '<span class="lab">' + esc(a.name) + '</span>') : '') + '</div>';
     });
   });
   var vh = '', ash = D.ash || [];
