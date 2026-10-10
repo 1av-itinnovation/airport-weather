@@ -2540,7 +2540,7 @@ function renderGlass() {
   var A = D.airports.filter(inRegion), n = A.length || 1, c = { danger: 0, warning: 0, advisory: 0, normal: 0, nodata: 0 };
   A.forEach(function (a) { c[a.level] = (c[a.level] || 0) + 1; });
   var att = c.danger + c.warning + c.advisory, off = A.filter(function (a) { return !a.est; }).length, tm = A.filter(function (a) { return a.t; }).length;
-  var nq = (D.eq_alerts || []).length + LIVE.length, nv = (D.vol_alerts || []).length, tyL = cyclonesShown(), ty = tyL.length > 0, tyC = tyL.filter(function (c) { return c.confirmed; });
+  var nq = (D.eq_alerts || []).length + LIVE.length, nv = (D.vol_alerts || []).length, tyL = cyclonesShown().filter(function (c) { return c.inpar || (c.now || []).length || (c.soon || []).length; }), ty = tyL.length > 0, tyC = tyL.filter(function (c) { return c.confirmed; });
   var cur = S.day === 'tmr' ? 'tmr' : S.filter;
   var big = function (key, tip, t, a, b) { return '<button class="k big' + (cur === key ? ' on' : '') + '" data-k="' + key + '" aria-pressed="' + (cur === key) + '" title="' + tip + '"><div class="r"><span class="t">' + t + '</span><span class="v">' + a + '/' + b + '</span></div><div class="bar"><i style="width:' + Math.round(100 * a / b) + '%"></i></div></button>'; };
   var sm = function (go, icon, t, v, hot) { return '<button class="k sm' + (hot ? ' hot' : '') + '" data-go="' + go + '"><span class="t">' + icon + t + '</span><span class="v">' + v + '</span></button>'; };
@@ -2643,7 +2643,7 @@ function renderData() {
   $('vList').innerHTML = vl;
   $('banner').textContent = D.ty_banner; $('banner').hidden = /^No typhoon/i.test(D.ty_banner || '') || (D.ty_alerts || []).length > 0;
   applyLayers();
-  var nq = (D.eq_alerts || []).length + LIVE.length, nv = (D.vol_alerts || []).length, ty = cyclonesShown().length > 0;
+  var nq = (D.eq_alerts || []).length + LIVE.length, nv = (D.vol_alerts || []).length, ty = cyclonesShown().some(function (c) { return c.inpar || (c.now || []).length || (c.soon || []).length; });
   var chip = function (id, on, yes, no) { var e = $(id); e.textContent = on ? yes : no; e.classList.toggle('on', !!on); };
   chip('hzQs', nq, nq === 1 ? '1 alert' : nq + ' alerts', 'No alert'); chip('hzVs', nv, nv === 1 ? '1 alert' : nv + ' alerts', 'No alert'); chip('hzTs', ty, 'In the area', 'None in the area');
   $('hzDot').hidden = !(nq || nv || ty);
