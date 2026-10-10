@@ -61,8 +61,6 @@ why, and how reliable each reading is.
 - **Focus on what is affected.** Selecting a volcano, an earthquake or a cyclone hides every airport
   except the ones it can affect (150 km ring for a volcano, 100 km ring for an earthquake, the
   strong-wind area for a cyclone). Closing the selection brings all airports back.
-- **Nearest airport first.** On opening, the browser asks once for the viewer's location and shows
-  the nearest airport. The location is used only in the browser and is not sent or stored.
 - **Auto-show alerts.** With nobody using the screen, the map zooms to each earthquake alert, then
   each Danger airport, then returns to the whole map and repeats.
 - **Fast earthquake watch.** Every 5 minutes a light check reads only the earthquake sources. A new
