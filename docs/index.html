@@ -1825,6 +1825,43 @@ body{background:var(--page);color:var(--ink)}
 .glass #kpis .k.sm .dot{animation:g-live 2s ease-in-out infinite}
 @keyframes g-live{0%,100%{box-shadow:0 0 0 0 rgba(47,197,181,.45)}60%{box-shadow:0 0 0 6px rgba(47,197,181,0)}}
 @media (prefers-reduced-motion:reduce){.glass #kpis .k.sm .dot{animation:none}}
+
+/* name cards in a tight spot: name only, and on two lines if needed, never cut off */
+.glass .layer .pin.a.tight .lab em{display:none}
+.glass .layer .pin.a.tight .lab{padding-top:4px;padding-bottom:4px}
+.glass .layer .pin.a.tight .lab .bd{width:24px;height:24px;border-radius:8px}
+.glass .layer .pin.a.tight .lab .bd svg{width:13px;height:13px}
+.glass .layer .pin.a.wrap .lab{white-space:normal}
+.glass .layer .pin.a.bare .lab .bd{display:none}
+.glass .layer .pin.a.bare .lab{padding:4px 9px}
+.glass .layer .pin.a.wrap .lab b{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2}
+.ckshort{display:none}
+/* phones: a slimmer top so the map is reached sooner */
+@media (max-width:900px){
+  .glass .app .brand .checked #checked,.glass .app .brand .checked .nextup{display:none}
+  .glass .app .brand .checked .ckshort{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .glass .app .brand .checked .ckshort.late{color:#B26A00}
+  .glass .app header.top{padding:7px 9px 7px 6px;border-radius:18px}
+  .glass .app .filters{gap:6px}
+  .glass .app .filters .stat{height:auto;min-height:0;padding:6px 2px 5px;border-radius:14px;gap:0}
+  .glass .app .filters .stat .n{font-size:17px;line-height:1.15}
+  .glass .app .filters .stat .l{font-size:11px;line-height:1.2}
+  .glass .app .filters .daysw{height:36px}
+  .glass .app .filters .daysw button{height:30px}
+  .glass .app .filters select{height:36px;min-height:36px}
+  .glass .app .ptabs{padding:3px}
+  .glass .app .ptabs button{height:34px}
+  .glass .app{gap:8px}
+  .glass .layer .pin.a .lab b{font-size:11px}
+}
+@media (max-width:340px){.glass .app .filters .stat .l{font-size:11px;letter-spacing:-.01em}}
+@media (max-width:400px){
+  .glass .app .brand h1{font-size:13.5px}
+  .glass .app .brand img{height:26px;padding:0 0 0 4px}
+  .glass .app .brand{gap:8px}
+  .glass .app .sndbtn,.glass .app .helpbtn{width:36px;height:36px}
+  .glass .app .brand .checked{font-size:11px}
+}
 </style>
 </head>
 <body class="glass">
@@ -1842,7 +1879,7 @@ body{background:var(--page);color:var(--ink)}
     <img src="assets/logo-blue.png" alt="1Aviation logo">
     <div>
       <h1>Airport Weather Monitoring</h1>
-      <div class="checked"><span id="checked">Loading the latest data…</span><span class="nextup" id="nextUp"></span></div>
+      <div class="checked"><span id="checked">Loading the latest data…</span><span class="nextup" id="nextUp"></span><span class="ckshort" id="ckShort"></span></div>
     </div>
   </div>
   <div class="tools">
@@ -2176,8 +2213,15 @@ function glassIcon(a) { var w = String(a.what || '').toLowerCase(); return G_ICO
 /* the Live tile is a running clock: Philippine time, 24-hour */
 function liveNow() { try { return new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Manila', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }); } catch (e) { return ''; } }
 setInterval(function () { var c = document.getElementById('liveClock'); if (c) c.textContent = liveNow(); }, 1000);
+function shortChecked() {
+  var el = document.getElementById('ckShort'); if (!el || !D) return;
+  var nx = $('nextUp'), t = (nx.textContent || '').replace('Next update about ', 'next ').replace('Next update expected any moment', 'next any moment').replace('Update is running late', 'update running late').replace(/ \(in \d+ min\)/, '');
+  el.textContent = 'Checked ' + phTime(D.generated_ms) + (t ? ' · ' + t : ''); el.classList.toggle('late', nx.classList.contains('late'));
+}
+setInterval(shortChecked, 10000);
 function renderGlass() {
   if (!GLASS || !D) return;
+  setTimeout(shortChecked, 0);
   var A = D.airports.filter(inRegion), n = A.length || 1, c = { danger: 0, warning: 0, advisory: 0, normal: 0, nodata: 0 };
   A.forEach(function (a) { c[a.level] = (c[a.level] || 0) + 1; });
   var att = c.danger + c.warning + c.advisory, off = A.filter(function (a) { return !a.est; }).length, tm = A.filter(function (a) { return a.t; }).length;
@@ -2775,16 +2819,26 @@ function closeSoft(el, done) {                                      // help and 
 var PLT = 0;
 function placeLabels() {
   if (!GLASS) return;
-  var vr = $('vp').getBoundingClientRect(); if (!vr.width) return;
+  var vp0 = $('vp'), vr = vp0.getBoundingClientRect(); if (!vr.width) return;
+  // things on the map a name card must not sit under
+  var obs = []; Array.prototype.forEach.call(vp0.querySelectorAll('.zoom, .lyrbtn, .tour'), function (el) { if (el.getClientRects().length) obs.push(el.getBoundingClientRect()); });
   Array.prototype.forEach.call(document.querySelectorAll('#pins .pin.a'), function (p) {
     var lab = p.querySelector('.lab'); if (!lab || !lab.getClientRects().length) return;
-    var pr = p.getBoundingClientRect(), x = pr.left + pr.width / 2 - vr.left, y = pr.top + pr.height / 2 - vr.top, w = lab.getBoundingClientRect().width + 24;
-    var keep = y > vr.height - 190 ? 70 : (y < 76 ? 140 : 8);            // room for the zoom buttons and the Layers button
-    lab.style.maxWidth = '';
-    w = lab.getBoundingClientRect().width + 24;
-    var roomR = vr.width - keep - x, roomL = x - 8, fitsR = w <= roomR, fitsL = w <= roomL, left = !fitsR && (fitsL || roomL > roomR);
+    lab.style.maxWidth = ''; p.classList.remove('tight', 'wrap', 'bare'); var nm = lab.querySelector('b'); if (nm) nm.style.fontSize = '';
+    var pr = p.getBoundingClientRect(), x = pr.left + pr.width / 2, y = pr.top + pr.height / 2, lr = lab.getBoundingClientRect();
+    var top = y - lr.height / 2 - 6, bot = y + lr.height / 2 + 6, edgeR = vr.right - 8, edgeL = vr.left + 8;
+    obs.forEach(function (o) { if (o.bottom < top || o.top > bot) return; if (o.left >= x) edgeR = Math.min(edgeR, o.left - 6); else if (o.right <= x) edgeL = Math.max(edgeL, o.right + 6); });
+    var roomR = edgeR - x, roomL = x - edgeL, need = function () { return lab.getBoundingClientRect().width + 22; };
+    var w = need();
+    if (w > roomR && w > roomL) { p.classList.add('tight'); w = need(); }                 // drop the second line first
+    var left = w > roomR && (w <= roomL || roomL > roomR);
     p.classList.toggle('east', left);
-    if (!fitsR && !fitsL) { var sc = (lab.getBoundingClientRect().width / (lab.offsetWidth || 1)) || 1; lab.style.maxWidth = Math.max(90, Math.floor(((left ? roomL : roomR) - 26) / sc)) + 'px'; }   // too wide for either side: shorten the text
+    if (w > roomR && w > roomL) {                                                         // still too wide: let the name use two lines
+      p.classList.add('wrap');
+      var sc = (lab.getBoundingClientRect().width / (lab.offsetWidth || 1)) || 1; lab.style.maxWidth = Math.max(80, Math.floor(((left ? roomL : roomR) - 22) / sc)) + 'px';
+      if (nm && nm.scrollWidth > nm.clientWidth + 1) p.classList.add('bare');                 // very little room: the name alone
+      for (var fs = 11; nm && nm.scrollWidth > nm.clientWidth + 1 && fs >= 8; fs -= 0.5) nm.style.fontSize = fs + 'px';   // a long single word: step the size down until it fits
+    }
   });
 }
 function placeSoon() { placeLabels(); clearTimeout(PLT); PLT = setTimeout(placeLabels, 700); }
