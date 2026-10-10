@@ -452,13 +452,13 @@ def load_jma_tc():
         reached += 1
         try:
             h = re.search(r'WTPQ\d\d RJTD (\d{2})(\d{2})(\d{2})', txt); nm = re.search(r'NAME[ \t]+([A-Z]{2,3})\b(?:[ \t]+(\d{4}))?(?:[ \t]+([A-Z][A-Z-]*))?', txt)
-            if not h or not nm: continue
+            if not h or not nm: print(f"TYPHOON: RSMC Tokyo wtpq{n} skipped, {'no header' if not h else 'no NAME line'}: {' | '.join(txt.split(chr(10))[:9])[:420]!r}", file=sys.stderr); continue
             t = NOW.replace(day=1, hour=int(h.group(2)), minute=int(h.group(3)), second=0, microsecond=0) + dt.timedelta(days=int(h.group(1)) - 1)
             if t > NOW + dt.timedelta(hours=2): t = (t.replace(day=1) - dt.timedelta(days=1)).replace(day=1) + dt.timedelta(days=int(h.group(1)) - 1)     # issued last month
-            if not (-2 <= (NOW - t).total_seconds() / 3600 <= JMA_HOURS): continue
+            if not (-2 <= (NOW - t).total_seconds() / 3600 <= JMA_HOURS): print(f"TYPHOON: RSMC Tokyo wtpq{n} skipped, old advisory ({t.strftime('%d %b %H:%MZ')}): {' | '.join(txt.split(chr(10))[:5])[:200]!r}", file=sys.stderr); continue
             ana, _, fcst = txt.partition('FORECAST')
             ps = re.search(r'PSTN\s+\d{6}UTC\s+(\d+\.\d)([NS])\s+(\d+\.\d)([EW])', ana)
-            if not ps: continue
+            if not ps: print(f"TYPHOON: RSMC Tokyo wtpq{n} skipped, no position line: {' | '.join(txt.split(chr(10))[:12])[:520]!r}", file=sys.stderr); continue
             la = float(ps.group(1)) * (1 if ps.group(2) == 'N' else -1); lo = float(ps.group(3)) * (1 if ps.group(4) == 'E' else -1)
             num = lambda pat, src: (int(re.search(pat, src).group(1)) if re.search(pat, src) else None)
             def reach(tag):         # the furthest the winds of this strength extend, in km
@@ -1296,15 +1296,21 @@ def _phiv_volcano_levels():
         body = fetch(url, tries=1, text=True, insecure_ok=True, timeout=30)
         if not body: print(f'VOLCANO: {vname} bulletin not reached: {url}', file=sys.stderr); continue
         txt = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', body, flags=re.S | re.I); txt = ' '.join(re.sub(r'<[^>]+>', ' ', txt).replace('&nbsp;', ' ').split())
-        lv = re.findall(r'Alert\s+Level\s*:?\s*([0-5])\b', txt, re.I)
-        dm = re.search(r'(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})', txt)
-        print(f"VOLCANO: {vname}: levels seen {lv[:6]}, date {dm.group(0) if dm else None}, text sample: {txt[:160]!r}", file=sys.stderr)
+        # bulletins are published in English or Filipino ("Antas ng Alerto"), and the level can also sit in a picture's name or label
+        LVPAT = r'(?:Alert\s*Level|Antas\s+ng\s+Alerto|Alerto\s+Antas|Alert\s*Lvl)\s*[:\-]?\s*([0-5])\b'
+        lv = re.findall(LVPAT, txt, re.I) or re.findall(r'alert[\s_\-]*level[\s_\-]*([0-5])(?!\d)', body, re.I) or re.findall(r'antas[\s_\-]*ng[\s_\-]*alerto[\s_\-]*([0-5])(?!\d)', body, re.I)
+        FILMON = {'enero': 1, 'pebrero': 2, 'marso': 3, 'abril': 4, 'mayo': 5, 'hunyo': 6, 'hulyo': 7, 'agosto': 8, 'setyembre': 9, 'oktubre': 10, 'nobyembre': 11, 'disyembre': 12,
+                  'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6, 'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12}
+        DPAT = r'(\d{1,2})\s+(' + '|'.join(FILMON) + r')\s+(\d{4})'
+        dm = re.search(r'(?:Petsa|Date)\s*:?\s*' + DPAT, txt, re.I) or re.search(DPAT, txt, re.I)
+        hints = [' '.join(x.split())[:110] for x in re.findall(r'.{0,45}(?:alert|alerto|antas).{0,60}', txt, re.I)[:3]] or [' '.join(x.split())[:110] for x in re.findall(r'.{0,45}(?:alert|alerto|antas).{0,60}', body, re.I)[:3]]
+        print(f"VOLCANO: {vname}: levels seen {lv[:6]}, date {dm.group(0) if dm else None}, text sample: {txt[:160]!r}, level wording: {hints}", file=sys.stderr)
         if not lv or not dm: continue
-        try: bd = dt.datetime.strptime(dm.group(0), '%d %B %Y').replace(tzinfo=PHT)
+        try: bd = dt.datetime(int(dm.group(3)), FILMON[dm.group(2).lower()], int(dm.group(1)), tzinfo=PHT)
         except Exception: continue
         if abs((NOW - bd).days) > 4: print(f'VOLCANO: {vname} bulletin is not recent ({dm.group(0)}); not used.', file=sys.stderr); continue
         if len(set(lv[:3])) != 1: print(f'VOLCANO: {vname} bulletin mentions several levels; not used.', file=sys.stderr); continue
-        out[vid] = (int(lv[0]), f"PHIVOLCS bulletin, {dm.group(0)}")
+        out[vid] = (int(lv[0]), f"PHIVOLCS bulletin, {bd.day} {bd.strftime('%B %Y')}")
     return out
 
 VAAC_HOURS = 6        # a Tokyo VAAC advisory counts as current for this long (the same length as an aviation ash warning)
