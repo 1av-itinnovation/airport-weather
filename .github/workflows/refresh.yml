@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: airport-weather-refresh
-  cancel-in-progress: true
+  cancel-in-progress: false      # a run is never cut off half-way: stopping one after it has sent an alert but before it has recorded it would send the alert twice
 
 jobs:
   refresh:
