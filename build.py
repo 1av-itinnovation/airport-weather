@@ -971,7 +971,7 @@ if est_times:
     e0=clock_plain(min(est_times)); e1=clock_plain(max(est_times)); et=e1 if e0==e1 else f'{e0} to {e1}'
 else: et=None
 n=ph(NOW)
-parts=[f"Checked {n.strftime('%A')}, {day(NOW)}, {clock_plain(NOW)}."]
+parts=[f"Last updated {n.strftime('%A')}, {day(NOW)}, {clock_plain(NOW)}."]
 bits=[]
 if ot: bits.append(f"Airport reports {clock_plain(ot)}")
 if tt: bits.append(f"airport forecasts issued {clock_plain(tt)}")
@@ -1206,6 +1206,16 @@ try:
     VOL_ALERTS.sort(key=lambda a: ({'ash': 0, 'eruption': 1, 'level': 2}[a['kind']], -a['ms']))
 except Exception as _e:
     vol_ok = False; volcanoes = []; ASH_AREAS = []; VOL_ALERTS = []; print('VOLCANO ERROR', _e, file=sys.stderr)
+# The two volcano sources, for the "data on screen now" boxes in the Help Centre.
+try:
+    _va_ok = SIGMET is not None
+    SRC_STATUS.append(dict(what='Volcanic ash warnings', used=('Aviation ash warnings (aviationweather.gov)' if _va_ok else 'Not reached'), ok=_va_ok, first=True,
+        chain=[dict(name='Aviation ash warnings, SIGMET (aviationweather.gov)', role='Only source. Shared with the typhoon watch', state=('used' if _va_ok else 'failed'), note=('Used' if _va_ok else 'Could not be reached'), tested=None)]))
+    _auto_ok = bool(locals().get('_auto')); _man_ok = bool(locals().get('_manual'))
+    SRC_STATUS.append(dict(what='Volcano alert levels', used=('PHIVOLCS volcano bulletins' if _auto_ok else ('Levels entered by hand' if _man_ok else 'Not available at this check')), ok=True, first=_auto_ok,
+        chain=[dict(name='PHIVOLCS volcano bulletins (wovodat.phivolcs.dost.gov.ph)', role='First choice', state=('used' if _auto_ok else 'failed'), note=('Used' if _auto_ok else 'Could not be read automatically'), tested=None),
+               dict(name='Levels entered by hand (volcano_levels.json)', role=('Backup, in use' if (_man_ok and not _auto_ok) else ('Backup' if _man_ok else 'Backup. Nothing entered yet')), state=('used' if (_man_ok and not _auto_ok) else 'standby'), note=('Used' if (_man_ok and not _auto_ok) else ('Backup' if _man_ok else 'Backup, nothing entered')), tested=None)]))
+except Exception as _e: print('VOLCANO SOURCE BOX ERROR', _e, file=sys.stderr)
 _nerupt = sum(1 for v in volcanoes if v['status'] == 'erupting')
 if not vol_ok: vol_flag = 'Volcanic ash warnings could not be reached at this check.'
 elif VOL_ALERTS: vol_flag = VOL_ALERTS[0]['text']

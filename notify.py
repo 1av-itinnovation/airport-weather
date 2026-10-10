@@ -52,6 +52,13 @@ def pht(ms): return dt.datetime.fromtimestamp(ms / 1000, PHT)
 def clock(ms): t = pht(ms); return f"{t.strftime('%b')} {t.day}, {t.strftime('%I:%M %p').lstrip('0')}"
 def esc(s): return html.escape(str(s or ''))
 
+def as_of(d):
+    """When the data was last updated, as plain words: 'Saturday, Oct 10, 3:18 PM'."""
+    t = (d.get('checked') or '').split('. ')[0].rstrip('.')
+    for lead in ('Last updated ', 'Checked '):
+        if t.startswith(lead): t = t[len(lead):]
+    return t
+
 def dashboard_url():
     repo = os.environ.get('GITHUB_REPOSITORY', '')
     if '/' in repo:
@@ -183,7 +190,7 @@ def build_email(d, new_q, new_d):
     if new_d: subj.append('Danger: ' + (', '.join(a['name'] for a in new_d) if len(new_d) <= 2 else f'{len(new_d)} airports'))
     subject = 'Airport Weather: ' + ' | '.join(subj)
     if len(subject) > 90: subject = subject[:87] + '...'
-    checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
+    checked = as_of(d)
     n = len(new_q) + len(new_d) + len(NEW_V)
     intro = ('A new alert has been raised on the Airport Weather Monitoring dashboard.' if n == 1 else f'{n} new alerts have been raised on the Airport Weather Monitoring dashboard.')
     button = (f'<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 6px"><tr><td style="background:{BLUE};border-radius:5px">'
@@ -195,7 +202,7 @@ def build_email(d, new_q, new_d):
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px">
 <tr><td style="background:{NAVY};border-radius:8px 8px 0 0;padding:18px 24px">
 <div style="{FONT};font-size:18px;font-weight:600;color:#FFFFFF">Airport Weather Monitoring</div>
-<div style="{FONT};font-size:12.5px;color:{TINT};margin-top:3px">Alert notification &middot; {esc(checked)} (Philippine time)</div></td></tr>
+<div style="{FONT};font-size:12.5px;color:{TINT};margin-top:3px">Alert issued {esc(checked)} (Philippine time)</div></td></tr>
 <tr><td style="background:#FFFFFF;padding:22px 24px 8px;border-left:1px solid #DCE7EB;border-right:1px solid #DCE7EB">
 <div style="{FONT};font-size:14px;line-height:1.55;color:{INK};margin:0 0 16px">{esc(intro)}</div>
 {''.join(cards)}
@@ -246,10 +253,10 @@ def teams_card(d, new_q, new_d, test=False):
         items = top + [tb(title, size='Large', weight='Bolder', spacing='Small')] + ([{'type': 'Image', 'url': pic, 'size': 'Stretch', 'altText': 'Map showing ' + title, 'spacing': 'Small'}] if pic else []) + [line(k, v) for k, v in pairs if v]
         if action: items.append({'type': 'Container', 'style': 'emphasis', 'spacing': 'Medium', 'items': [tb('**What to do.** ' + action)]})
         return {'type': 'Container', 'spacing': 'Large', 'separator': not have, 'items': items}
-    checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
+    checked = as_of(d)
     n = len(new_q) + len(new_d) + len(NEW_V)
     head = [tb('Airport Weather Monitoring', size='Large', weight='Bolder', color='Light' if have else 'Default'),
-            tb(f'Alert notification \u00b7 {checked} (Philippine time)', size='Small', spacing='None', color='Light' if have else 'Default', isSubtle=not have)]
+            tb(f'Alert issued {checked} (Philippine time)', size='Small', spacing='None', color='Light' if have else 'Default', isSubtle=not have)]
     if have:
         header = {'type': 'Container', 'bleed': True, 'backgroundImage': bg('navy'), 'items': [{'type': 'ColumnSet', 'columns': [
             {'type': 'Column', 'width': 'auto', 'verticalContentAlignment': 'Center', 'items': [{'type': 'Image', 'url': f'{url}assets/logo.png', 'height': '30px', 'altText': '1Aviation'}]},
@@ -383,7 +390,7 @@ def _section(colour, tag, title, inner, note=''):
 
 def _shell(d, subject, kicker, intro, inner):
     """The email frame shared by heads-ups and briefings (same look as the alert email)."""
-    url = dashboard_url(); checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
+    url = dashboard_url(); checked = as_of(d)
     button = (f'<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 6px"><tr><td style="background:{BLUE};border-radius:5px">'
               f'<a href="{esc(url)}" style="display:inline-block;padding:10px 20px;{FONT};font-size:14px;font-weight:600;color:#FFFFFF;text-decoration:none">Open the dashboard</a></td></tr></table>') if url else ''
     return f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{esc(subject)}</title></head>
@@ -392,7 +399,7 @@ def _shell(d, subject, kicker, intro, inner):
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px">
 <tr><td style="background:{NAVY};border-radius:8px 8px 0 0;padding:18px 24px">
 <div style="{FONT};font-size:18px;font-weight:600;color:#FFFFFF">Airport Weather Monitoring</div>
-<div style="{FONT};font-size:12.5px;color:{TINT};margin-top:3px">{esc(kicker)} &middot; {esc(checked)} (Philippine time)</div></td></tr>
+<div style="{FONT};font-size:12.5px;color:{TINT};margin-top:3px">{esc(kicker)} &middot; Data as of {esc(checked)} (Philippine time)</div></td></tr>
 <tr><td style="background:#FFFFFF;padding:22px 24px 8px;border-left:1px solid #DCE7EB;border-right:1px solid #DCE7EB">
 <div style="{FONT};font-size:14px;line-height:1.55;color:{INK};margin:0 0 16px">{esc(intro)}</div>
 {inner}
@@ -411,9 +418,9 @@ def _have(names):
     url = dashboard_url()
     return bool(url) and all(os.path.exists(os.path.join(HERE, 'docs', 'assets', f'card-{n}.png')) for n in names)
 def _card(d, kicker, intro, blocks, test=False):
-    url = dashboard_url(); have = _have(('navy', 'button')); checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
+    url = dashboard_url(); have = _have(('navy', 'button')); checked = as_of(d)
     head = [_tb('Airport Weather Monitoring', size='Large', weight='Bolder', color='Light' if have else 'Default'),
-            _tb(f'{kicker} · {checked} (Philippine time)', size='Small', spacing='None', color='Light' if have else 'Default', isSubtle=not have)]
+            _tb(f'{kicker} · Data as of {checked} (Philippine time)', size='Small', spacing='None', color='Light' if have else 'Default', isSubtle=not have)]
     if have:
         header = {'type': 'Container', 'bleed': True, 'backgroundImage': {'url': f'{url}assets/card-navy.png', 'fillMode': 'Repeat'}, 'items': [{'type': 'ColumnSet', 'columns': [
             {'type': 'Column', 'width': 'auto', 'verticalContentAlignment': 'Center', 'items': [{'type': 'Image', 'url': f'{url}assets/logo.png', 'height': '30px', 'altText': '1Aviation'}]},
