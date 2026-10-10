@@ -2326,7 +2326,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
         <li><strong>Today and Tomorrow.</strong> At the top. Switches the list between today's alerts and airports with bad weather forecast for tomorrow.</li>
         <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport; when a region is chosen it lists only the airports in that region.</li>
         <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Selecting a volcano zooms to it, shows its name and status, and draws a dashed ring 150 km around it. While it is selected, only the airports it can affect are shown, with their names: those inside the ring and any under its ash. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. Selecting an earthquake zooms to it and draws a dashed ring 100 km around it; while it is selected, only the airports inside the ring are shown (or the nearest airport when none is inside). A round swirl is a tropical cyclone, labelled with its class and name. A grey dashed swirl is one that only a single source has reported so far. Selecting a cyclone draws how far its strong winds reach and where it is forecast to be in 24 hours, and shows only the airports within reach. Closing the selection brings every airport back. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
-        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the usual view of the Philippines and clears the selection. Zooming all the way out shows the whole Philippine Area of Responsibility (PAR), the area PAGASA watches for tropical cyclones, drawn as a dashed outline from 115 to 135 degrees East and 5 to 25 degrees North. The neighbouring countries are drawn for reference only and cannot be selected. A cyclone or low pressure area just outside the PAR (up to roughly 1,000 km east or west of it) is drawn too, and the furthest zoom-out stretches to include it. When one of them is beyond the usual view of the Philippines, the map opens zoomed out so it can be seen. A red circle with an L is a low pressure area, where a cyclone can start; press it for details. It is for information only and raises no alert.</li>
+        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the usual view of the Philippines and clears the selection. Zooming all the way out shows the whole Philippine Area of Responsibility (PAR), the area PAGASA watches for tropical cyclones, drawn as a dashed outline from 115 to 135 degrees East and 5 to 25 degrees North. The neighbouring countries are drawn for reference only and cannot be selected. Cyclones and low pressure areas outside the PAR are drawn too, as far east as about 160 degrees East, and the furthest zoom-out stretches to include them. When one is within roughly 1,000 km of the PAR, the map opens zoomed out far enough to show it; ones further away are seen by pressing the zoom-out button, and are always named on the Typhoon tile and listed under Hazards. A red circle with an L is a low pressure area, where a cyclone can start; press it for details. It is for information only and raises no alert.</li>
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
         <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. Press one to show those airports in the list. To go back, press it again or press "Clear filter" beside the list title. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
         <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
@@ -2435,7 +2435,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
         <li>Earthquakes cannot be predicted. Only those that have already happened are shown.</li>
         <li>Forecasts for tomorrow and the days ahead are less certain than today.</li>
         <li>PAGASA's public typhoon bulletins and wind signals are not read directly, because they are not published as data. The typhoon alert is based on measured wind reach, not on the wind signal. Confirm typhoon decisions against PAGASA and CAAP advisories.</li>
-        <li>Low pressure areas come from one source only (the Joint Typhoon Warning Center) and may differ from the ones PAGASA names. They are shown for awareness and never raise an alert.</li>
+        <li>Low pressure areas come from one source only (the Joint Typhoon Warning Center) and may differ from the ones PAGASA names. They are not a complete list: PAGASA also tracks weaker ones, including some inside the Philippine area, that this source does not report. They are shown for awareness and never raise an alert; the PAGASA tropical cyclone outlook is the official list.</li>
       </ul>
     </div>
     <div class="about">
@@ -2697,7 +2697,9 @@ function renderData() {
   var lowsL = D.lows || [];
   $('tyList').innerHTML += lowsL.map(function (l) { return '<button class="vline tline quiet" data-t="' + esc(l.id) + '"><b>' + esc(l.name) + (l.chance ? ' \u00B7 ' + esc(l.chance) + ' chance' : '') + '</b><span>' + esc(l.where) + '</span></button>'; }).join('');
   if (!cyl.length && lowsL.length) $('tyText').textContent = D.ty_text;
-  $('tyNote').textContent = cyl.length ? 'Each cyclone is checked against three sources. It counts as confirmed, and can raise an alert, only when at least two of them report it. PAGASA issues the official wind signals.' : '';
+  var LOWNOTE = 'Low pressure areas shown here are the ones the Joint Typhoon Warning Center is watching. PAGASA may list others, including weaker ones inside the Philippine area, so check the PAGASA tropical cyclone outlook for the complete list.';
+  $('tyNote').textContent = (cyl.length ? 'Each cyclone is checked against three sources. It counts as confirmed, and can raise an alert, only when at least two of them report it. PAGASA issues the official wind signals. ' : '') +
+    (D.lows_ok === false ? 'Low pressure areas could not be read at this check. See the PAGASA tropical cyclone outlook.' : ('lows' in D ? (lowsL.length ? '' : 'No low pressure area is listed by the Joint Typhoon Warning Center at this check. ') + LOWNOTE : ''));
   // the long source note becomes a short list that opens on request
   var parts = [], rest = String(D.sources || '').replace(/^Sources:\s*/, ''), m;
   while ((m = rest.match(/^(.*?\.)\s+(?=[A-Z])/))) { parts.push(m[1]); rest = rest.slice(m[0].length); }
@@ -2752,9 +2754,9 @@ function viewNow() {
   }
   if (p) p = { x: OFFX + p.x * FITX, y: OFFY + p.y * FITY };      // map position -> position inside the wider panel
   // nothing selected: the Philippines fills the panel, unless a cyclone is inside the PAR but off that view, in which case the whole PAR is shown
-  var farCyc = farThings().length > 0;
-  var z = v ? v.z : (p ? zsel * HOMEZ : (farCyc ? 1 : HOMEZ));
-  return { z: z, cx: clampC(v ? v.cx : (p ? p.x : HOMEC.x), z), cy: clampC(v ? v.cy : (p ? p.y : HOMEC.y), z) };
+  var farCyc = farThings().some(function (o) { return o.near !== false; });      // something just outside the usual view: open wide enough to show it
+  var z = v ? v.z : (p ? zsel * HOMEZ : (farCyc ? VIEWN.z : HOMEZ));
+  return { z: z, cx: clampC(v ? v.cx : (p ? p.x : (farCyc ? VIEWN.x : HOMEC.x)), z), cy: clampC(v ? v.cy : (p ? p.y : (farCyc ? VIEWN.y : HOMEC.y)), z) };
 }
 function setView(z, cx, cy, drag) { S.view = { z: z, cx: clampC(cx, z), cy: clampC(cy, z) }; S.drag = !!drag; applyView(); }
 var VIEW_READY = 0;
@@ -2920,6 +2922,7 @@ function applyState() {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(cy.name) + '</h3><span class="pill unconf">For information</span></div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       '<div class="dfacts"><div><span>Chance of becoming a cyclone</span><b>' + (cy.chance ? esc(cy.chance.charAt(0).toUpperCase() + cy.chance.slice(1)) : 'Not stated') + '</b></div><div><span>Nearest airport</span><b>' + (Math.round(cy.dist / 10) * 10).toLocaleString('en-US') + ' km</b></div><div><span>Philippine area</span><b>' + (cy.inpar ? 'Inside' : 'Outside') + '</b></div></div>' +
       field('What it is', 'A low pressure area is a patch of unsettled weather where a tropical cyclone can start. Most do not develop.') + field('Where it is', cy.where) +
+      field('Not a complete list', 'This is one of the areas the Joint Typhoon Warning Center is watching. PAGASA may list others, including weaker ones inside the Philippine area. Check the PAGASA tropical cyclone outlook for the complete, official list.') +
       fold('about', 'About this reading', 'One source only', (cy.ms ? field('Reported', phDay(cy.ms) + ', ' + phTime(cy.ms) + ' Philippine time (' + agoText(cy.ms) + ').') : '') +
         field('Source', 'Joint Typhoon Warning Center (United States Navy and Air Force), tropical weather advisory. It raises no alert here. PAGASA names low pressure areas in its own bulletins.')) + '</div>';
   } else if (cy) {
@@ -3448,7 +3451,7 @@ $('tyList').addEventListener('click', function (e) { var b = e.target.closest('[
 $('vList').addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (b) { selectVolcano(b.getAttribute('data-v')); } });
 $('qList').addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) { selectQuake(b.getAttribute('data-q')); } });
 $('airportPick').addEventListener('change', function () { if (S.sel) { S.pane = 'side'; applyState(); } });
-$('zIn').addEventListener('click', function () { var v = viewNow(), p = selPoint(), nz = v.z < HOMEZ * 0.98 ? HOMEZ : Math.min(6 * HOMEZ, v.z * 1.5); if (v.z < HOMEZ * 0.98 && !p) { S.view = null; S.drag = false; applyView(); return; } if (p && !S.drag) setView(nz, OFFX + p.x * FITX, OFFY + p.y * FITY, false); else setView(nz, v.cx, v.cy, false); });     // keep the selected point in view
+$('zIn').addEventListener('click', function () { var v = viewNow(), p = selPoint(), nz = v.z < HOMEZ * 0.98 ? HOMEZ : Math.min(6 * HOMEZ, v.z * 1.5); if (v.z < HOMEZ * 0.98 && !p) { setView(HOMEZ, HOMEC.x, HOMEC.y, false); return; } if (p && !S.drag) setView(nz, OFFX + p.x * FITX, OFFY + p.y * FITY, false); else setView(nz, v.cx, v.cy, false); });     // keep the selected point in view
 $('zOut').addEventListener('click', function () { var v = viewNow(); var nz = v.z > HOMEZ * 1.02 ? Math.max(HOMEZ, v.z / 1.5) : 1;      // steps back to the usual view, then one more press shows the whole PAR
   if (nz < HOMEZ * 1.1 && nz > HOMEZ) nz = HOMEZ;
   if (nz === 1) setView(1, 50, 50, false); else setView(nz, v.cx, v.cy, false); });
@@ -3460,6 +3463,7 @@ $('modalBack').addEventListener('click', closeHelp); $('modalClose').addEventLis
 document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (modal.classList.contains('open')) closeHelp(); else if (WX.open) wxOpen(false); });
 
 /* fit the map to the space available so the whole dashboard stays on one screen */
+var VIEWN = { z: 1, x: 50, y: 50 };
 var FITX = 1, FITY = 1, FITKEY = '', OFFX = 0, OFFY = 0, HOMEZ = 1, HOMEC = { x: 50, y: 50 };
 // the Philippine Area of Responsibility as a share of the Philippine map image: 115E to 135E, 5N to 25N
 var PARB = { l: -0.08669, t: -0.22486, w: 1.73856, h: 1.18355 };
@@ -3477,7 +3481,7 @@ function fit() {
   grid.classList.toggle('tall', avail > natural + 340);          // enough spare height to put the details under the map
   // The panel is never taller than the rain forecast can fill at the widest zoom, so no part of the map is left without a forecast.
   var COV = rainCover(), bwc = PARB.w, far0 = farThings();
-  far0.forEach(function (o) { bwc = Math.max(bwc, Math.min(2.6, Math.max(PARB.l + PARB.w, o.x / 100 + 0.12)) - Math.max(-1.6, Math.min(PARB.l, o.x / 100 - 0.12))); });
+  far0.forEach(function (o) { bwc = Math.max(bwc, Math.min(3.95, Math.max(PARB.l + PARB.w, o.x / 100 + 0.12)) - Math.max(-1.6, Math.min(PARB.l, o.x / 100 - 0.12))); });
   var capH = Math.floor((COV.b - COV.t) * 1.506 * (v.clientWidth / (bwc * 1.08)) * 0.985);
   if (v.style.maxHeight) { v.style.maxHeight = ''; if (v.getAttribute('data-cap')) { v.removeAttribute('data-cap'); v.style.removeProperty('height'); v.style.removeProperty('flex'); col.style.removeProperty('align-self'); } }      // measure the free height first
   if (v.clientHeight > capH + 1) {
@@ -3488,16 +3492,20 @@ function fit() {
   var W = v.clientWidth, H = v.clientHeight, swHome = Math.min(W, H * 1000 / 1506);
   // Fully zoomed out, the panel shows the whole Philippine Area of Responsibility (PAR) with a small margin.
   // The usual view (HOMEZ) is zoomed in from there so the Philippines fills the panel as before.
-  var B = { l: PARB.l, t: PARB.t, r: PARB.l + PARB.w, b: PARB.t + PARB.h };
-  farThings().forEach(function (o) {      // a cyclone or low pressure area just outside the PAR: zooming out reaches it too
-    B.l = Math.max(-1.6, Math.min(B.l, o.x / 100 - 0.12)); B.r = Math.min(2.6, Math.max(B.r, o.x / 100 + 0.12));
-    B.t = Math.max(PARB.t, Math.min(B.t, o.y / 100 - 0.08)); B.b = Math.min(1.19, Math.max(B.b, o.y / 100 + 0.08));
-  });
+  var grow = function (B, o) {
+    B.l = Math.max(-1.6, Math.min(B.l, o.x / 100 - 0.12)); B.r = Math.min(3.95, Math.max(B.r, o.x / 100 + 0.12));
+    B.t = Math.max(-0.85, Math.min(B.t, o.y / 100 - 0.08)); B.b = Math.min(1.19, Math.max(B.b, o.y / 100 + 0.08));
+  };
+  // B: everything drawn, which sets how far the map can zoom out. BN: the PAR plus anything just outside it, which is what the map opens on.
+  var B = { l: PARB.l, t: PARB.t, r: PARB.l + PARB.w, b: PARB.t + PARB.h }, BN = { l: B.l, t: B.t, r: B.r, b: B.b };
+  farThings().forEach(function (o) { grow(B, o); if (o.near !== false) grow(BN, o); });
   var bw = B.r - B.l, bh = B.b - B.t;
   var sw = Math.min(swHome, W / (bw * 1.08), H / (bh * 1.08 * 1.506)), sh = sw * 1506 / 1000;
   var OX = W / 2 - (B.l + bw / 2) * sw, OY = H / 2 - (B.t + bh / 2) * sh;
   if (H - COV.b * sh <= -COV.t * sh) OY = Math.max(H - COV.b * sh, Math.min(-COV.t * sh, OY));      // keep the view inside the forecast area
   HOMEZ = swHome / sw; OFFX = OX / W * 100; OFFY = OY / H * 100; HOMEC = { x: OFFX + 50 * sw / W, y: OFFY + 50 * sh / H };
+  var bnw = BN.r - BN.l, bnh = BN.b - BN.t, swN = Math.min(swHome, W / (bnw * 1.08), H / (bnh * 1.08 * 1.506));
+  VIEWN = { z: Math.max(1, swN / sw), x: (OX + (BN.l + bnw / 2) * sw) / W * 100, y: (OY + (BN.t + bnh / 2) * sh) / H * 100 };
   var appEl = document.querySelector('.app'); if (appEl) { appEl.style.setProperty('--maptop', Math.round(v.getBoundingClientRect().top - appEl.getBoundingClientRect().top) + 'px'); appEl.style.setProperty('--mapw', Math.round(W) + 'px'); }   // lets floating items line up with the map
   [st, $('pins')].forEach(function (el) { el.style.width = sw + 'px'; el.style.height = sh + 'px'; el.style.left = OX + 'px'; el.style.top = OY + 'px'; });
   // dots and labels are drawn for the usual view, so they keep their normal size there and shrink a little when zoomed right out
@@ -3509,7 +3517,7 @@ function fit() {
   if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
   GEO = { sl: OX * sc, st: OY * sc, sw: sw * sc, sh: sh * sc };
   if (typeof rainDraw === 'function' && typeof R !== 'undefined' && R) rainDraw();
-  var fx = sw / W, fy = sh / H, key = [fx.toFixed(4), fy.toFixed(4), OFFX.toFixed(2), OFFY.toFixed(2)].join(), changed = key !== FITKEY;
+  var fx = sw / W, fy = sh / H, key = [fx.toFixed(4), fy.toFixed(4), OFFX.toFixed(2), OFFY.toFixed(2), VIEWN.z.toFixed(3)].join(), changed = key !== FITKEY;
   FITX = fx; FITY = fy; FITKEY = key;
   if (changed && D) applyView();
 }
