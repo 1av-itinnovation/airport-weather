@@ -1731,7 +1731,9 @@ body{background:var(--page);color:var(--ink)}
 .glass .pin.a.lv-danger .lab .bd{background:linear-gradient(160deg,#FF6A5E,#D82B2B)}
 .glass .pin.a.lv-warning .lab .bd{background:linear-gradient(160deg,#FFB14A,#F07F0A)}
 .glass .pin.a.lv-advisory .lab .bd{background:linear-gradient(160deg,#FFDB5C,#E0AE00)}
-.glass .pin.a .lab b{display:block;font-weight:600;font-size:12px}
+.glass .pin.a .lab b{display:block;font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis}
+.glass .pin.a .lab>span{min-width:0;overflow:hidden}
+.glass .pin.a .lab{box-sizing:border-box}
 .glass .pin.a .lab em{display:block;font-style:normal;color:#56657F;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab{top:-9px;left:12px;padding:1px 7px;border-radius:7px;box-shadow:0 2px 6px rgba(40,60,110,.14);font-size:11px}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab .bd,.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab em{display:none}
@@ -1751,6 +1753,69 @@ body{background:var(--page);color:var(--ink)}
 /* region and airport pickers: one drawn arrow, the same distance from the edge on both */
 .glass .app .filters select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.500-3.500' fill='none' stroke='%231B2B45' stroke-width='1.500' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px 12px;text-overflow:ellipsis}
 @media (max-width:900px){.glass .app .filters select{background-position:right 10px center;background-size:11px 11px}}
+
+/* zoom buttons: a clear focus ring that stays inside the button */
+.glass .app .zoom button:focus{outline:none}
+.glass .app .zoom button:focus-visible{outline:2px solid #4D5EE0;outline-offset:-4px;border-radius:14px}
+
+/* =====================================================================================
+   MOTION: one calm, consistent feel. Things ease out and settle; nothing bounces or flashes.
+   Turned off for people who ask their device for reduced motion.
+   ===================================================================================== */
+.glass{--ease:cubic-bezier(.32,.72,0,1);--ease-soft:cubic-bezier(.22,1,.36,1)}
+@keyframes g-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes g-fade{from{opacity:0}to{opacity:1}}
+@keyframes g-drawer-in{from{opacity:0;transform:translateX(28px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes g-drawer-out{from{opacity:1;transform:none}to{opacity:0;transform:translateX(22px) scale(.99)}}
+@keyframes g-pop{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes g-sheet{from{opacity:0;transform:translateY(18px) scale(.975)}to{opacity:1;transform:none}}
+@keyframes g-label{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+@keyframes g-fold{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  /* map: zooming and moving glide to a stop */
+  .glass .layer{transition:transform .75s var(--ease)}
+  .glass .layer.nodrag{transition:none}
+  .glass .pin{transition:transform .75s var(--ease)}
+  .glass .layer.nodrag .pin{transition:none}
+  /* first load: the parts arrive once, in order */
+  .glass.booting header.top{animation:g-rise .6s var(--ease-soft) both}
+  .glass.booting .col.map{animation:g-rise .7s var(--ease-soft) .06s both}
+  .glass.booting #kpis .k{animation:g-rise .6s var(--ease-soft) both}
+  .glass.booting #kpis .k:nth-child(1){animation-delay:.12s}.glass.booting #kpis .k:nth-child(2){animation-delay:.16s}.glass.booting #kpis .k:nth-child(3){animation-delay:.20s}.glass.booting #kpis .k:nth-child(4){animation-delay:.24s}
+  .glass.booting #kpis .k:nth-child(n+5){animation-delay:.28s}
+  .glass.booting .col.list{animation:g-rise .7s var(--ease-soft) .24s both}
+  .glass.booting .col.side{animation:g-rise .7s var(--ease-soft) .30s both}
+  .glass.booting #alertBar .al{animation:g-rise .6s var(--ease-soft) .45s both}
+  /* details window: slides in from the right and eases out again */
+  .glass .app .cols.has-sel .col.side{animation:g-drawer-in .5s var(--ease) both;transform-origin:right center}
+  .glass .app .cols.has-sel .col.side.closing{animation:g-drawer-out .22s cubic-bezier(.4,0,1,1) both}
+  .glass #detail.fresh>*{animation:g-rise .45s var(--ease-soft) both}
+  .glass .app .cols:not(.has-sel) .col.side.back{animation:g-fade .35s ease both}
+  /* sections that open */
+  .glass details[open]>.in,.glass details[open]>.hzbody,.glass details[open]>ul{animation:g-fold .32s var(--ease-soft) both}
+  .glass details>summary{transition:color .2s ease}
+  /* tabs and panes */
+  .glass .scrolly:not([hidden]){animation:g-fade .3s ease both}
+  .glass .app .ptabs button,.glass .app .col.side .stabs button,.glass .app .filters .daysw button{transition:background-color .28s var(--ease),color .2s ease,box-shadow .28s var(--ease)}
+  /* pop-ups */
+  .glass .lyr:not([hidden]){animation:g-pop .26s var(--ease-soft) both;transform-origin:top right}
+  .glass .modal.open .back{animation:g-fade .3s ease both}
+  .glass .modal.open .box{animation:g-sheet .42s var(--ease) both}
+  .glass .modal.closing .back{animation:g-fade .2s ease reverse both}
+  .glass .modal.closing .box{animation:g-sheet .2s cubic-bezier(.4,0,1,1) reverse both}
+  /* map name cards and markers */
+  .glass .layer .pin.a.sel .lab,.glass .layer .pin.a:hover .lab{animation:g-label .22s var(--ease-soft) both}
+  .glass .pin.a.east .lab{transform-origin:right center}
+  /* things you press give a little, then settle */
+  .glass button,.glass select,.glass .alert,.glass #kpis .k,.glass #statsBig button,.glass .app .filters .stat{transition:background-color .2s ease,box-shadow .25s var(--ease),transform .18s var(--ease),color .2s ease,opacity .2s ease}
+  .glass button:active:not(.back),.glass #kpis button.k:active,.glass .app .filters .stat:active{transform:scale(.97)}
+  .glass .app .alert:active{transform:scale(.995)}
+  .glass #kpis .k .bar i{transition:width .8s var(--ease)}
+  .glass .app .tour,.glass .almore{transition:opacity .25s ease,transform .25s var(--ease)}
+}
+@media (max-width:900px) and (prefers-reduced-motion:no-preference){
+  .glass .app .col.show{animation:g-rise .38s var(--ease-soft) both}
+}
 </style>
 </head>
 <body class="glass">
@@ -1823,7 +1888,7 @@ body{background:var(--page);color:var(--ink)}
       <div class="zoom">
         <button id="zIn" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
         <button id="zOut" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button>
-        <button id="zAll" class="all" aria-label="Show whole map" title="Show whole map"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+        <button id="zAll" class="all" aria-label="Back to the whole map" title="Back to the whole map"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M3.500 12a8.500 8.500 0 1 0 2.700-6.200L3.500 8.300"/><path d="M3.500 3.500v4.800h4.800"/></svg></button>
       </div>
     </div>
     <div class="selbar" id="selBar"><span class="nm" id="selName"></span><span id="selPill"></span><button class="btn" id="selGo" style="min-height:36px;padding:0 10px">Details</button></div>
@@ -1914,7 +1979,7 @@ body{background:var(--page);color:var(--ink)}
         <li><strong>Today and Tomorrow.</strong> At the top. Switches the list between today's alerts and airports with bad weather forecast for tomorrow.</li>
         <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport.</li>
         <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
-        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. ALL shows the whole map again and clears the selection.</li>
+        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the whole map and clears the selection.</li>
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
         <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. The smaller tiles show earthquake alerts, volcano alerts and typhoon; one turns red when it has an alert, and pressing it opens that list.</li>
         <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
@@ -2116,6 +2181,9 @@ function renderGlass() {
     '<div class="sbar">' + seg.map(function (x) { return '<i style="width:' + (100 * c[x[0]] / tot) + '%;background:' + x[1] + '"></i>'; }).join('') + '</div>';
   $('paneDetails').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk));
   $('cols').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk) && S.tab === 'details');
+  setTimeout(placeSoon, 0);
+  var key = S.sel || S.qk || S.vk || '';
+  if (key !== LASTKEY) { LASTKEY = key; var dt = $('detail'); if (key && dt) { dt.classList.remove('fresh'); void dt.offsetWidth; dt.classList.add('fresh'); setTimeout(function () { dt.classList.remove('fresh'); }, 700); } }
 }
 function agoText(ms) {
   if (!ms) return ''; var m = Math.max(0, Math.round((Date.now() - ms) / 60000));
@@ -2161,7 +2229,7 @@ function renderData() {
         (lv === 'danger' ? '<span class="wx-flash"></span><span class="wx-ring"></span><span class="wx-ring wx-ring2"></span><span class="wx-bolt"><i></i></span>' : '') +
         '<span class="selring"></span>' +
         '<button aria-label="' + esc(a.name) + '" title="' + esc(a.name) + '"><span class="dot" style="' + dotStyle(a) + '"></span></button>' +
-        (ORDER.indexOf(lv) >= 0 ? (GLASS ? '<span class="lab"><i class="bd">' + glassIcon(a) + '</i><span><b>' + esc(a.name) + '</b><em>' + esc(a.what || '') + '</em></span></span>' : '<span class="lab">' + esc(a.name) + '</span>') : '') + '</div>';
+        ((GLASS || ORDER.indexOf(lv) >= 0) ? (GLASS ? '<span class="lab"><i class="bd">' + glassIcon(a) + '</i><span><b>' + esc(a.name) + '</b><em>' + esc(a.what || '') + '</em></span></span>' : '<span class="lab">' + esc(a.name) + '</span>') : '') + '</div>';
     });
   });
   var vh = '', ash = D.ash || [];
@@ -2450,8 +2518,9 @@ function wxUpdate() {
   Array.prototype.forEach.call(document.querySelectorAll('.seg[data-layer]'), function (b) { b.classList.toggle('on', b.getAttribute('data-layer') === WX.layer); });
 }
 function wxOpen(on) {
-  WX.open = on; $('wxModal').classList.toggle('open', on);
-  if (!on) { WX.src = ''; $('wxFrame').removeAttribute('src'); $('wxToggle').focus(); } else { WX.follow = true; wxUpdate(); $('wxClose').focus(); }
+  WX.open = on;
+  if (!on) { var f = function () { $('wxModal').classList.remove('open'); WX.src = ''; $('wxFrame').removeAttribute('src'); $('wxToggle').focus(); }; if (typeof closeSoft === 'function') closeSoft($('wxModal'), f); else f(); }
+  else { $('wxModal').classList.remove('closing'); $('wxModal').classList.add('open'); WX.follow = true; wxUpdate(); $('wxClose').focus(); }
 }
 $('wxToggle').addEventListener('click', function () { wxOpen(true); });
 $('wxClose').addEventListener('click', function () { wxOpen(false); }); $('wxBack').addEventListener('click', function () { wxOpen(false); });
@@ -2675,6 +2744,49 @@ $('list').addEventListener('click', function (e) { var b = e.target.closest('[da
 $('rail').addEventListener('click', function (e) { var b = e.target.closest('.rz'); if (b) { S.tab = b.getAttribute('data-go'); applyState(); } });
 arrange();
 if (WIDE.addEventListener) WIDE.addEventListener('change', function () { arrange(); if (D) applyState(); fit(); }); else if (WIDE.addListener) WIDE.addListener(function () { arrange(); if (D) applyState(); fit(); });
+/* ---------- motion helpers ---------- */
+document.body.classList.add('booting'); setTimeout(function () { document.body.classList.remove('booting'); }, 1600);
+var MOTION_OK = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches), LASTKEY = '', CLOSING = 0;
+var clearSelBase = clearSel;
+clearSel = function () {
+  var side = document.querySelector('.col.side');
+  if (!GLASS || !MOTION_OK || !WIDE.matches || !$('cols').classList.contains('has-sel') || CLOSING) { clearSelBase(); return; }
+  side.classList.add('closing');                                   // let the window ease out first
+  CLOSING = setTimeout(function () { CLOSING = 0; side.classList.remove('closing'); clearSelBase(); side.classList.add('back'); setTimeout(function () { side.classList.remove('back'); }, 400); }, 200);
+};
+function closeSoft(el, done) {                                      // help and Windy windows ease out too
+  if (!MOTION_OK || !el.classList.contains('open')) { done(); return; }
+  el.classList.add('closing'); setTimeout(function () { el.classList.remove('closing'); done(); }, 190);
+}
+/* ---------- name cards always stay inside the map, and clear of the buttons ---------- */
+var PLT = 0;
+function placeLabels() {
+  if (!GLASS) return;
+  var vr = $('vp').getBoundingClientRect(); if (!vr.width) return;
+  Array.prototype.forEach.call(document.querySelectorAll('#pins .pin.a'), function (p) {
+    var lab = p.querySelector('.lab'); if (!lab || !lab.getClientRects().length) return;
+    var pr = p.getBoundingClientRect(), x = pr.left + pr.width / 2 - vr.left, y = pr.top + pr.height / 2 - vr.top, w = lab.getBoundingClientRect().width + 24;
+    var keep = y > vr.height - 190 ? 70 : (y < 76 ? 140 : 8);            // room for the zoom buttons and the Layers button
+    lab.style.maxWidth = '';
+    w = lab.getBoundingClientRect().width + 24;
+    var roomR = vr.width - keep - x, roomL = x - 8, fitsR = w <= roomR, fitsL = w <= roomL, left = !fitsR && (fitsL || roomL > roomR);
+    p.classList.toggle('east', left);
+    if (!fitsR && !fitsL) { var sc = (lab.getBoundingClientRect().width / (lab.offsetWidth || 1)) || 1; lab.style.maxWidth = Math.max(90, Math.floor(((left ? roomL : roomR) - 26) / sc)) + 'px'; }   // too wide for either side: shorten the text
+  });
+}
+function placeSoon() { placeLabels(); clearTimeout(PLT); PLT = setTimeout(placeLabels, 700); }
+var applyViewBase = applyView;
+applyView = function () { applyViewBase(); placeSoon(); };
+$('pins').addEventListener('mouseover', function (e) { if (e.target.closest && e.target.closest('.pin.a')) requestAnimationFrame(placeLabels); });
+window.addEventListener('resize', placeSoon);
+/* pressing anywhere outside the details window closes it (the X and the Esc key still work) */
+document.addEventListener('click', function (e) {
+  if (!GLASS || !WIDE.matches || !(S.sel || S.qk || S.vk)) return;
+  var t = e.target; if (!t || !t.closest || !document.contains(t)) return;
+  if (t.closest('.col.side, .pin, .alert, #alertBar, #kpis, header.top, .zoom, .lyrbtn, .lyr, .mapfoot, .modal, .notice, [data-q], [data-v], [data-a], select, a')) return;
+  clearSel();
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && GLASS && (S.sel || S.qk || S.vk) && !modal.classList.contains('open') && !WX.open) clearSel(); });
 $('kpis').addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b && b.getAttribute('data-go')) { S.tab = b.getAttribute('data-go'); applyState(); } });
 $('statsBig').addEventListener('click', function (e) { var b = e.target.closest('[data-f]'); if (!b) return; var f = b.getAttribute('data-f'); var t = document.querySelector('.stat[data-f="' + (S.filter === f ? 'alerts' : f) + '"]'); if (t) t.click(); });
 $('notice').addEventListener('click', function () { this.classList.toggle('open'); fit(); });
@@ -2695,7 +2807,7 @@ $('zOut').addEventListener('click', function () { var v = viewNow(); setView(Mat
 $('zAll').addEventListener('click', clearSel);
 var modal = $('modal');
 $('helpBtn').addEventListener('click', function () { modal.classList.add('open'); $('modalClose').focus(); });
-function closeHelp() { modal.classList.remove('open'); $('helpBtn').focus(); }
+function closeHelp() { var f = function () { modal.classList.remove('open'); $('helpBtn').focus(); }; if (typeof closeSoft === 'function') closeSoft(modal, f); else f(); }
 $('modalBack').addEventListener('click', closeHelp); $('modalClose').addEventListener('click', closeHelp);
 document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (modal.classList.contains('open')) closeHelp(); else if (WX.open) wxOpen(false); });
 
