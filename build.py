@@ -87,7 +87,7 @@ SOURCE_NAMES = {
     'openmeteo':       'Open-Meteo (api.open-meteo.com)',
     'sigmet':          'Aviation storm warnings (aviationweather.gov)',
     'gdacs':           'GDACS, UN and EU disaster alert system (gdacs.org)',
-    'jma':             'RSMC Tokyo typhoon advisories, Japan Meteorological Agency (via the NOAA data server)',
+    'jma':             'RSMC Tokyo typhoon information, Japan Meteorological Agency (jma.go.jp)',
     'phivolcs':        'PHIVOLCS (earthquake.phivolcs.dost.gov.ph)',
     'usgs':            'USGS (earthquake.usgs.gov)',
     'emsc':            'EMSC (seismicportal.eu)',
@@ -440,42 +440,93 @@ def load_storms(key):
 
 JMA_HOURS = 12        # an RSMC Tokyo advisory older than this is ignored (they are issued every 3 to 6 hours)
 def load_jma_tc():
-    """Tropical cyclone advisories from RSMC Tokyo (Japan Meteorological Agency), the World Meteorological Organization's official
-    typhoon centre for the western Pacific. They give the strength (maximum winds, measured the same way PAGASA does), how far
-    the strong winds reach, and the forecast position. Read from the NOAA data server. Returns a list, or None if not reached.
+    """Second source for tropical cyclones: the Japan Meteorological Agency's own typhoon feed (RSMC Tokyo is the official
+    typhoon centre for the western Pacific). It gives the strength (maximum winds, measured the same way PAGASA does), how far
+    the strong winds reach, and the forecast position. Returns a list, or None if not reached.
     Prints lines starting with TYPHOON: so a run log shows what was found."""
-    out = []; reached = 0
-    _dirw = {'N': 'north', 'NNE': 'north-northeast', 'NE': 'northeast', 'ENE': 'east-northeast', 'E': 'east', 'ESE': 'east-southeast', 'SE': 'southeast', 'SSE': 'south-southeast', 'S': 'south', 'SSW': 'south-southwest', 'SW': 'southwest', 'WSW': 'west-southwest', 'W': 'west', 'WNW': 'west-northwest', 'NW': 'northwest', 'NNW': 'north-northwest'}
-    for n in range(20, 26):
-        txt = fetch(f'https://tgftp.nws.noaa.gov/data/raw/wt/wtpq{n}.rjtd..txt', tries=1, text=True, timeout=20)
-        if not txt: continue
-        reached += 1
+    base = 'https://www.jma.go.jp/bosai/typhoon/data/'
+    raw = fetch(base + 'targetTc.json', tries=2, text=True, timeout=25)
+    if raw is None: print('TYPHOON: JMA typhoon feed not reached.', file=sys.stderr); return None
+    try: lst = json.loads(raw)
+    except Exception as e: print(f'TYPHOON: JMA list not understood ({e}): {raw[:300]!r}', file=sys.stderr); return None
+    print(f"TYPHOON: JMA list: {' '.join(raw.split())[:300]}", file=sys.stderr)
+    JDIR = {'北': 'north', '北北東': 'north-northeast', '北東': 'northeast', '東北東': 'east-northeast', '東': 'east', '東南東': 'east-southeast', '南東': 'southeast', '南南東': 'south-southeast',
+            '南': 'south', '南南西': 'south-southwest', '南西': 'southwest', '西南西': 'west-southwest', '西': 'west', '西北西': 'west-northwest', '北西': 'northwest', '北北西': 'north-northwest',
+            'N': 'north', 'NNE': 'north-northeast', 'NE': 'northeast', 'ENE': 'east-northeast', 'E': 'east', 'ESE': 'east-southeast', 'SE': 'southeast', 'SSE': 'south-southeast',
+            'S': 'south', 'SSW': 'south-southwest', 'SW': 'southwest', 'WSW': 'west-southwest', 'W': 'west', 'WNW': 'west-northwest', 'NW': 'northwest', 'NNW': 'north-northwest'}
+    def val(x, *keys):
+        """A number from a value that may be a number, a text number, or a small table such as {"kt": 85, "m/s": 45}."""
+        if isinstance(x, dict):
+            for k in keys:
+                if k in x and x[k] not in (None, ''): return val(x[k])
+            return None
+        try: return float(str(x).strip())
+        except Exception: return None
+    def txt_of(x, *keys):
+        if isinstance(x, dict):
+            for k in keys:
+                if x.get(k): return str(x[k])
+            return ''
+        return str(x or '')
+    def latlon(p):
+        d = (p or {}).get('deg') if isinstance(p, dict) else p
+        if isinstance(d, (list, tuple)) and len(d) >= 2: return val(d[0]), val(d[1])
+        if isinstance(d, dict): return val(d, 'lat', 'latitude'), val(d, 'lon', 'lng', 'longitude')
+        return None, None
+    def kmh(w):
+        k = val(w, 'kt'); m = val(w, 'm/s')
+        return round(k * 1.852) if k else (round(m * 3.6) if m else None)
+    def reach(areas):
+        v = []
+        for a in (areas if isinstance(areas, list) else [areas] if areas else []):
+            r = a.get('range') if isinstance(a, dict) else a
+            for one in (r if isinstance(r, list) else [r]):
+                km_ = val(one, 'km'); nm_ = val(one, 'nm')
+                if km_: v.append(km_)
+                elif nm_: v.append(nm_ * 1.852)
+        return round(max(v)) if v else None
+    def when(rec):
+        t = txt_of(rec.get('validtime') or rec.get('issue') or {}, 'UTC', 'utc')
         try:
-            h = re.search(r'WTPQ\d\d RJTD (\d{2})(\d{2})(\d{2})', txt); nm = re.search(r'NAME[ \t]+([A-Z]{2,3})\b(?:[ \t]+(\d{4}))?(?:[ \t]+([A-Z][A-Z-]*))?', txt)
-            if not h or not nm: print(f"TYPHOON: RSMC Tokyo wtpq{n} skipped, {'no header' if not h else 'no NAME line'}: {' | '.join(txt.split(chr(10))[:9])[:420]!r}", file=sys.stderr); continue
-            t = NOW.replace(day=1, hour=int(h.group(2)), minute=int(h.group(3)), second=0, microsecond=0) + dt.timedelta(days=int(h.group(1)) - 1)
-            if t > NOW + dt.timedelta(hours=2): t = (t.replace(day=1) - dt.timedelta(days=1)).replace(day=1) + dt.timedelta(days=int(h.group(1)) - 1)     # issued last month
-            if not (-2 <= (NOW - t).total_seconds() / 3600 <= JMA_HOURS): print(f"TYPHOON: RSMC Tokyo wtpq{n} skipped, old advisory ({t.strftime('%d %b %H:%MZ')}): {' | '.join(txt.split(chr(10))[:5])[:200]!r}", file=sys.stderr); continue
-            ana, _, fcst = txt.partition('FORECAST')
-            ps = re.search(r'PSTN\s+\d{6}UTC\s+(\d+\.\d)([NS])\s+(\d+\.\d)([EW])', ana)
-            if not ps: print(f"TYPHOON: RSMC Tokyo wtpq{n} skipped, no position line: {' | '.join(txt.split(chr(10))[:12])[:520]!r}", file=sys.stderr); continue
-            la = float(ps.group(1)) * (1 if ps.group(2) == 'N' else -1); lo = float(ps.group(3)) * (1 if ps.group(4) == 'E' else -1)
-            num = lambda pat, src: (int(re.search(pat, src).group(1)) if re.search(pat, src) else None)
-            def reach(tag):         # the furthest the winds of this strength extend, in km
-                m = re.search(tag + r'\s+(.*)', ana); v = [int(x) for x in re.findall(r'(\d+)NM', m.group(1))] if m else []
-                return round(max(v) * 1.852) if v else None
-            mv = re.search(r'MOVE\s+([A-Z]{1,3})\s+(\d+)KT', ana); f24 = re.search(r'24HF\s+\d{6}UTC\s+(\d+\.\d)([NS])\s+(\d+\.\d)([EW])', fcst)
-            f24w = num(r'24HF[^\n]*\n(?:[^\n]*\n){0,3}?MXWD\s+(\d+)KT', fcst)
-            kt = num(r'MXWD\s+(\d+)KT', ana); gust = num(r'GUST\s+(\d+)KT', ana)
-            name = ('-'.join(w.capitalize() for w in nm.group(3).split('-')) if nm.group(3) else '')
-            out.append(dict(name=name, cls=nm.group(1), la=la, lo=lo, issued=t, wind=(round(kt * 1.852) if kt else None), gust=(round(gust * 1.852) if gust else None),
-                            gale=reach('30KT'), storm=reach('50KT'), mv=(_dirw.get(mv.group(1)) if mv else None), sp=(round(int(mv.group(2)) * 1.852) if mv else None),
-                            still=bool(re.search(r'MOVE\s+(ALMOST STATIONARY|STNR)', ana)), wind24=(round(f24w * 1.852) if f24w else None),
-                            fc=((float(f24.group(1)) * (1 if f24.group(2) == 'N' else -1), float(f24.group(3)) * (1 if f24.group(4) == 'E' else -1)) if f24 else None)))
-            print(f"TYPHOON: RSMC Tokyo advisory wtpq{n}: {nm.group(1)} {name or '(no name)'} at {la:.1f}N {lo:.1f}E, winds {kt} kt, 30 kt reach {out[-1]['gale']} km, issued {t.strftime('%d %b %H:%MZ')}", file=sys.stderr)
+            t = dt.datetime.fromisoformat(t.replace('Z', '+00:00'))
+            return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
+        except Exception: return None
+    out = []
+    for item in (lst if isinstance(lst, list) else []):
+        code = item.get('tropicalCyclone') if isinstance(item, dict) else str(item)
+        if not code: continue
+        body = fetch(f'{base}{code}/specifications.json', tries=2, text=True, timeout=25)
+        if body is None: print(f'TYPHOON: JMA {code} details not reached.', file=sys.stderr); continue
+        try:
+            recs = json.loads(body); recs = recs if isinstance(recs, list) else [recs]
+            title = next((r for r in recs if isinstance(r, dict) and 'position' not in r), {})
+            pts = [r for r in recs if isinstance(r, dict) and 'position' in r]
+            if not pts: print(f"TYPHOON: JMA {code} skipped, no position: {' '.join(body.split())[:700]}", file=sys.stderr); continue
+            hrs = lambda r: val(r.get('advancedHours'), 'hour', 'hours', 'value') if 'advancedHours' in r else None
+            ana = next((r for r in pts if not hrs(r)), pts[0]); t = when(ana) or when(title)
+            la, lo = latlon(ana.get('position'))
+            if la is None or lo is None or t is None: print(f"TYPHOON: JMA {code} skipped, position or time not understood: {' '.join(body.split())[:900]}", file=sys.stderr); continue
+            if not (-2 <= (NOW - t).total_seconds() / 3600 <= JMA_HOURS): print(f"TYPHOON: JMA {code} skipped, old advisory ({t.strftime('%d %b %Y %H:%MZ')}).", file=sys.stderr); continue
+            f24 = next((r for r in pts if hrs(r) == 24), None)
+            if f24 is None:
+                near = [(abs(((when(r) or t) - t).total_seconds() / 3600 - 24), r) for r in pts if r is not ana and when(r)]
+                near = [x for x in near if x[0] <= 3]; f24 = min(near, key=lambda x: x[0])[1] if near else None
+            fla, flo = latlon(f24.get('position')) if f24 else (None, None)
+            mw = ana.get('maximumWind') or {}; wind = kmh(mw.get('sustained') if isinstance(mw, dict) else mw); gust = kmh(mw.get('gust')) if isinstance(mw, dict) else None
+            name = txt_of(title.get('name') or item.get('name') or {}, 'en', 'jp').strip()
+            name = '-'.join(w.capitalize() for w in name.split('-')) if re.fullmatch(r'[A-Za-z][A-Za-z\- ]*', name or '') else ''
+            cls = txt_of(ana.get('category') or title.get('category') or item.get('category') or {}, 'en', 'jp').strip()
+            course = txt_of(ana.get('course') or {}, 'en', 'jp').strip(); sp = val(ana.get('speed'), 'km/h'); spk = val(ana.get('speed'), 'kt')
+            out.append(dict(name=name, cls=cls, la=la, lo=lo, issued=t, wind=wind, gust=gust, gale=reach(ana.get('galeWarning')), storm=reach(ana.get('stormWarning')),
+                            mv=JDIR.get(course) or JDIR.get(course.upper()), sp=(round(sp) if sp else (round(spk * 1.852) if spk else None)),
+                            still=bool(isinstance(ana.get('speed'), dict) and ana['speed'].get('note') and not sp and not spk),
+                            wind24=(kmh((f24.get('maximumWind') or {}).get('sustained')) if f24 and isinstance(f24.get('maximumWind'), dict) else None),
+                            fc=((fla, flo) if fla is not None and flo is not None else None)))
+            o = out[-1]
+            print(f"TYPHOON: JMA {code}: {cls} {name or '(no name)'} at {la:.1f}N {lo:.1f}E, winds {o['wind']} km/h, strong winds reach {o['gale']} km, moving {o['mv']} at {o['sp']} km/h, 24 h forecast {o['fc']} ({o['wind24']} km/h), issued {t.strftime('%d %b %H:%MZ')}", file=sys.stderr)
+            if o['wind'] is None or o['gale'] is None or o['fc'] is None: print(f"TYPHOON: JMA {code} raw (some figures missing): {' '.join(body.split())[:1400]}", file=sys.stderr)
         except Exception as e:
-            print(f'TYPHOON: RSMC Tokyo advisory wtpq{n} not understood: {e}', file=sys.stderr)
-    if not reached: print('TYPHOON: RSMC Tokyo advisories not reached.', file=sys.stderr); return None
+            print(f"TYPHOON: JMA {code} not understood ({type(e).__name__}: {e}): {' '.join(body.split())[:900]}", file=sys.stderr)
     return out
 
 def run_chain(group, loader):
@@ -1097,7 +1148,7 @@ try:
         wind = j['wind'] if j else None; est = False
         if wind is None and g and g.get('wind'): wind = round(g['wind'] * 0.93); est = True       # GDACS quotes 1-minute winds; 10-minute winds are about 7 percent lower
         code, word = stage_of(wind)
-        if j and j['cls'] == 'TD' and not code: code, word = 'TD', 'Tropical Depression'
+        if j and str(j['cls']).upper() in ('TD', 'TROPICAL DEPRESSION') and not code: code, word = 'TD', 'Tropical Depression'
         gale = (j or {}).get('gale'); reach = gale or TY_NEAR_KM
         fc = (j or {}).get('fc')
         strong = code in ('TS', 'STS', 'TY', 'STY')
