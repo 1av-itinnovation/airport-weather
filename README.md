@@ -61,8 +61,9 @@ why, and how reliable each reading is.
 - **Philippine Area of Responsibility.** Zooming all the way out shows the whole PAR (115 to 135 degrees
   East, 5 to 25 degrees North) as a dashed outline, with the neighbouring countries drawn for
   reference only. The usual view stays on the Philippines; the map opens zoomed out by itself when a
-  cyclone is inside the PAR but still far out at sea. A cyclone or low pressure area just outside the
-  PAR (roughly 1,000 km east or west of it) is drawn too, and the zoom-out stretches to include it.
+  cyclone is inside the PAR but still far out at sea. Cyclones and low pressure areas outside the PAR
+  are drawn too, as far east as about 160 degrees East, and the zoom-out stretches to include them.
+  The map opens wide enough to show any that are within roughly 1,000 km of the PAR.
 - **Low pressure areas.** A red circle with an L marks each area the Joint Typhoon Warning Center is
   watching, with its chance (low, medium or high) of becoming a tropical cyclone within 24 hours.
   Press one for its details. Information only: one source, no alert.
@@ -232,7 +233,9 @@ cross-checked says so in plain words; it is never shown as confirmed.
   directly. The typhoon alert is based on measured wind reach, not on the wind signal. Confirm
   typhoon decisions against PAGASA and CAAP advisories.
 - Low pressure areas come from one source only (the Joint Typhoon Warning Center) and may differ from
-  the ones PAGASA names. They are shown for awareness and never raise an alert.
+  the ones PAGASA names. The list is not complete: PAGASA also tracks weaker areas, including some
+  inside the PAR, that this source does not report. The dashboard says so beside every low pressure
+  area and in the Hazards list. They are shown for awareness and never raise an alert.
 
 ## Data credits
 

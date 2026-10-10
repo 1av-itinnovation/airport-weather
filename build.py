@@ -1175,7 +1175,7 @@ try:
         if not confirmed and (now_ap or exp_ap): todo = f"Not yet confirmed: only one source is reporting {title}, so no alert has been sent. If it is confirmed, strong winds could reach {', '.join(now_ap or exp_ap)}. Check the PAGASA bulletin before acting."
         x_ = P['cx'][0] * c['lo'] + P['cx'][1]; y_ = P['cy'][0] * c['la'] + P['cy'][1]
         cid = 't' + re.sub(r'[^a-z0-9]', '', c['name'].lower() or 'x') + str(len(CYCLONES))
-        CYCLONES.append(dict(id=cid, name=c['name'], title=title, stage=code, word=word, confirmed=confirmed, inpar=c['inpar'], lat=c['la'], lon=c['lo'], x=x_, y=y_, show=(-150 <= x_ <= 250 and -18 <= y_ <= 116), onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100),
+        CYCLONES.append(dict(id=cid, name=c['name'], title=title, stage=code, word=word, confirmed=confirmed, inpar=c['inpar'], lat=c['la'], lon=c['lo'], x=x_, y=y_, show=(-139 <= x_ <= 380 and -80 <= y_ <= 116), near=(-150 <= x_ <= 250 and -18 <= y_ <= 116), onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100),
             wind=wind, gale=(gale if strong else None), reach=(reach if strong else None), fx=(P['cx'][0] * fc[1] + P['cx'][1] if fc else None), fy=(P['cy'][0] * fc[0] + P['cy'][1] if fc else None),
             now=now_ap, soon=exp_ap, dist=c['dist'], chg=c['chg'], trend=c['trend'],
             where=f"{title} is {pos}" + (f", {move}" if move else '') + (f" and {c['chg']}" if c['chg'] else '') + '.' + (f" It is {c['trend']}." if c['trend'] else ''),
@@ -1249,7 +1249,7 @@ try:
         inpar = (5 <= z['la'] <= 25 and 115 <= z['lo'] <= 135 and not (z['lo'] < 120 and z['la'] > 15 + (z['lo'] - 115) * 1.2))
         cw = {'low': 'a low chance', 'medium': 'a medium chance', 'high': 'a high chance'}.get(z['chance'])
         LOWS.append(dict(id=f"l{z['code'].lower()}", name='Low pressure area ' + z['code'], lat=z['la'], lon=z['lo'], x=x_, y=y_, inpar=inpar, chance=z['chance'],
-                         onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100), show=(-150 <= x_ <= 250 and -18 <= y_ <= 116), dist=d_, ms=int(z['issued'].timestamp() * 1000),
+                         onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100), show=(-139 <= x_ <= 380 and -80 <= y_ <= 116), near=(-150 <= x_ <= 250 and -18 <= y_ <= 116), dist=d_, ms=int(z['issued'].timestamp() * 1000),
                          where=f"About {km(d_)} km {comp(brg(nr['lat'], nr['lon'], z['la'], z['lo']))} of {nr['name']}, {'inside' if inpar else 'outside'} the Philippine Area of Responsibility. " +
                                (f"The Joint Typhoon Warning Center gives it {cw} of becoming a tropical cyclone within 24 hours." if cw else 'The Joint Typhoon Warning Center is watching it.') +
                                ' One source only, for information: it raises no alert. PAGASA names low pressure areas in its own bulletins.'))
