@@ -1,0 +1,11 @@
+{
+  "_how_to_use": "Only needed if the dashboard cannot read the alert levels from PHIVOLCS by itself. Type the current Alert Level (0 to 5) for a volcano and the date you checked it, then save. Leave level as null for 'not known'. PHIVOLCS readings, when available, take priority over this file.",
+  "levels": {
+    "Mayon": { "level": null, "as_of": "" },
+    "Taal": { "level": null, "as_of": "" },
+    "Kanlaon": { "level": null, "as_of": "" },
+    "Bulusan": { "level": null, "as_of": "" },
+    "Pinatubo": { "level": null, "as_of": "" },
+    "Hibok-Hibok": { "level": null, "as_of": "" }
+  }
+}
