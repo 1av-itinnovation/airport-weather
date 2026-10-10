@@ -1010,6 +1010,15 @@ header.top{padding:10px 16px;border-radius:10px}
 @media (max-width:380px){.app .col.side .stabs button{padding:0 4px;font-size:11.5px}}
 .al.volcano{background:#BF360C}
 .al.typhoon{background:#0B6E8A}
+.pin.l{z-index:4;pointer-events:auto}
+.pin.l .lmark{position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;background:#FFFFFF;border:2px solid #C62828;color:#C62828;font-size:13px;font-weight:700;line-height:20px;text-align:center;box-sizing:border-box;pointer-events:auto;cursor:help}
+.pin.l .llab{position:absolute;left:-90px;width:180px;top:14px;text-align:center;font-size:11px;font-weight:600;color:#8E1F1F;text-shadow:0 0 2px #FFFFFF,0 0 2px #FFFFFF,0 0 3px #FFFFFF;white-space:nowrap;line-height:1.25;pointer-events:none}
+.pin.l .llab em{display:block;font-style:normal;font-weight:500;color:#4A5D6B}
+.lowline{display:block;padding:9px 0;border-top:1px solid rgba(120,140,160,.22);font-size:13px;line-height:1.45}.lowline b{display:block;color:#8E1F1F;font-weight:600}
+.parline{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.parline polygon{fill:none;stroke:#0B6E8A;stroke-width:1.500;stroke-dasharray:7 6;opacity:.55}
+.parlab{position:absolute;transform:translate(8px,7px) scale(var(--inv,1));transform-origin:0 0;font-size:11px;font-weight:600;color:#0B5A72;background:rgba(255,255,255,.82);border-radius:999px;padding:1px 9px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s ease}
+.layer.parview .parlab{opacity:1}
 .pill.typhoon{background:#DFF1F5;color:#0B6E8A}.pill.unconf{background:#EEF1F4;color:#4A5D6B}
 .dtodo.typhoon{background:#E6F3F6;border-left-color:#0B6E8A}
 .pin.t{z-index:5}
@@ -1948,7 +1957,7 @@ html[data-theme="dark"] .glass #pins .vrangelab{color:#FFAE8A;background:rgba(30
 .glass .col.list .colhead .sub{margin-left:auto}
 .glass .col.list .colhead h2{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-.glass #pins.vfocus .pin.a.v-out,.glass #pins.vfocus .pin.q:not(.sel),.glass #pins.vfocus .pin.v:not(.sel),.glass #pins.vfocus .pin.t:not(.sel){display:none}
+.glass #pins.vfocus .pin.a.v-out,.glass #pins.vfocus .pin.q:not(.sel),.glass #pins.vfocus .pin.v:not(.sel),.glass #pins.vfocus .pin.t:not(.sel),.glass #pins.vfocus .pin.l{display:none}
 .glass #pins .vrange.k-q{border-color:rgba(106,27,154,.7);background:rgba(106,27,154,.06)}
 .glass #pins .vrangelab.k-q{color:#6A1B9A}
 .glass #pins .vrange.k-t{border-color:rgba(11,110,138,.75);background:rgba(11,110,138,.07)}
@@ -2036,6 +2045,12 @@ html[data-theme="dark"] .glass .tscale div:nth-child(5) i{background:#327A90}
 html[data-theme="dark"] .glass .tscale b, html[data-theme="dark"] .glass .tscale span{color:#A9B8C6}
 html[data-theme="dark"] .glass .tscale .on i{background:#6ECDE4}
 html[data-theme="dark"] .glass .tscale .on b, html[data-theme="dark"] .glass .tscale .on span{color:#9BE3F3}
+html[data-theme="dark"] .glass .pin.l .lmark{background:#16202F;border-color:#FF8A80;color:#FF8A80}
+html[data-theme="dark"] .glass .pin.l .llab{color:#FFB3AB;text-shadow:0 0 3px #0F1A27,0 0 3px #0F1A27}
+html[data-theme="dark"] .glass .pin.l .llab em{color:#B7C4D0}
+html[data-theme="dark"] .glass .lowline b{color:#FFB3AB}
+html[data-theme="dark"] .glass .parline polygon{stroke:#6ECDE4}
+html[data-theme="dark"] .glass .parlab{color:#8FDCEF;background:rgba(30,39,58,.88)}
 html[data-theme="dark"] .glass .tynote{color:#A9B8C6}
 html[data-theme="dark"] .glass .vline.tline b{color:#8FDCEF}
 html[data-theme="dark"] .glass .vline.tline.quiet b{color:#C6D2DD}
@@ -2307,11 +2322,11 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
         <li><strong>Today and Tomorrow.</strong> At the top. Switches the list between today's alerts and airports with bad weather forecast for tomorrow.</li>
         <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport; when a region is chosen it lists only the airports in that region.</li>
         <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Selecting a volcano zooms to it, shows its name and status, and draws a dashed ring 150 km around it. While it is selected, only the airports it can affect are shown, with their names: those inside the ring and any under its ash. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. Selecting an earthquake zooms to it and draws a dashed ring 100 km around it; while it is selected, only the airports inside the ring are shown (or the nearest airport when none is inside). A round swirl is a tropical cyclone, labelled with its class and name. A grey dashed swirl is one that only a single source has reported so far. Selecting a cyclone draws how far its strong winds reach and where it is forecast to be in 24 hours, and shows only the airports within reach. Closing the selection brings every airport back. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
-        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the whole map and clears the selection.</li>
+        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the usual view of the Philippines and clears the selection. Zooming all the way out shows the whole Philippine Area of Responsibility (PAR), the area PAGASA watches for tropical cyclones, drawn as a dashed outline from 115 to 135 degrees East and 5 to 25 degrees North. The neighbouring countries are drawn for reference only and cannot be selected. A cyclone or low pressure area just outside the PAR (up to roughly 1,000 km east or west of it) is drawn too, and the furthest zoom-out stretches to include it. When one of them is beyond the usual view of the Philippines, the map opens zoomed out so it can be seen. A red circle with an L is a low pressure area, where a cyclone can start; hover over it for details. It is for information only and raises no alert.</li>
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
         <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. Press one to show those airports in the list. To go back, press it again or press "Clear filter" beside the list title. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
         <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
-        <li><strong>Details window.</strong> Selecting an airport, earthquake, volcano or typhoon opens its details in a window on the right. Press the X to close it.</li>
+        <li><strong>Details window.</strong> Selecting an airport, earthquake, volcano or typhoon opens its details in a window on the right. Press the X, or press any empty part of the map, to close it and let go of the selection.</li>
         <li><strong>Bell and question mark.</strong> At the top right. The bell turns the alert chime on or off, and the question mark opens this guide. The first button changes the colours: Auto follows the device, then Day, then Night; the choice is remembered on that device.</li>
         <li><strong>On a phone.</strong> The map, the airport list and the details become three tabs.</li>
       </ul>
@@ -2354,6 +2369,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
       <div class="src"><b>Estimates</b><span class="t">For airports with no official report, a computer weather forecast for that exact location. These are marked Estimate. They show rain and wind only and cannot confirm a thunderstorm. First choice: MET Norway, the Norwegian national weather institute. Backup: Open-Meteo.</span></div>
       <div class="src"><b>Chance of rain and the 7-day outlook</b><span class="t">From Open-Meteo, a computer forecast. Used only for the hourly rain chance and the Next 7 days list. It never affects an alert level, and if it cannot be reached those two items are simply left out.</span></div>
       <div class="src"><b>Tropical cyclones (typhoons)</b><span class="t">Three independent sources are read at every check and compared. Aviation storm warnings from aviationweather.gov give the position, movement and warning areas. RSMC Tokyo, the Japan Meteorological Agency centre that is the official typhoon centre for this region under the World Meteorological Organization, gives the strength, how far the strong winds reach and the 24-hour forecast. GDACS, the United Nations and European Union disaster alert system, gives a third, independent position and strength. A cyclone counts as confirmed only when at least two of the three report it. Thunderstorm area warnings come from the aviation storm warnings.</span></div>
+      <div class="src"><b>Low pressure areas</b><span class="t">From the Joint Typhoon Warning Center (United States Navy and Air Force) tropical weather advisory, which lists each area it is watching in the western Pacific and whether it has a low, medium or high chance of becoming a tropical cyclone within 24 hours. This is one source only, shown for information and never used for an alert. PAGASA names low pressure areas in its own bulletins, which are not published as data.</span></div>
       <div class="src"><b>Earthquakes</b><span class="t">First choice: PHIVOLCS, the Philippine government agency with the most earthquake sensors inside the country. Backups: USGS (United States Geological Survey), then EMSC (European seismological centre). Agencies can report slightly different magnitudes for the same earthquake. Every earthquake of magnitude 5.0 or stronger is also checked against a second agency (USGS or EMSC, whichever is not already the main source), and its details say whether it has been confirmed.</span></div>
       <div class="src"><b>Volcanoes</b><span class="t">Ash clouds and eruptions use two official sources. Primary: aviation volcanic ash warnings (SIGMET) from aviationweather.gov, which give the area the ash covers. Second source: advisories from the Tokyo Volcanic Ash Advisory Centre (Japan Meteorological Agency), the official ash centre for this region. It confirms the warning, and stands in for it when the warning has not been issued yet or cannot be reached. Volcano Alert Levels: PHIVOLCS volcano bulletins first; if they cannot be read automatically, figures entered by hand are used as the backup, and otherwise the level shows as not available.</span></div>
       <div class="src"><b>Rain on the map</b><span class="t">A MET Norway forecast sampled on a grid of points across the region, rebuilt every 3 hours. The optional detailed map is provided by Windy.com.</span></div>
@@ -2415,7 +2431,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
         <li>Earthquakes cannot be predicted. Only those that have already happened are shown.</li>
         <li>Forecasts for tomorrow and the days ahead are less certain than today.</li>
         <li>PAGASA's public typhoon bulletins and wind signals are not read directly, because they are not published as data. The typhoon alert is based on measured wind reach, not on the wind signal. Confirm typhoon decisions against PAGASA and CAAP advisories.</li>
-        <li>Low pressure areas are not shown. No reliable public data source for them was found, so a cyclone first appears when it becomes a Tropical Depression.</li>
+        <li>Low pressure areas come from one source only (the Joint Typhoon Warning Center) and may differ from the ones PAGASA names. They are shown for awareness and never raise an alert.</li>
       </ul>
     </div>
     <div class="about">
@@ -2459,7 +2475,10 @@ var LIVE = [];                             // early notices read straight from U
 function allQuakes() { return LIVE.concat((D && D.quakes) || []); }
 function quakeById(id) { var L = allQuakes(); for (var i = 0; i < L.length; i++) { if (L[i].id === id) return L[i]; } return null; }
 function cycloneById(id) { var L = (D && D.cyclones) || []; for (var i = 0; i < L.length; i++) { if (L[i].id === id) return L[i]; } return null; }
+function farThings() { return D ? cyclonesShown().concat(D.lows || []).filter(function (o) { return o.show && !o.onmap; }) : []; }
 function cyclonesShown() { return ((D && D.cyclones) || []).filter(function (c) { return c.confirmed || c.inpar; }); }
+// PAR corners (PAGASA): 5N 115E, 15N 115E, 21N 120E, 25N 120E, 25N 135E, 5N 135E, as map percentages
+var PAR_PTS = [[115, 5], [115, 15], [120, 21], [120, 25], [135, 25], [135, 5]].map(function (q) { return [8.69278161 * q[0] - 1008.33883896, -5.91775171 * q[1] + 125.45788502]; });
 var TY_ARMS = 'M12 7.500c1.500-3.500 5-5 8.500-4.500M12 16.500c-1.500 3.500-5 5-8.500 4.500';
 function cycloneIcon(c) {
   var strong = c.stage === 'TY' || c.stage === 'STY';
@@ -2539,7 +2558,7 @@ function renderGlass() {
   var A = D.airports.filter(inRegion), n = A.length || 1, c = { danger: 0, warning: 0, advisory: 0, normal: 0, nodata: 0 };
   A.forEach(function (a) { c[a.level] = (c[a.level] || 0) + 1; });
   var att = c.danger + c.warning + c.advisory, off = A.filter(function (a) { return !a.est; }).length, tm = A.filter(function (a) { return a.t; }).length;
-  var nq = (D.eq_alerts || []).length + LIVE.length, nv = (D.vol_alerts || []).length, tyL = cyclonesShown().filter(function (c) { return c.inpar || (c.now || []).length || (c.soon || []).length; }), ty = tyL.length > 0, tyC = tyL.filter(function (c) { return c.confirmed; });
+  var nq = (D.eq_alerts || []).length + LIVE.length, nv = (D.vol_alerts || []).length, tyL = cyclonesShown().filter(function (c) { return c.inpar || c.show || (c.now || []).length || (c.soon || []).length; }), ty = tyL.length > 0, tyC = tyL.filter(function (c) { return c.confirmed; });
   var cur = S.day === 'tmr' ? 'tmr' : S.filter;
   var big = function (key, tip, t, a, b) { return '<button class="k big' + (cur === key ? ' on' : '') + '" data-k="' + key + '" aria-pressed="' + (cur === key) + '" title="' + tip + '"><div class="r"><span class="t">' + t + '</span><span class="v">' + a + '/' + b + '</span></div><div class="bar"><i style="width:' + Math.round(100 * a / b) + '%"></i></div></button>'; };
   var sm = function (go, icon, t, v, hot) { return '<button class="k sm' + (hot ? ' hot' : '') + '" data-go="' + go + '"><span class="t">' + icon + t + '</span><span class="v">' + v + '</span></button>'; };
@@ -2626,6 +2645,12 @@ function renderData() {
       '<button aria-label="' + esc(lab) + '" title="' + esc(lab) + '">' + volcanoIcon(v) + '</button>' +
       (quiet ? '' : '<span class="vlab">' + esc(v.name) + '</span>') + '</div>';
   });
+  vh = '<svg class="parline" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="' + PAR_PTS.map(function (q) { return q[0].toFixed(2) + ',' + q[1].toFixed(2); }).join(' ') + '" vector-effect="non-scaling-stroke"/></svg>' +
+    '<span class="parlab" style="left:' + PAR_PTS[3][0].toFixed(1) + '%;top:' + PAR_PTS[3][1].toFixed(1) + '%">Philippine Area of Responsibility</span>' + vh;
+  (D.lows || []).forEach(function (l) {
+    if (!l.show) return;
+    vh += '<div class="pin l" style="left:' + l.x.toFixed(1) + '%;top:' + l.y.toFixed(1) + '%"><span class="lmark" title="' + esc(l.name + '. ' + l.where) + '">L</span><span class="llab">Low pressure area' + (l.chance ? '<em>' + esc(l.chance) + ' chance of becoming a cyclone</em>' : '') + '</span></div>';
+  });
   cyclonesShown().forEach(function (c) {
     if (!c.show) return;
     var lab = c.title + (c.confirmed ? '' : ' (not yet confirmed)');
@@ -2634,6 +2659,7 @@ function renderData() {
       '<span class="tlab">' + esc(c.title.replace(/^Tropical cyclone /, '')) + '<em>' + (c.confirmed ? (c.wind ? 'Winds ' + c.wind + ' km/h' : '') : 'not yet confirmed') + '</em></span></div>';
   });
   $('pins').innerHTML = vh + h;
+  if (typeof fit === 'function') fit();
   $('vAsof').textContent = D.volcano_asof || '';
   $('vFlag').textContent = D.volcano_flag || '';
   $('vCount').textContent = (D.volcanoes || []).length ? 'Triangles on the map are volcanoes. A filled triangle means an eruption or a raised alert level; a brown dashed area is an official ash cloud warning. Tap one for details.' : '';
@@ -2660,6 +2686,9 @@ function renderData() {
   var cyl = D.cyclones || [];
   $('tyText').textContent = cyl.length ? (D.ty_banner || '') + '.' : D.ty_text;
   $('tyList').innerHTML = cyl.map(function (c) { return '<button class="vline tline' + (c.confirmed ? '' : ' quiet') + '" data-t="' + esc(c.id) + '"><b>' + esc(c.title) + (c.confirmed ? '' : ' \u00B7 not yet confirmed') + '</b><span>' + esc(c.where) + (c.wind ? ' ' + esc(c.windline) : '') + '</span></button>'; }).join('');
+  var lowsL = D.lows || [];
+  $('tyList').innerHTML += lowsL.map(function (l) { return '<div class="lowline"><b>' + esc(l.name) + (l.chance ? ' \u00B7 ' + esc(l.chance) + ' chance' : '') + '</b><span>' + esc(l.where) + '</span></div>'; }).join('');
+  if (!cyl.length && lowsL.length) $('tyText').textContent = D.ty_text;
   $('tyNote').textContent = cyl.length ? 'Each cyclone is checked against three sources. It counts as confirmed, and can raise an alert, only when at least two of them report it. PAGASA issues the official wind signals.' : '';
   // the long source note becomes a short list that opens on request
   var parts = [], rest = String(D.sources || '').replace(/^Sources:\s*/, ''), m;
@@ -2702,7 +2731,7 @@ function selPoint() {
   if (S.sel) { return byId(S.sel); }
   if (S.qk) { var q = quakeById(S.qk); return q && q.onmap ? q : null; }
   if (S.vk) { var v = volcanoById(S.vk); return v && v.onmap ? v : null; }
-  if (S.tk) { var c = cycloneById(S.tk); return c && c.onmap ? c : null; }
+  if (S.tk) { var c = cycloneById(S.tk); return c && (c.onmap || c.show) ? c : null; }
   return null;
 }
 function viewNow() {
@@ -2712,18 +2741,20 @@ function viewNow() {
     if (tx == null) { var bd = 1e9; D.airports.forEach(function (a) { var d = Math.pow(a.x - p.x, 2) + Math.pow((a.y - p.y) * 1.5, 2); if (d < bd) { bd = d; tx = a.x; ty = a.y; } }); }
     p = { x: (p.x + tx) / 2, y: (p.y + ty) / 2 }; zsel = 1.45;
   }
-  if (p) p = { x: 50 + (p.x - 50) * FITX, y: 50 + (p.y - 50) * FITY };      // map position -> position inside the wider panel
-  var z = v ? v.z : (p ? zsel : 1);
-  return { z: z, cx: clampC(v ? v.cx : (p ? p.x : 50), z), cy: clampC(v ? v.cy : (p ? p.y : 50), z) };
+  if (p) p = { x: OFFX + p.x * FITX, y: OFFY + p.y * FITY };      // map position -> position inside the wider panel
+  // nothing selected: the Philippines fills the panel, unless a cyclone is inside the PAR but off that view, in which case the whole PAR is shown
+  var farCyc = farThings().length > 0;
+  var z = v ? v.z : (p ? zsel * HOMEZ : (farCyc ? 1 : HOMEZ));
+  return { z: z, cx: clampC(v ? v.cx : (p ? p.x : HOMEC.x), z), cy: clampC(v ? v.cy : (p ? p.y : HOMEC.y), z) };
 }
 function setView(z, cx, cy, drag) { S.view = { z: z, cx: clampC(cx, z), cy: clampC(cy, z) }; S.drag = !!drag; applyView(); }
 function applyView() {
   var v = viewNow(), L = $('layer');
   L.classList.toggle('nodrag', S.drag);
   L.style.transform = 'translate(' + ((0.5 - v.z * v.cx / 100) * 100).toFixed(2) + '%,' + ((0.5 - v.z * v.cy / 100) * 100).toFixed(2) + '%) scale(' + v.z.toFixed(3) + ')';
-  L.style.setProperty('--inv', Math.min(1, 1.35 / v.z).toFixed(3));
-  L.classList.toggle('zoomed', v.z >= 1.7);
-  L.style.touchAction = v.z > 1 ? 'none' : 'pan-x pan-y';
+  L.style.setProperty('--inv', (v.z >= HOMEZ ? Math.min(1, 1.35 * HOMEZ / v.z) : Math.min(3, 0.9 * HOMEZ / v.z + 0.1)).toFixed(3));      // zoomed right out, dots and names stay readable
+  L.classList.toggle('zoomed', v.z >= 1.7 * HOMEZ); L.classList.toggle('parview', v.z < HOMEZ * 0.93);
+  L.style.touchAction = Math.abs(v.z - HOMEZ) > 0.02 ? 'none' : 'pan-x pan-y';
   L.style.cursor = v.z > 1 ? 'grab' : 'default';
   if (typeof R !== 'undefined' && R && !R.playing) rainDraw();
 }
@@ -3234,7 +3265,7 @@ var FOCUS_ICON = {
 function focusTarget() {
   if (S.vk) { var v = volcanoById(S.vk); if (v && v.onmap) return { k: 'v', o: v, km: D.volcano_km || 150, lab: (D.volcano_km || 150) + ' km from the volcano', full: v.title || v.name, short: v.name, sub: volcanoWord(v) }; }
   if (S.qk) { var q = quakeById(S.qk); if (q && q.onmap) return { k: 'q', o: q, km: QUAKE_KM, lab: QUAKE_KM + ' km from the earthquake', full: 'Magnitude ' + q.mag.toFixed(1), short: 'M' + q.mag.toFixed(1), sub: q.ms ? phTime(q.ms) + ', ' + agoText(q.ms) : 'Earthquake' }; }
-  if (S.tk) { var c = cycloneById(S.tk); if (c && c.onmap) { var km = c.reach || c.gale || D.ty_near_km || 300; return { k: 't', o: c, km: km, lab: (c.gale ? 'Strong winds reach about ' : '') + (Math.round(km / 10) * 10) + ' km' + (c.gale ? '' : ' from the centre'), full: c.title, short: c.name || c.title, sub: c.confirmed ? (c.wind ? 'Winds ' + c.wind + ' km/h' : 'Strength not reported') : 'Not yet confirmed' }; } }
+  if (S.tk) { var c = cycloneById(S.tk); if (c && (c.onmap || c.show)) { var km = c.reach || c.gale || D.ty_near_km || 300; return { k: 't', o: c, km: km, lab: (c.gale ? 'Strong winds reach about ' : '') + (Math.round(km / 10) * 10) + ' km' + (c.gale ? '' : ' from the centre'), full: c.title, short: c.name || c.title, sub: c.confirmed ? (c.wind ? 'Winds ' + c.wind + ' km/h' : 'Strength not reported') : 'Not yet confirmed' }; } }
   return null;
 }
 function volcanoFocus() {
@@ -3360,9 +3391,10 @@ $('lyNames').addEventListener('change', function () { setTimeout(placeSoon, 30);
 window.addEventListener('resize', placeSoon);
 /* pressing anywhere outside the details window closes it (the X and the Esc key still work) */
 document.addEventListener('click', function (e) {
-  if (!GLASS || !WIDE.matches || !(S.sel || S.qk || S.vk || S.tk)) return;
+  if (!GLASS || !(S.sel || S.qk || S.vk || S.tk)) return;
   var t = e.target; if (!t || !t.closest || !document.contains(t)) return;
-  if (t.closest('.col.side, .pin, .alert, #alertBar, #kpis, header.top, .zoom, .lyrbtn, .lyr, .mapfoot, .modal, .notice, [data-q], [data-v], [data-a], select, a')) return;
+  if (!WIDE.matches && !t.closest('#vp')) return;      // on a phone, only a tap on an empty part of the map lets go of the selection
+  if (t.closest('.col.side, .pin button, .pin .lmark, .alert, #alertBar, #alertBtn, #kpis, header.top, .zoom, .lyrbtn, .lyr, .tour, .mapfoot, .modal, .notice, [data-q], [data-v], [data-a], [data-t], select, a')) return;
   clearSel();
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && GLASS && (S.sel || S.qk || S.vk || S.tk) && !modal.classList.contains('open') && !WX.open) clearSel(); });
@@ -3397,8 +3429,8 @@ $('tyList').addEventListener('click', function (e) { var b = e.target.closest('[
 $('vList').addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (b) { selectVolcano(b.getAttribute('data-v')); } });
 $('qList').addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) { selectQuake(b.getAttribute('data-q')); } });
 $('airportPick').addEventListener('change', function () { if (S.sel) { S.pane = 'side'; applyState(); } });
-$('zIn').addEventListener('click', function () { var v = viewNow(), p = selPoint(), nz = Math.min(6, v.z * 1.5); if (p && !S.drag) setView(nz, 50 + (p.x - 50) * FITX, 50 + (p.y - 50) * FITY, false); else setView(nz, v.cx, v.cy, false); });     // keep the selected point in view
-$('zOut').addEventListener('click', function () { var v = viewNow(); setView(Math.max(1, v.z / 1.5), v.cx, v.cy, false); });
+$('zIn').addEventListener('click', function () { var v = viewNow(), p = selPoint(), nz = Math.min(6 * HOMEZ, v.z * 1.5); if (p && !S.drag) setView(nz, OFFX + p.x * FITX, OFFY + p.y * FITY, false); else setView(nz, v.cx, v.cy, false); });     // keep the selected point in view
+$('zOut').addEventListener('click', function () { var v = viewNow(); var nz = v.z / 1.5; if (v.z > HOMEZ * 1.02 && nz < HOMEZ * 1.15) nz = HOMEZ; setView(Math.max(1, nz), v.cx, v.cy, false); });
 $('zAll').addEventListener('click', clearSel);
 var modal = $('modal');
 $('helpBtn').addEventListener('click', function () { modal.classList.add('open'); $('modalClose').focus(); });
@@ -3407,7 +3439,10 @@ $('modalBack').addEventListener('click', closeHelp); $('modalClose').addEventLis
 document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (modal.classList.contains('open')) closeHelp(); else if (WX.open) wxOpen(false); });
 
 /* fit the map to the space available so the whole dashboard stays on one screen */
-var FITX = 1, FITY = 1, GEO = { sl: 0, st: 0, sw: 480, sh: 723 };
+var FITX = 1, FITY = 1, FITKEY = '', OFFX = 0, OFFY = 0, HOMEZ = 1, HOMEC = { x: 50, y: 50 };
+// the Philippine Area of Responsibility as a share of the Philippine map image: 115E to 135E, 5N to 25N
+var PARB = { l: -0.08669, t: -0.22486, w: 1.73856, h: 1.18355 };
+var GEO = { sl: 0, st: 0, sw: 480, sh: 723 };
 var WIDE_BOX = { l: -4.69386, t: -0.22486, w: 10.17055, h: 1.42026 };   // where assets/map-wide.svg sits, as a share of the Philippine map image
 function fit() {
   var v = $('vp'), st = $('stage'), col = $('mapCol'), grid = $('cols'); if (!v || !st || !v.clientWidth) return;
@@ -3420,18 +3455,34 @@ function fit() {
   else { v.style.flex = ''; v.style.height = ''; col.style.alignSelf = ''; }
   grid.classList.toggle('tall', avail > natural + 340);          // enough spare height to put the details under the map
   if (!v.clientHeight) return;
-  var W = v.clientWidth, H = v.clientHeight, sw = Math.min(W, H * 1000 / 1506), sh = sw * 1506 / 1000;
+  var W = v.clientWidth, H = v.clientHeight, swHome = Math.min(W, H * 1000 / 1506);
+  // Fully zoomed out, the panel shows the whole Philippine Area of Responsibility (PAR) with a small margin.
+  // The usual view (HOMEZ) is zoomed in from there so the Philippines fills the panel as before.
+  var B = { l: PARB.l, t: PARB.t, r: PARB.l + PARB.w, b: PARB.t + PARB.h };
+  farThings().forEach(function (o) {      // a cyclone or low pressure area just outside the PAR: zooming out reaches it too
+    B.l = Math.max(-1.6, Math.min(B.l, o.x / 100 - 0.12)); B.r = Math.min(2.6, Math.max(B.r, o.x / 100 + 0.12));
+    B.t = Math.max(PARB.t, Math.min(B.t, o.y / 100 - 0.08)); B.b = Math.min(1.19, Math.max(B.b, o.y / 100 + 0.08));
+  });
+  var bw = B.r - B.l, bh = B.b - B.t;
+  var sw = Math.min(swHome, W / (bw * 1.08), H / (bh * 1.08 * 1.506)), sh = sw * 1506 / 1000;
+  var OX = W / 2 - (B.l + bw / 2) * sw, OY = H / 2 - (B.t + bh / 2) * sh;
+  // never show beyond the top or bottom of the map picture and the rain forecast (25N to about 1N)
+  var topMax = -WIDE_BOX.t * sh, botMin = H - (WIDE_BOX.t + WIDE_BOX.h) * sh;
+  if (botMin <= topMax) OY = Math.max(botMin, Math.min(topMax, OY)); else OY = (topMax + botMin) / 2;
+  HOMEZ = swHome / sw; OFFX = OX / W * 100; OFFY = OY / H * 100; HOMEC = { x: OFFX + 50 * sw / W, y: OFFY + 50 * sh / H };
   var appEl = document.querySelector('.app'); if (appEl) { appEl.style.setProperty('--maptop', Math.round(v.getBoundingClientRect().top - appEl.getBoundingClientRect().top) + 'px'); appEl.style.setProperty('--mapw', Math.round(W) + 'px'); }   // lets floating items line up with the map
-  [st, $('pins')].forEach(function (el) { el.style.width = sw + 'px'; el.style.height = sh + 'px'; el.style.left = ((W - sw) / 2) + 'px'; el.style.top = ((H - sh) / 2) + 'px'; });
+  [st, $('pins')].forEach(function (el) { el.style.width = sw + 'px'; el.style.height = sh + 'px'; el.style.left = OX + 'px'; el.style.top = OY + 'px'; });
+  // dots and labels are drawn for the usual view, so they keep their normal size there and shrink a little when zoomed right out
+  var pn = $('pins'); pn.style.width = (sw * HOMEZ) + 'px'; pn.style.height = (sh * HOMEZ) + 'px'; pn.style.transformOrigin = '0 0'; pn.style.transform = 'scale(' + (1 / HOMEZ).toFixed(5) + ')';
   // the neighbouring countries fill the space beside the Philippines on wide screens (picture only, nothing to press)
-  var wm = $('wideMap'); if (wm) { wm.style.left = ((W - sw) / 2 + sw * WIDE_BOX.l) + 'px'; wm.style.top = ((H - sh) / 2 + sh * WIDE_BOX.t) + 'px'; wm.style.width = (sw * WIDE_BOX.w) + 'px'; wm.style.height = (sh * WIDE_BOX.h) + 'px'; }
+  var wm = $('wideMap'); if (wm) { wm.style.left = (OX + sw * WIDE_BOX.l) + 'px'; wm.style.top = (OY + sh * WIDE_BOX.t) + 'px'; wm.style.width = (sw * WIDE_BOX.w) + 'px'; wm.style.height = (sh * WIDE_BOX.h) + 'px'; }
   // the rain canvas covers the whole panel; GEO says where the map image sits inside it, in canvas pixels
   var cw = Math.min(1600, Math.round(480 * W / sw)), ch = Math.round(cw * H / W), sc = cw / W, c = $('rainCv');
   if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
-  GEO = { sl: (W - sw) / 2 * sc, st: (H - sh) / 2 * sc, sw: sw * sc, sh: sh * sc };
+  GEO = { sl: OX * sc, st: OY * sc, sw: sw * sc, sh: sh * sc };
   if (typeof rainDraw === 'function' && typeof R !== 'undefined' && R) rainDraw();
-  var fx = sw / W, fy = sh / H, changed = Math.abs(fx - FITX) > 0.001 || Math.abs(fy - FITY) > 0.001;
-  FITX = fx; FITY = fy;
+  var fx = sw / W, fy = sh / H, key = [fx.toFixed(4), fy.toFixed(4), OFFX.toFixed(2), OFFY.toFixed(2)].join(), changed = key !== FITKEY;
+  FITX = fx; FITY = fy; FITKEY = key;
   if (changed && D) applyView();
 }
 if (window.ResizeObserver) { new ResizeObserver(function () { fit(); }).observe($('vp')); }
@@ -3442,7 +3493,7 @@ var layer = $('layer'), vp = $('vp'), pts = {}, drag = null, pinch = null, moved
 function frac(x, y) { var R = vp.getBoundingClientRect(); return { fx: (x - R.left) / R.width, fy: (y - R.top) / R.height, R: R }; }
 function zoomAt(nz, x, y, animate) { var v = viewNow(), f = frac(x, y); setView(nz, v.cx + (f.fx - 0.5) * 100 / v.z - (f.fx - 0.5) * 100 / nz, v.cy + (f.fy - 0.5) * 100 / v.z - (f.fy - 0.5) * 100 / nz, !animate); }
 layer.addEventListener('wheel', function (e) {
-  var v = viewNow(), nz = Math.min(6, Math.max(1, v.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2)));
+  var v = viewNow(), nz = Math.min(6 * HOMEZ, Math.max(1, v.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2)));
   if (nz === v.z) return;
   e.preventDefault(); zoomAt(nz, e.clientX, e.clientY, false);
 }, { passive: false });
@@ -3464,7 +3515,7 @@ layer.addEventListener('pointermove', function (e) {
   if (pinch) {
     var ids = Object.keys(pts); if (ids.length < 2) return;
     var a = pts[ids[0]], b = pts[ids[1]], f = frac((a.x + b.x) / 2, (a.y + b.y) / 2);
-    var nz = Math.min(6, Math.max(1, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
+    var nz = Math.min(6 * HOMEZ, Math.max(1, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
     setView(nz, pinch.px - (f.fx - 0.5) * 100 / nz, pinch.py - (f.fy - 0.5) * 100 / nz, true);
     return;
   }
@@ -3484,7 +3535,7 @@ function pointerEnd(e) {
   if (e.target.closest && e.target.closest('button')) { lastTap = null; return; }
   var t = Date.now();
   if (lastTap && t - lastTap.t < 320 && Math.abs(e.clientX - lastTap.x) + Math.abs(e.clientY - lastTap.y) < 30) {
-    lastTap = null; var v = viewNow(); zoomAt(v.z >= 5.9 ? 1 : Math.min(6, v.z * 1.8), e.clientX, e.clientY, true);
+    lastTap = null; var v = viewNow(); if (v.z >= 5.9 * HOMEZ) { S.view = null; S.drag = false; applyView(); } else zoomAt(Math.min(6 * HOMEZ, v.z * 1.8), e.clientX, e.clientY, true);
   } else { lastTap = { t: t, x: e.clientX, y: e.clientY }; }
 }
 layer.addEventListener('pointerup', pointerEnd); layer.addEventListener('pointercancel', pointerEnd); layer.addEventListener('pointerleave', pointerEnd);
