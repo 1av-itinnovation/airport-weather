@@ -1242,6 +1242,9 @@ body{background:var(--page);color:var(--ink)}
 #alertBar .al{padding:6px 10px 6px 12px;gap:10px;align-items:center}
 #alertBar .al .tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-weight:500}
 #alertBar .al .tx b{font-weight:600}
+#alertBar .al.danger .tx{display:flex;gap:5px;min-width:0}
+#alertBar .al.danger .tx b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#alertBar .al.danger .tx i{flex:0 100000 auto;min-width:0;font-style:normal;overflow:hidden;text-overflow:ellipsis}
 #alertBar .al .names{display:inline-flex;flex-wrap:nowrap}
 #alertBar.more .al.extra{display:none}
 .almore{align-self:flex-start;border:none;background:transparent;color:var(--action,#0077C8);font:inherit;font-size:12px;font-weight:600;padding:2px 4px;cursor:pointer}
@@ -1615,6 +1618,10 @@ body{background:var(--page);color:var(--ink)}
   .glass #alertBar{left:36px;width:min(440px,calc(var(--mapw,520px) - 150px))}
   /* a data note is a slim line under the header */
   .glass.app .notice,.glass .app .notice{position:static;max-width:none;align-self:flex-start;border-radius:999px;padding:5px 14px;box-shadow:none;background:rgba(var(--g-surf),.7)}
+}
+@media (min-width:901px) and (max-width:1250px){
+  /* narrow map: the alerts go under the Layers button and use the full width of the map */
+  .glass #alertBar{left:22px;top:calc(var(--maptop,92px) + 62px);width:min(440px,calc(var(--mapw,400px) - 12px))}
 }
 @media (min-width:1500px){
   /* room for the airport list and the status panel side by side */
@@ -2207,7 +2214,7 @@ html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
       </ul>
       <p class="subh">Alerts and what the page does by itself</p>
       <ul>
-        <li><strong>Alert bar.</strong> A coloured bar appears under the title when an airport is at Danger, a strong earthquake has happened, a tsunami is possible, or there is a volcano alert. The browser tab shows a warning sign as well. Tap a name or Details in the bar to go to it. Each alert is one short line; press Details for the full information. When there are more than three, the rest fold under a "more" link.</li>
+        <li><strong>Alert bar.</strong> A coloured bar appears under the title when an airport is at Danger, a strong earthquake has happened, a tsunami is possible, or there is a volcano alert. The browser tab shows a warning sign as well. Each Danger airport has its own line with the airport name first; press Details to go to it. Each alert is one short line; press Details for the full information. When there are more than three, the rest fold under a "more" link.</li>
         <li><strong>Sound.</strong> Press the bell at the top to turn on a soft two-note chime, played once for each new alert. It is quiet on purpose: it asks for attention without causing alarm. Browsers only allow sound after someone has clicked on the page.</li>
         <li><strong>Your nearest airport.</strong> When the page is opened or reloaded, the browser asks once for your location. If you allow it, the map first shows the airport nearest to you. Your location is used only inside your browser; it is not sent anywhere or stored.</li>
         <li><strong>Auto-show alerts.</strong> When there is an earthquake alert or an airport at Danger and nobody is using the screen, the map shows each one in turn: earthquakes first, then volcano alerts, then Danger airports. It zooms in, shows the details, then returns to the whole map and repeats. A new earthquake alert is shown straight away. Earthquakes stay in the rotation for 6 hours. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
@@ -2386,7 +2393,7 @@ function renderGlass() {
   var big = function (key, tip, t, a, b) { return '<button class="k big' + (cur === key ? ' on' : '') + '" data-k="' + key + '" aria-pressed="' + (cur === key) + '" title="' + tip + '"><div class="r"><span class="t">' + t + '</span><span class="v">' + a + '/' + b + '</span></div><div class="bar"><i style="width:' + Math.round(100 * a / b) + '%"></i></div></button>'; };
   var sm = function (go, icon, t, v, hot) { return '<button class="k sm' + (hot ? ' hot' : '') + '" data-go="' + go + '"><span class="t">' + icon + t + '</span><span class="v">' + v + '</span></button>'; };
   var ic = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
-  $('kpis').innerHTML = big('alerts', 'Show the airports needing attention today', 'Airports needing<br>attention today', att, n) + big('danger', 'Show the airports with a thunderstorm now', 'Thunderstorm at the<br>airport now', c.danger, n) + big('official', 'Show the airports with an official weather report', 'Airports with an official<br>weather report', off, n) + big('tmr', 'Show the bad weather forecast for tomorrow', 'Bad weather forecast<br>tomorrow', tm, n) +
+  $('kpis').innerHTML = big('alerts', 'Show the airports needing attention today', 'Airports needing <br>attention today', att, n) + big('danger', 'Show the airports with a thunderstorm now', 'Thunderstorm at the <br>airport now', c.danger, n) + big('official', 'Show the airports with an official weather report', 'Airports with an official <br>weather report', off, n) + big('tmr', 'Show the bad weather forecast for tomorrow', 'Bad weather forecast <br>tomorrow', tm, n) +
     sm('quakes', ic('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'), 'Earthquake alerts', nq, nq) + sm('volcano', ic('<path d="M8.500 9L3 20h18l-5.500-11zM10.500 5.500c0-1.200.800-1.200.800-2.500M13.500 5.500c0-1.200.800-1.200.800-2.500"/>'), 'Volcano alerts', nv, nv) +
     sm('typhoon', ic('<path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20H9"/>'), 'Typhoon', ty ? 'In the area' : 'None', ty) + sm('', '<span class="dot"></span>', 'Live', '<span id="liveClock">' + liveNow() + '</span>', false);
   var tot = c.danger + c.warning + c.advisory + c.normal || 1, seg = [['danger', '#D82B2B'], ['warning', '#F5A623'], ['advisory', '#E8C21A'], ['normal', '#2E9B45']];
@@ -2803,12 +2810,13 @@ function renderAlerts() {
     if (!title) title = a.kind === 'ash' ? 'VOLCANIC ASH' : 'VOLCANO';
   });
   var dg = sorted(D.airports.filter(function (a) { return a.level === 'danger' && inRegion(a); }));
-  if (dg.length) {
-    var k = 'danger:' + dg.map(function (a) { return a.id; }).join(','); keys.push(k);
-    h += '<div class="al" data-k="' + esc(k) + '"><span class="ai">' + AICON.danger + '</span><span class="tag">Danger</span><span class="tx">Thunderstorm at the airport now: <span class="names">' +
-      dg.map(function (a) { return '<button data-a="' + esc(a.id) + '">' + esc(a.name) + '</button>'; }).join('') + '</span></span></div>';
-    if (!title) title = 'DANGER (' + dg.length + ')';
-  }
+  // one row per Danger airport, with the airport name first so it is never the part that gets cut off
+  dg.forEach(function (a) {
+    var k = 'danger:' + a.id; keys.push(k);
+    h += '<div class="al danger" data-k="' + esc(k) + '"><span class="ai">' + AICON.danger + '</span><span class="tag">Danger</span><span class="tx" title="' + esc(a.name + ': thunderstorm at the airport now') + '"><b>' + esc(a.name) + '</b><i>\u00B7 Thunderstorm now</i></span>' +
+      '<button class="go" data-a="' + esc(a.id) + '">Details</button></div>';
+  });
+  if (dg.length && !title) title = 'DANGER (' + dg.length + ')';
   var fresh = ALERT_SEEN ? keys.filter(function (k) { return ALERT_SEEN.indexOf(k) < 0; }) : keys;
   bar.hidden = !h; bar.innerHTML = h;
   var rowsAl = bar.querySelectorAll('.al'), folded = bar.classList.contains('more') || !bar.hasAttribute('data-init');
