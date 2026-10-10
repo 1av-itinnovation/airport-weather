@@ -121,6 +121,11 @@ When both ash sources report the same volcano, the aviation warning is used and 
 
 Each Teams and email alert shows a small zoomed map of what it is about: the Danger airport, the volcano with its 150 km ring and the airports named in the warning, the earthquake with its nearest airport, or the cyclone with its strong-wind area, its 24-hour forecast position and the airports within reach. `alert_map.py` draws the picture when the alert is found, saves it under `docs/alertmaps/`, and the dashboard is published before the alert is sent so the picture is online. Pictures older than 7 days are removed. If the picture library (Pillow) cannot be installed, alerts are sent without a map. Set `SEND_MAPS = False` in `notify.py` to switch this off.
 
+In Teams, the kind of alert (Danger, Volcanic ash, Typhoon and so on) is written as plain coloured text, not a picture, and
+each map has a caption naming what it should show. Before sending, `notify.py` confirms the website is serving the exact
+picture just drawn; if it is not, the alert goes without a picture. The refresh is never cancelled half-way, so an alert
+cannot be sent twice.
+
 ## How fast alerts arrive
 
 Earthquake and volcano alerts are treated as critical.

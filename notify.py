@@ -80,9 +80,27 @@ def map_file(kind, obj):
         name = alert_map.name_for(kind, obj)
         return name if os.path.exists(os.path.join(alert_map.OUT_DIR, name)) else ''
     except Exception: return ''
+_MAP_OK = {}
 def map_url(kind, obj, stamp=''):
+    """Address of the map picture for this alert, or '' when there is none. The picture is only used once the website
+    is really serving it: an alert with no picture is better than one with a blank or wrong picture."""
     name = map_file(kind, obj); url = dashboard_url()
-    return f'{url}alertmaps/{name}?v={stamp}' if name and url else ''
+    if not (name and url): return ''
+    full = f'{url}alertmaps/{name}?v={stamp}'
+    if full in _MAP_OK: return full if _MAP_OK[full] else ''
+    if os.environ.get('NOTIFY_PREVIEW') or os.environ.get('NOTIFY_SKIP_MAP_CHECK'): _MAP_OK[full] = True; return full
+    import time, urllib.request
+    want = os.path.getsize(os.path.join(HERE, 'docs', 'alertmaps', name)); ok = False
+    for i in range(8):                      # up to about 40 seconds
+        try:
+            with urllib.request.urlopen(urllib.request.Request(full, headers={'User-Agent': 'airport-weather-alerts'}), timeout=15) as r:
+                body = r.read()
+            if r.status == 200 and len(body) == want and body[:4] == b'\x89PNG': ok = True; break      # the same picture that was just drawn, not an older one
+        except Exception: pass
+        time.sleep(5)
+    if not ok: print(f'Map picture not online yet, alert sent without it: {name}')
+    _MAP_OK[full] = ok
+    return full if ok else ''
 def draw_maps(d, quakes, dangers, volcanoes, typhoons=()):
     """Draw the map pictures for the alerts about to be sent. Runs before the dashboard is published, so the pictures are online when the alert arrives."""
     if not SEND_MAPS: return 0
@@ -294,16 +312,17 @@ def teams_card(d, new_q, new_d, test=False):
             {'type': 'Column', 'width': '120px', 'items': [tb(label, size='Small', isSubtle=True)]},
             {'type': 'Column', 'width': 'stretch', 'items': [tb(value)]}]}
     stamp = d.get('generated_ms', '')
-    def block(colour, fallback, tag, title, pairs, action, pic=''):
-        key = {'Earthquake': 'earthquake', 'Danger': 'danger', 'Possible tsunami': 'tsunami', 'Volcanic ash': 'ash', 'Eruption': 'eruption', 'Volcano': 'volcano', 'Typhoon': 'typhoon'}[tag]
-        if have and all(os.path.exists(os.path.join(HERE, 'docs', 'assets', f)) for f in (f'card-bar-{colour}.png', f'card-tag-{key}.png')):
-            top = [{'type': 'Image', 'url': f'{url}assets/card-bar-{colour}.png', 'size': 'Stretch', 'altText': ''},
-                   {'type': 'Image', 'url': f'{url}assets/card-tag-{key}.png', 'height': '22px', 'altText': tag, 'spacing': 'Medium'}]
-        else:
-            top = [tb(tag.upper(), size='Small', weight='Bolder', color=fallback)]
-        items = top + [tb(title, size='Large', weight='Bolder', spacing='Small')] + ([{'type': 'Image', 'url': pic, 'size': 'Stretch', 'altText': 'Map showing ' + title, 'spacing': 'Small'}] if pic else []) + [line(k, v) for k, v in pairs if v]
+    def block(colour, fallback, tag, title, pairs, action, pic='', what=''):
+        # The tag is plain text in Teams' own colours, not a picture. Teams (the phone app especially) can show a stale or
+        # mismatched picture, and a wrong tag on a safety alert is worse than a plainer one.
+        tone = {'Danger': 'Attention', 'Possible tsunami': 'Attention', 'Volcanic ash': 'Warning', 'Eruption': 'Warning', 'Volcano': 'Warning', 'Earthquake': 'Accent', 'Typhoon': 'Accent'}.get(tag, fallback)
+        top = [tb(tag.upper(), size='Medium', weight='Bolder', color=tone)]
+        items = top + [tb(title, size='Large', weight='Bolder', spacing='Small')]
+        if pic: items += [{'type': 'Image', 'url': pic, 'size': 'Stretch', 'altText': 'Map: ' + (what or title), 'spacing': 'Small'},
+                          tb('Map: ' + (what or title), size='Small', isSubtle=True, spacing='None')]      # names what the picture should show
+        items += [line(k, v) for k, v in pairs if v]
         if action: items.append({'type': 'Container', 'style': 'emphasis', 'spacing': 'Medium', 'items': [tb('**What to do.** ' + action)]})
-        return {'type': 'Container', 'spacing': 'Large', 'separator': not have, 'items': items}
+        return {'type': 'Container', 'spacing': 'Large', 'separator': True, 'items': items}
     checked = as_of(d)
     n = len(new_q) + len(new_d) + len(NEW_V) + len(NEW_T)
     head = [tb('Airport Weather Monitoring', size='Large', weight='Bolder', color='Light' if have else 'Default'),
@@ -330,10 +349,10 @@ def teams_card(d, new_q, new_d, test=False):
         body.append(block('red', 'Attention', 'Danger', a['name'], [('Right now', a.get('now')), ('Forecast for later today', a.get('next')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo'), map_url('danger', a, stamp)))
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
-        body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action, map_url('volcano', v, stamp)))
+        body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action, map_url('volcano', v, stamp), (v or {}).get('title', '')))
     for a, c, upd in NEW_T:
         tag, title, pairs, action = _typhoon_parts(a, c, upd)
-        body.append(block('typhoon', 'Accent', tag, title, pairs, action, map_url('typhoon', c, stamp)))
+        body.append(block('typhoon', 'Accent', tag, title, pairs, action, map_url('typhoon', c, stamp), (c or {}).get('title', '')))
     card = {'type': 'AdaptiveCard', '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json', 'version': '1.4', 'msteams': {'width': 'Full'}, 'body': body}
     if url and have:        # a picture of a button in the dashboard's blue, because Teams draws its own buttons in its own colours
         body.append({'type': 'Image', 'url': f'{url}assets/card-button.png', 'height': '36px', 'altText': 'Open the dashboard', 'spacing': 'Large',
