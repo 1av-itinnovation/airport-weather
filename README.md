@@ -82,6 +82,17 @@ why, and how reliable each reading is.
 
 The moving rain layer is built separately every 3 hours and saved.
 
+## Volcano sources
+
+| Role | Source | What it gives |
+|---|---|---|
+| Primary | Aviation volcanic ash warnings (SIGMET), aviationweather.gov | Eruption, and the area the ash covers |
+| Second source | Tokyo Volcanic Ash Advisory Centre (Japan Meteorological Agency) | Eruption time, whether ash is seen, and an ash area when one is given |
+| Alert levels, first choice | PHIVOLCS volcano bulletins | Alert Level 0 to 5 |
+| Alert levels, backup | `volcano_levels.json`, entered by hand | Alert Level 0 to 5 |
+
+When both ash sources report the same volcano, the aviation warning is used and the dashboard notes that Tokyo VAAC confirms it. When only Tokyo VAAC reports it, the alert is raised from the advisory and a notice says the second source is in use. If neither can be reached, the dashboard says volcano warnings are not available. The run log prints lines starting with `VAAC:` and `VOLCANO:` showing what each reader found.
+
 ## Map picture in alerts
 
 Each Teams and email alert shows a small zoomed map of what it is about: the Danger airport, the volcano with its 150 km ring and the airports named in the warning, or the earthquake with its nearest airport. `alert_map.py` draws the picture when the alert is found, saves it under `docs/alertmaps/`, and the dashboard is published before the alert is sent so the picture is online. Pictures older than 7 days are removed. If the picture library (Pillow) cannot be installed, alerts are sent without a map. Set `SEND_MAPS = False` in `notify.py` to switch this off.
@@ -94,7 +105,7 @@ Earthquake and volcano alerts are treated as critical.
 - One run watches for about five and a half hours and then starts the next one. A 15-minute safety net restarts it if it ever stops.
 - **Fallbacks:** the 5-minute Earthquake Watch (`quake_watch.py`) stands down while the live watch is running and takes over if it is not. The regular refresh also raises any alert it finds.
 - **The dashboard page** asks USGS directly every minute for new earthquakes and checks for new data every 30 seconds.
-- An alert can never be faster than its source. Volcano alerts come from the official aviation ash warning, which the aviation weather office issues some minutes after an eruption.
+- An alert can never be faster than its source. Volcano alerts come from the official aviation ash warning and the Tokyo VAAC advisory, which are issued some minutes after an eruption (11 minutes for Kanlaon on 10 October 2026).
 - The live watch keeps one GitHub runner busy around the clock, so it is left out unless it is added on purpose. Without it, the 5-minute Earthquake Watch raises these alerts, typically 5 to 15 minutes after the source.
 
 ## Where the data comes from
@@ -106,7 +117,7 @@ Earthquake and volcano alerts are treated as critical.
 | Chance of rain and the 7-day outlook | Open-Meteo | none; the items are left out |
 | Typhoon watch and thunderstorm area warnings | Aviation storm warnings (aviationweather.gov) | GDACS (position only) |
 | Earthquakes | PHIVOLCS | USGS, then EMSC |
-| Volcanic ash and eruptions | Aviation ash warnings (SIGMET), aviationweather.gov | None yet |
+| Volcanic ash and eruptions | Aviation ash warnings (SIGMET), aviationweather.gov. Gives the ash area | Second source: Tokyo VAAC advisories (Japan Meteorological Agency). Confirms the warning, and stands in when it is missing or cannot be reached |
 | Volcano alert levels | PHIVOLCS volcano bulletins | Levels entered by hand in `volcano_levels.json` |
 | Rain on the map | MET Norway forecast grid | none |
 | Detailed rain map (optional) | Windy.com embedded map | none |
@@ -139,8 +150,10 @@ used. Idle backups are tested every 6 hours and the result is shown in Help.
 - **Volcanoes** raise their own alerts, like earthquakes, and never change an airport's weather level.
   A volcano counts as near an airport within 150 km (no official standard exists; this covers about
   half of past airport disruptions in a US Geological Survey study).
-- **Volcanic ash alert:** an official aviation ash warning area covers an airport, at any distance.
-- **Eruption alert:** an official ash warning reports an eruption within 150 km of an airport.
+- **Volcanic ash alert:** an official ash area covers an airport, at any distance. The area comes from
+  the aviation ash warning, or from the Tokyo VAAC advisory when there is no warning.
+- **Eruption alert:** an aviation ash warning or a Tokyo VAAC advisory reports an eruption within
+  150 km of an airport. A Tokyo VAAC advisory counts for 6 hours after it is issued (`VAAC_HOURS`).
 - **Volcano Alert Level** (PHIVOLCS, 0 to 5): Level 3 or higher within 150 km of an airport raises an
   alert on the dashboard.
 - **Possible tsunami** is shown for an earthquake of magnitude 6.5 or stronger no deeper than 70 km,
