@@ -2787,10 +2787,13 @@ function selectQuake(id) { S.sel = ''; S.vk = ''; S.qk = id; S.view = null; S.dr
 function clearSel() { if (WIDE.matches && !GLASS && S.tab === 'details') S.tab = 'airports'; S.sel = ''; S.qk = ''; S.vk = ''; S.view = null; S.drag = false; applyState(); }
 
 /* ---------- events ---------- */
-$('region').addEventListener('change', function (e) { S.region = e.target.value; applyLayers(); applyState(); });
+/* changing any filter lets go of the selected airport, earthquake or volcano, so the filter always takes effect */
+function dropSel() { if (S.sel || S.qk || S.vk) { S.sel = ''; S.qk = ''; S.vk = ''; S.view = null; S.drag = false; if (WIDE.matches && !GLASS_ON && S.tab === 'details') S.tab = 'airports'; } }
+var GLASS_ON = document.body.classList.contains('glass');
+$('region').addEventListener('change', function (e) { S.region = e.target.value; dropSel(); if (S.pane === 'side') S.pane = 'list'; applyLayers(); applyState(); });
 $('airportPick').addEventListener('change', function (e) { if (e.target.value) selectAirport(e.target.value); else clearSel(); });
-Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.addEventListener('click', function () { S.filter = b.getAttribute('data-f'); S.day = 'today'; if (S.pane === 'side') S.pane = 'list'; applyState(); }); });
-Array.prototype.forEach.call(document.querySelectorAll('.daysw button'), function (b) { b.addEventListener('click', function () { S.day = b.getAttribute('data-day'); if (S.pane === 'side') S.pane = 'list'; applyState(); }); });
+Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.addEventListener('click', function () { S.filter = b.getAttribute('data-f'); S.day = 'today'; dropSel(); if (S.pane === 'side') S.pane = 'list'; applyState(); }); });
+Array.prototype.forEach.call(document.querySelectorAll('.daysw button'), function (b) { b.addEventListener('click', function () { S.day = b.getAttribute('data-day'); dropSel(); if (S.pane === 'side') S.pane = 'list'; applyState(); }); });
 Array.prototype.forEach.call(document.querySelectorAll('.stabs button[data-tab]'), function (b) { b.addEventListener('click', function () { S.tab = b.getAttribute('data-tab'); applyState(); }); });
 Array.prototype.forEach.call(document.querySelectorAll('.ptabs button'), function (b) { b.addEventListener('click', function () { S.pane = b.getAttribute('data-pane'); applyState(); }); });
 $('summary').addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b) { S.tab = b.getAttribute('data-go'); applyState(); } });
@@ -2860,11 +2863,15 @@ $('kpis').addEventListener('click', function (e) {
   if (key === cur && key !== 'alerts') { S.day = 'today'; S.filter = 'alerts'; }            // press again to go back
   else if (key === 'tmr') { S.day = 'tmr'; }
   else { S.day = 'today'; S.filter = key; }
-  if (S.sel || S.qk || S.vk) { S.sel = ''; S.qk = ''; S.vk = ''; S.view = null; S.drag = false; }
+  dropSel();
   if (!WIDE.matches) S.pane = 'list';
   applyState();
 });
 $('kpis').addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b && b.getAttribute('data-go')) { S.tab = b.getAttribute('data-go'); applyState(); } });
+/* changing any filter lets go of the selected airport, earthquake or volcano, so the whole map and the full list show the result */
+function dropSel() { if (S.sel || S.qk || S.vk) { S.sel = ''; S.qk = ''; S.vk = ''; S.view = null; S.drag = false; if (TOUR.active) TOUR.active = false; } }
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.filters .stat, .daysw button, #statsBig [data-f]')) dropSel(); }, true);
+$('region').addEventListener('change', dropSel, true);
 $('statsBig').addEventListener('click', function (e) { var b = e.target.closest('[data-f]'); if (!b) return; var f = b.getAttribute('data-f'); var t = document.querySelector('.stat[data-f="' + (S.filter === f ? 'alerts' : f) + '"]'); if (t) t.click(); });
 $('notice').addEventListener('click', function () { this.classList.toggle('open'); fit(); });
 $('lyrBtn').addEventListener('click', function (e) { e.stopPropagation(); var pop = $('lyrPop'); pop.hidden = !pop.hidden; this.setAttribute('aria-expanded', pop.hidden ? 'false' : 'true'); });
