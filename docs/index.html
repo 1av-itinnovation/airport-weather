@@ -1482,6 +1482,11 @@ body{background:var(--page);color:var(--ink)}
   .glass #kpis .k.sm .dot{width:9px;height:9px;border-radius:50%;background:#2FC5B5;flex:none}
   .glass #kpis .k.sm.hot .v{color:#C62828;font-weight:600}
   .glass #kpis button.k{cursor:pointer}
+  .glass #kpis button.k.big:hover{background:rgba(255,255,255,.9)}
+  .glass #kpis button.k.big.on{background:#FFFFFF;box-shadow:0 0 0 2px #4D5EE0,0 10px 26px rgba(77,94,224,.16)}
+  .glass #kpis button.k.big.on .bar i{background:#4D5EE0}
+  .glass #kpis button.k.big .r{width:100%}
+  .glass #kpis button.k.big .bar{width:100%}
 
   /* airport table */
   .glass .col.list .colhead{border:none;padding:0 0 8px}
@@ -1985,7 +1990,7 @@ body{background:var(--page);color:var(--ink)}
         <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
         <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the whole map and clears the selection.</li>
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
-        <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
+        <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. Press one to show those airports in the list; press it again to go back. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
         <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
         <li><strong>Details window.</strong> Selecting an airport, earthquake or volcano opens its details in a window on the right. Press the X to close it.</li>
         <li><strong>Alerts over the map.</strong> Earthquake, volcano and Danger alerts appear as coloured cards at the top of the map. Press Details on a card to open it. If there are more than three, press "more" to see the rest.</li>
@@ -2093,7 +2098,7 @@ var RAIN_MS = 10 * 60 * 1000;        // how often the page looks for a new rain 
 var STALE_MIN = 60;                  // warn when the data is older than this
 var D = null;
 var S = { filter: 'alerts', region: '', sel: '', qk: '', vk: '', view: null, drag: false, day: 'today', tab: 'details', pane: 'map' };
-var LABELS = { alerts: 'Needs attention today', advisory: 'Advisory today', warning: 'Warning today', danger: 'Danger today', normal: 'Normal today' };
+var LABELS = { alerts: 'Needs attention today', advisory: 'Advisory today', warning: 'Warning today', danger: 'Danger today', normal: 'Normal today', official: 'Official weather report' };
 var PILL = { danger: 'Danger', warning: 'Warning', advisory: 'Advisory', normal: 'Normal', nodata: 'No data' };
 var ORDER = ['danger', 'warning', 'advisory'];
 var $ = function (id) { return document.getElementById(id); };
@@ -2177,10 +2182,11 @@ function renderGlass() {
   A.forEach(function (a) { c[a.level] = (c[a.level] || 0) + 1; });
   var att = c.danger + c.warning + c.advisory, off = A.filter(function (a) { return !a.est; }).length, tm = A.filter(function (a) { return a.t; }).length;
   var nq = (D.eq_alerts || []).length + LIVE.length, nv = (D.vol_alerts || []).length, ty = !/^No typhoon/i.test(D.ty_banner || '');
-  var big = function (t, a, b) { return '<div class="k big"><div class="r"><span class="t">' + t + '</span><span class="v">' + a + '/' + b + '</span></div><div class="bar"><i style="width:' + Math.round(100 * a / b) + '%"></i></div></div>'; };
+  var cur = S.day === 'tmr' ? 'tmr' : S.filter;
+  var big = function (key, tip, t, a, b) { return '<button class="k big' + (cur === key ? ' on' : '') + '" data-k="' + key + '" aria-pressed="' + (cur === key) + '" title="' + tip + '"><div class="r"><span class="t">' + t + '</span><span class="v">' + a + '/' + b + '</span></div><div class="bar"><i style="width:' + Math.round(100 * a / b) + '%"></i></div></button>'; };
   var sm = function (go, icon, t, v, hot) { return '<button class="k sm' + (hot ? ' hot' : '') + '" data-go="' + go + '"><span class="t">' + icon + t + '</span><span class="v">' + v + '</span></button>'; };
   var ic = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
-  $('kpis').innerHTML = big('Airports needing<br>attention today', att, n) + big('Thunderstorm at the<br>airport now', c.danger, n) + big('Airports with an official<br>weather report', off, n) + big('Bad weather forecast<br>tomorrow', tm, n) +
+  $('kpis').innerHTML = big('alerts', 'Show the airports needing attention today', 'Airports needing<br>attention today', att, n) + big('danger', 'Show the airports with a thunderstorm now', 'Thunderstorm at the<br>airport now', c.danger, n) + big('official', 'Show the airports with an official weather report', 'Airports with an official<br>weather report', off, n) + big('tmr', 'Show the bad weather forecast for tomorrow', 'Bad weather forecast<br>tomorrow', tm, n) +
     sm('quakes', ic('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'), 'Earthquake alerts', nq, nq) + sm('volcano', ic('<path d="M8.500 9L3 20h18l-5.500-11zM10.500 5.500c0-1.200.800-1.200.800-2.500M13.500 5.500c0-1.200.800-1.200.800-2.500"/>'), 'Volcano alerts', nv, nv) +
     sm('typhoon', ic('<path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20H9"/>'), 'Typhoon', ty ? 'In the area' : 'None', ty) + sm('', '<span class="dot"></span>', 'Live', '<span id="liveClock">' + liveNow() + '</span>', false);
   var tot = c.danger + c.warning + c.advisory + c.normal || 1, seg = [['danger', '#D82B2B'], ['warning', '#F5A623'], ['advisory', '#E8C21A'], ['normal', '#2E9B45']];
@@ -2202,7 +2208,7 @@ function phTime(ms) { return new Date(ms).toLocaleTimeString('en-US', { timeZone
 function phDay(ms) { return new Date(ms).toLocaleDateString('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' }); }
 function inRegion(a) { return !S.region || a.region === S.region; }
 function levelShown(lv, forMap) {
-  if (S.filter === 'alerts') return forMap ? true : ORDER.indexOf(lv) >= 0;
+  if (S.filter === 'alerts' || S.filter === 'official') return forMap ? true : ORDER.indexOf(lv) >= 0;
   return lv === S.filter;
 }
 function sorted(list) { return list.slice().sort(function (a, b) { return (a.sort - b.sort) || (a.est - b.est) || a.name.localeCompare(b.name); }); }
@@ -2441,14 +2447,14 @@ function applyState() {
 
   var al = '', n = 0;
   if (S.day === 'today') {
-    var lvls = S.filter === 'alerts' ? ORDER : [S.filter], shown = [];
-    lvls.forEach(function (lv) { shown = shown.concat(sorted(D.airports.filter(function (a) { return a.level === lv && inRegion(a); }))); });
+    var offOnly = S.filter === 'official', lvls = S.filter === 'alerts' ? ORDER : offOnly ? ORDER.concat(['normal']) : [S.filter], shown = [];
+    lvls.forEach(function (lv) { shown = shown.concat(sorted(D.airports.filter(function (a) { return a.level === lv && inRegion(a) && (!offOnly || !a.est); }))); });
     shown.forEach(function (a) {
       al += '<button class="alert' + (a.id === S.sel ? ' on' : '') + '" data-a="' + esc(a.id) + '"><span class="a1">' + pill(a.level) + '<span class="nm">' + esc(a.name) + '</span>' + (a.est ? EST : '') + '</span>' +
         '<span class="a2"><span>' + esc(a.what || 'No bad weather expected today') + '</span><span class="wh">' + esc(a.when) + '</span></span></button>';
     });
     n = shown.length;
-    if (!n) al = '<div class="empty">No airports at this level right now.</div>';
+    if (!n) al = '<div class="empty">' + (offOnly ? 'No airport has an official weather report right now.' : 'No airports at this level right now.') + '</div>';
     $('listTitle').textContent = LABELS[S.filter]; $('listSub').textContent = n + (n === 1 ? ' airport' : ' airports');
   } else {
     var tm = D.airports.filter(function (a) { return a.t && inRegion(a); }).sort(function (a, b) { return (a.tsort - b.tsort) || (a.test - b.test) || a.name.localeCompare(b.name); });
@@ -2794,6 +2800,16 @@ document.addEventListener('click', function (e) {
   clearSel();
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && GLASS && (S.sel || S.qk || S.vk) && !modal.classList.contains('open') && !WX.open) clearSel(); });
+$('kpis').addEventListener('click', function (e) {
+  var k = e.target.closest('[data-k]'); if (!k) return;
+  var key = k.getAttribute('data-k'), cur = S.day === 'tmr' ? 'tmr' : S.filter;
+  if (key === cur && key !== 'alerts') { S.day = 'today'; S.filter = 'alerts'; }            // press again to go back
+  else if (key === 'tmr') { S.day = 'tmr'; }
+  else { S.day = 'today'; S.filter = key; }
+  if (S.sel || S.qk || S.vk) { S.sel = ''; S.qk = ''; S.vk = ''; S.view = null; S.drag = false; }
+  if (!WIDE.matches) S.pane = 'list';
+  applyState();
+});
 $('kpis').addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b && b.getAttribute('data-go')) { S.tab = b.getAttribute('data-go'); applyState(); } });
 $('statsBig').addEventListener('click', function (e) { var b = e.target.closest('[data-f]'); if (!b) return; var f = b.getAttribute('data-f'); var t = document.querySelector('.stat[data-f="' + (S.filter === f ? 'alerts' : f) + '"]'); if (t) t.click(); });
 $('notice').addEventListener('click', function () { this.classList.toggle('open'); fit(); });
