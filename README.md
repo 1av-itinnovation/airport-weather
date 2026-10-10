@@ -65,7 +65,7 @@ why, and how reliable each reading is.
   PAR (roughly 1,000 km east or west of it) is drawn too, and the zoom-out stretches to include it.
 - **Low pressure areas.** A red circle with an L marks each area the Joint Typhoon Warning Center is
   watching, with its chance (low, medium or high) of becoming a tropical cyclone within 24 hours.
-  Information only: one source, no alert.
+  Press one for its details. Information only: one source, no alert.
 - **Rain and thunderstorm forecast** covers the whole map, from 25.5 to 1.5 degrees North and well
   beyond the PAR to the east and west.
 - **Focus on what is affected.** Selecting a volcano, an earthquake or a cyclone hides every airport
