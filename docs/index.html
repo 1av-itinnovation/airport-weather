@@ -2860,6 +2860,7 @@ function weekList(a) {
    sections that open on a tap, and stay open while you move between airports. */
 var DOPEN = {};
 function fold(key, title, note, inner) { return inner ? '<details class="dmore" data-fold="' + key + '"' + (DOPEN[key] ? ' open' : '') + '><summary>' + esc(title) + (note ? '<span>' + esc(note) + '</span>' : '') + '</summary><div class="in">' + inner + '</div></details>' : ''; }
+function exactTime(ms) { var d = new Date(ms), sec = d.getUTCSeconds() !== 0, o = { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }; if (sec) o.second = '2-digit'; var u = d.toISOString().slice(11, sec ? 19 : 16); return d.toLocaleString('en-US', o) + ' Philippine time (' + u + ' UTC).'; }
 function todoBox(cls, text) { return text ? '<div class="dtodo ' + cls + '"><b>What to do</b>' + esc(text) + '</div>' : ''; }
 function nowBlock(a) {
   var t = String(a.now || ''), w = /\((\d+) km\/h\)/.exec(t), c = /(-?\d+)\u00B0C/.exec(t), at = /as of ([^.]+)\./.exec(t), first = t.split('. ')[0].replace(/\.$/, '') + '.';
@@ -2922,15 +2923,15 @@ function applyState() {
       todoBox('quake', q.todo) +
       '<div class="dfacts"><div><span>Magnitude</span><b>' + q.mag.toFixed(1) + '</b></div><div><span>Happened</span><b>' + (q.ms ? esc(phTime(q.ms)) : '') + '</b></div><div><span>How long ago</span><b>' + (q.ms ? esc(agoText(q.ms)) : '') + '</b></div></div>' +
       field('Where', q.where) + field('Nearest airport', q.near) + (q.check ? field('Cross-check', q.check) : '') +
-      fold('qmag', 'Magnitude and depth', '', (q.magnote ? field('Magnitude', q.magnote) : '') + field('Depth', q.depth) + field('Time it happened', q.ms ? phDay(q.ms) + ', ' + phTime(q.ms) + ' Philippine time.' : q.when)) +
+      fold('qmag', 'Magnitude and depth', '', (q.magnote ? field('Magnitude', q.magnote) : '') + field('Depth', q.depth) + field('Time it happened', q.ms ? exactTime(q.ms) : q.when)) +
       fold('qtsu', 'Tsunami', '', field('Tsunami', q.tsu)) +
       fold('qaft', 'Aftershocks', q.nshock ? q.nshock + ' so far' : '', '<div class="f"><span class="k">Aftershocks</span><span class="v">' + esc(q.after) + '</span>' + ((q.slist || []).length ? '<div class="shocks">' + q.slist.map(function (r) { return '<div><b>M' + r[1].toFixed(1) + '</b><span>' + esc(r[0]) + '<em>' + esc(r[2]) + '</em></span></div>'; }).join('') + (q.nshock > q.slist.length ? '<div><span><em>and ' + (q.nshock - q.slist.length) + ' earlier.</em></span></div>' : '') + '</div>' : '') + '</div>') +
       fold('about', 'About this reading', q.check ? (/^Confirmed/.test(q.check) ? 'Cross-checked' : 'One source so far') : '', field('Source', q.src)) + '</div>';
   } else if (vo) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(vo.title) + '</h3><span class="pill volcano">' + (vo.status === 'erupting' ? 'Eruption' : 'Volcano') + '</span></div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      todoBox(vo.status === 'quiet' || vo.status === 'unknown' ? '' : 'volcano', vo.todo) + field('Volcanic ash', vo.ashline) + field('Alert level', vo.levelline) +
+      todoBox(vo.status === 'quiet' || vo.status === 'unknown' ? '' : 'volcano', vo.todo) + (vo.eruptline ? field('Eruption started', vo.eruptline) : '') + field('Volcanic ash', vo.ashline) + field('Alert level', vo.levelline) +
       field('Airports within ' + (D.volcano_km || 150) + ' km', vo.near) +
-      fold('about', 'About this reading', '', (vo.ms ? field('Warning issued', phDay(vo.ms) + ', ' + phTime(vo.ms) + ' Philippine time (' + agoText(vo.ms) + ').') : '') + field('Source', vo.src)) + '</div>';
+      fold('about', 'About this reading', '', (vo.ms ? field('Ash warning issued', phDay(vo.ms) + ', ' + phTime(vo.ms) + ' Philippine time (' + agoText(vo.ms) + ').') : '') + field('Source', vo.src)) + '</div>';
   } else if (cy && cy.low) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(cy.name) + '</h3><span class="pill unconf">For information</span></div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       '<div class="dfacts"><div><span>Chance of becoming a cyclone</span><b>' + (cy.chance ? esc(cy.chance.charAt(0).toUpperCase() + cy.chance.slice(1)) : 'Not stated') + '</b></div><div><span>Nearest airport</span><b>' + (Math.round(cy.dist / 10) * 10).toLocaleString('en-US') + ' km</b></div><div><span>Philippine area</span><b>' + (cy.inpar ? 'Inside' : 'Outside') + '</b></div></div>' +
