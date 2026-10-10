@@ -2,7 +2,8 @@
 """
 Airport Weather Monitoring: fast earthquake and volcanic ash watch.
 
-The full data refresh runs about every 20 minutes. This small check runs every few minutes in between.
+The full data refresh runs about every 20 minutes. This small check runs in between: every minute from the Live Alert
+Watch (live_watch.py), and every few minutes on its own as a fallback.
 It reads only the earthquake sources (PHIVOLCS first, then USGS) and the aviation ash warnings, and looks
 for a strong earthquake or a volcanic ash warning that the dashboard does not show yet. If it finds one, it asks for a full refresh straight away, which updates
 the dashboard and sends the Teams and email alert. If there is nothing new, it stops after a few seconds.
@@ -54,7 +55,7 @@ def usgs():
 def ash_warnings():
     """Official volcanic ash warnings (SIGMET) now in force in the Philippine area: [(volcano name, start time in ms)]."""
     now = dt.datetime.now(dt.timezone.utc).timestamp(); out = []
-    for x in json.loads(get('https://aviationweather.gov/api/data/isigmet?format=json', timeout=30)):
+    for x in json.loads(get('https://aviationweather.gov/api/data/isigmet?format=json&hazard=va', timeout=30)):
         if x.get('hazard') != 'VA' or not (x.get('validTimeFrom', 0) <= now + 3600 and x.get('validTimeTo', 0) > now): continue
         raw = ' '.join((x.get('rawSigmet') or '').split())
         if re.search(r'\bCNL\b|\bCANCEL', raw): continue
@@ -66,7 +67,19 @@ def ash_warnings():
         out.append((re.sub(r'[^a-z]', '', (m.group(1) if m else 'unnamed').lower()), int(x.get('validTimeFrom', 0)) * 1000))
     return out
 
-def main():
+def live_watch_running():
+    """True when the Live Alert Watch (live-watch.yml) is running. It checks every minute, so this 5-minute check can stand down."""
+    repo = os.environ.get('GITHUB_REPOSITORY'); tok = os.environ.get('GITHUB_TOKEN')
+    if not repo or not tok: return False
+    try:
+        req = urllib.request.Request(f'https://api.github.com/repos/{repo}/actions/workflows/live-watch.yml/runs?status=in_progress&per_page=1',
+                                     headers={'Authorization': 'Bearer ' + tok, 'Accept': 'application/vnd.github+json', 'User-Agent': UA})
+        with urllib.request.urlopen(req, timeout=15) as r: return json.load(r).get('total_count', 0) > 0
+    except Exception as e:
+        print(f'Could not ask whether the live watch is running ({type(e).__name__}); checking anyway.', file=sys.stderr); return False
+
+def check(quiet=False):
+    """Look once. Returns True when a full refresh is needed."""
     now = int(dt.datetime.now(dt.timezone.utc).timestamp() * 1000)
     try: data = json.load(open(DATA, encoding='utf-8'))
     except Exception: data = {}
@@ -107,7 +120,14 @@ def main():
     for k in [k for k in tried if k.startswith('va:') and now - int(k.rsplit(':', 1)[1]) * 3600000 > 2 * 86400000]: del tried[k]
     for k in [k for k in tried if not k.startswith('va:') and now - int(k) * 600000 > 2 * 86400000]: del tried[k]
     if need: json.dump(state, open(STATE, 'w', encoding='utf-8'), separators=(',', ':'))
-    print(f"Sources reached: {', '.join(reached) or 'none'}. " + ('Full refresh needed.' if need else 'Nothing new.'))
+    if need or not quiet: print(f"Sources reached: {', '.join(reached) or 'none'}. " + ('Full refresh needed.' if need else 'Nothing new.'))
+    return need
+
+def main():
+    if os.environ.get('WATCH_DEFER') == '1' and live_watch_running():
+        print('The Live Alert Watch is running and checks every minute, so this check is not needed.'); need = False
+    else:
+        need = check()
     out = os.environ.get('GITHUB_OUTPUT')
     if out: open(out, 'a').write(f"refresh={'true' if need else 'false'}\n")
 

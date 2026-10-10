@@ -82,6 +82,17 @@ why, and how reliable each reading is.
 
 The moving rain layer is built separately every 3 hours and saved.
 
+## How fast alerts arrive
+
+Earthquake and volcano alerts are treated as critical.
+
+- **Live Alert Watch (optional, not installed by default)** (`live_watch.py`, `.github/workflows/live-watch.yml`) looks once a minute at PHIVOLCS and USGS for earthquakes and at the official aviation volcanic ash warnings. When something new appears it refreshes the data, publishes the dashboard and sends the Teams and email alert, normally within about 3 minutes of the source publishing it.
+- One run watches for about five and a half hours and then starts the next one. A 15-minute safety net restarts it if it ever stops.
+- **Fallbacks:** the 5-minute Earthquake Watch (`quake_watch.py`) stands down while the live watch is running and takes over if it is not. The regular refresh also raises any alert it finds.
+- **The dashboard page** asks USGS directly every minute for new earthquakes and checks for new data every 30 seconds.
+- An alert can never be faster than its source. Volcano alerts come from the official aviation ash warning, which the aviation weather office issues some minutes after an eruption.
+- The live watch keeps one GitHub runner busy around the clock, so it is left out unless it is added on purpose. Without it, the 5-minute Earthquake Watch raises these alerts, typically 5 to 15 minutes after the source.
+
 ## Where the data comes from
 
 | Data | First choice | Backup |

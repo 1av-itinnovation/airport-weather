@@ -1319,5 +1319,8 @@ def build_rain():
     os.replace(tmp, RAIN_OUT)
     print(f'Rain animation: rebuilt from {ok} of {len(pts)} grid points.')
 
-try: build_rain()
+# An urgent refresh for an earthquake or volcano alert skips the rain animation, which can take two minutes.
+try:
+    if os.environ.get('SKIP_RAIN') == '1': print('Rain animation: skipped for this urgent refresh.')
+    else: build_rain()
 except Exception as e: print('Rain animation could not be built:', e, file=sys.stderr)
