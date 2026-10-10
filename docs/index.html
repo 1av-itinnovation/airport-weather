@@ -984,7 +984,7 @@ header.top{padding:10px 16px;border-radius:10px}
 .shocks div{display:flex;gap:8px;font-size:12px;line-height:1.4;padding:4px 0;border-top:1px solid var(--line,#E6EEF1)}
 .shocks b{flex:none;width:36px;font-weight:600;color:#6A1B9A;font-variant-numeric:tabular-nums}
 .shocks span{flex:1;min-width:0}.shocks em{font-style:normal;color:var(--muted,#5B7180);display:block}
-@media (max-width:640px){#alertBar .al.quake,#alertBar .al.tsunami,#alertBar .al.volcano{flex-wrap:wrap;row-gap:4px}#alertBar .al.quake .tx,#alertBar .al.tsunami .tx,#alertBar .al.volcano .tx{order:5;flex:none;width:100%;-webkit-line-clamp:3}#alertBar .al .ago{margin-left:auto}}
+@media (max-width:640px){#alertBar .al.quake,#alertBar .al.tsunami,#alertBar .al.volcano,#alertBar .al.danger{flex-wrap:wrap;row-gap:4px}#alertBar .al.quake .tx,#alertBar .al.tsunami .tx,#alertBar .al.volcano .tx{order:5;flex:none;width:100%;-webkit-line-clamp:3}#alertBar .al .ago{margin-left:auto}}
 /* ---------- volcanoes ---------- */
 .pin.v button{left:-15px;top:-17px;width:30px;height:30px}
 .pin.v svg{display:block;overflow:visible}
@@ -1824,7 +1824,8 @@ body{background:var(--page);color:var(--ink)}
   .glass .pin.a.east .lab{transform-origin:right center}
   /* things you press give a little, then settle */
   .glass button,.glass select,.glass .alert,.glass #kpis .k,.glass #statsBig button,.glass .app .filters .stat{transition:background-color .2s ease,box-shadow .25s var(--ease),transform .18s var(--ease),color .2s ease,opacity .2s ease}
-  .glass button:active:not(.back),.glass #kpis button.k:active,.glass .app .filters .stat:active{transform:scale(.97)}
+  .glass button:active:not(.back):not(.k):not(.stat){transform:scale(.97)}
+  .glass #kpis button.k:active,.glass .app .filters .stat:active,.glass #statsBig button:active{opacity:.82}    /* tiles do not shrink, so a press near the edge still counts */
   .glass .app .alert:active{transform:scale(.995)}
   .glass #kpis .k .bar i{transition:width .8s var(--ease)}
   .glass .app .tour,.glass .almore{transition:opacity .25s ease,transform .25s var(--ease)}
@@ -1911,6 +1912,21 @@ html[data-theme="dark"] .glass #pins .vrangelab{color:#FFAE8A;background:rgba(30
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-tl .lab{left:auto;right:0;top:-27px}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-bl .lab{left:auto;right:0;top:9px}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-hide .lab{display:none}
+
+/* alert cards: the label, time and Details on the first line, the full message on the second, so nothing is cut short */
+.glass #alertBar .al{flex-wrap:wrap;row-gap:3px}
+.glass #alertBar .al .tx,.glass #alertBar .al.danger .tx{order:5;flex:none;width:100%;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow:hidden;line-height:1.35}
+.glass #alertBar .al.danger .tx b,.glass #alertBar .al.danger .tx i{display:inline;overflow:visible}
+.glass #alertBar .al.danger .tx i::before{content:" "}
+.glass #alertBar .al .ago,.glass #alertBar .al.danger .go{margin-left:auto}
+.glass #alertBar .al .tag{margin-right:0}
+
+.clearf{border:none;border-radius:999px;background:rgba(77,94,224,.10);color:var(--g-accent-ink);font:inherit;font-size:12px;font-weight:600;padding:5px 12px;cursor:pointer;margin-left:10px;white-space:nowrap;flex:none}
+.clearf[hidden]{display:none}
+.clearf:hover{background:rgba(77,94,224,.18)}
+.glass .col.list .colhead{align-items:center}
+.glass .col.list .colhead .sub{margin-left:auto}
+.glass .col.list .colhead h2{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* =====================================================================================
    DAY AND NIGHT. The button in the header switches between Auto (follows the device),
@@ -2113,7 +2129,7 @@ html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
 
   <div id="kpis"></div>
   <section class="col list" data-pane="list">
-    <div class="colhead"><h2 id="listTitle">Airports</h2><span class="sub" id="listSub"></span></div>
+    <div class="colhead"><h2 id="listTitle">Airports</h2><button class="clearf" id="clearFilter" hidden>Clear filter</button><span class="sub" id="listSub"></span></div>
     <div class="scrolly" id="list"></div>
   </section>
 
@@ -2190,10 +2206,9 @@ html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
         <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Selecting a volcano zooms to it, shows its name and status, and draws a dashed ring 150 km around it so the airports inside the ring can be seen. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
         <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the whole map and clears the selection.</li>
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
-        <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. Press one to show those airports in the list; press it again to go back. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
+        <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. Press one to show those airports in the list. To go back, press it again or press "Clear filter" beside the list title. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
         <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
         <li><strong>Details window.</strong> Selecting an airport, earthquake or volcano opens its details in a window on the right. Press the X to close it.</li>
-        <li><strong>Alerts over the map.</strong> Earthquake, volcano and Danger alerts appear as coloured cards at the top of the map. Press Details on a card to open it. If there are more than three, press "more" to see the rest.</li>
         <li><strong>Bell and question mark.</strong> At the top right. The bell turns the alert chime on or off, and the question mark opens this guide. The first button changes the colours: Auto follows the device, then Day, then Night; the choice is remembered on that device.</li>
         <li><strong>On a phone.</strong> The map, the airport list and the details become three tabs.</li>
       </ul>
@@ -2208,17 +2223,18 @@ html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
       </ul>
       <p class="subh">Rain on the map</p>
       <ul>
-        <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Use Stop and Play, drag the slider to any hour, or press Hide rain.</li>
+        <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Use the pause and play button, or drag the slider to any hour. The Layers button turns the rain off.</li>
         <li><strong>Lightning marks and dashed areas.</strong> These come only from official sources: thunderstorm area warnings and official airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>It is a picture of the forecast.</strong> It plays no part in the alert levels, which take priority when the two differ. The Windy map is a different forecast again, so it can differ from both.</li>
       </ul>
       <p class="subh">Alerts and what the page does by itself</p>
       <ul>
-        <li><strong>Alert bar.</strong> A coloured bar appears under the title when an airport is at Danger, a strong earthquake has happened, a tsunami is possible, or there is a volcano alert. The browser tab shows a warning sign as well. Each Danger airport has its own line with the airport name first; press Details to go to it. Each alert is one short line; press Details for the full information. When there are more than three, the rest fold under a "more" link.</li>
+        <li><strong>Alerts.</strong> A coloured card appears over the map when an airport is at Danger, a strong earthquake has happened, a tsunami is possible, or there is a volcano alert. The browser tab shows a warning sign as well. Each card has the kind of alert, how long ago it started and a Details button on the first line, and the full message on the second. Each Danger airport has its own card. When there are more than three, the rest fold under a "more" link.</li>
+        <li><strong>Teams and email.</strong> The same critical alerts (Danger airport, earthquake, possible tsunami, volcanic ash or eruption) are sent to Microsoft Teams and by email, with a small map of the place and what to do. The dashboard is updated first, then the alert is sent.</li>
         <li><strong>Sound.</strong> Press the bell at the top to turn on a soft two-note chime, played once for each new alert. It is quiet on purpose: it asks for attention without causing alarm. Browsers only allow sound after someone has clicked on the page.</li>
         <li><strong>Your nearest airport.</strong> When the page is opened or reloaded, the browser asks once for your location. If you allow it, the map first shows the airport nearest to you. Your location is used only inside your browser; it is not sent anywhere or stored.</li>
         <li><strong>Auto-show alerts.</strong> When there is an earthquake alert or an airport at Danger and nobody is using the screen, the map shows each one in turn: earthquakes first, then volcano alerts, then Danger airports. It zooms in, shows the details, then returns to the whole map and repeats. A new earthquake alert is shown straight away. Earthquakes stay in the rotation for 6 hours. Touching the screen pauses this for a minute. A small label on the map lets you turn it off.</li>
-        <li><strong>The times at the top.</strong> "Checked" is when the data was last collected. "Next update" is that time plus the average gap between recent updates; it is an estimate, because the schedule does not run at exact times. An open page looks for new data by itself, every minute once an update is due, so you never need to reload.</li>
+        <li><strong>The times at the top.</strong> "Last updated" is when the data was last collected. "Next update" is that time plus the average gap between recent updates; it is an estimate, because the schedule does not run at exact times. An open page looks for new data by itself, every minute once an update is due, so you never need to reload.</li>
         <li><strong>Yellow notice.</strong> Appears when a backup source is in use or the data is more than 60 minutes old.</li>
       </ul>
     </div>
@@ -2245,7 +2261,7 @@ html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
         <li><strong>Earthquakes shown</strong> are magnitude 4.5 or stronger in the Philippine area over the past 7 days.</li>
         <li><strong>Aftershocks.</strong> Smaller earthquakes (below magnitude 5.0) within 100 km of a main earthquake of magnitude 5.0 or stronger, in the 72 hours after it, are grouped with it. Each is a small purple dot on the map, and the main earthquake's details list them together.</li>
         <li><strong>Why magnitudes differ.</strong> Each agency measures with its own instruments and method, so PHIVOLCS, USGS and phone alerts can show different figures for the same earthquake, and first figures are often revised. The dashboard shows the PHIVOLCS figure, shows the USGS figure beside it for strong earthquakes, and uses the more cautious of the two positions when deciding whether an airport is within 100 km.</li>
-        <li><strong>Early notice.</strong> The data is collected about every 20 minutes. In between, an open page asks USGS once a minute. An earthquake that meets the alert rules is shown at once as an early notice, then replaced by the confirmed figures at the next update. USGS usually publishes within about 10 to 20 minutes of an earthquake, so no source is instant.</li>
+        <li><strong>Early notice.</strong> The data is collected about every 20 minutes, and a separate quick check for earthquakes and ash warnings runs every few minutes. In between, an open page asks USGS once a minute. An earthquake that meets the alert rules is shown at once as an early notice, then replaced by the confirmed figures at the next update. USGS usually publishes within about 10 to 20 minutes of an earthquake, so no source is instant.</li>
         <li><strong>Earthquake alerts</strong> cover the last 24 hours: magnitude 5.0 or stronger within 100 km of an airport, or magnitude 6.0 or stronger anywhere in the Philippine area.</li>
         <li><strong>Possible tsunami</strong> is shown for an earthquake of magnitude 6.5 or stronger no deeper than 70 km, or one that USGS has flagged for tsunami information. It is a prompt to check PHIVOLCS bulletins, not an official tsunami warning.</li>
         <li><strong>Volcanoes</strong> work like earthquakes: they raise their own alerts and never change an airport's weather level. A volcano counts as near an airport within 150 km. There is no official standard distance; 150 km covers about half of all past airport disruptions worldwide (US Geological Survey study).</li>
@@ -2379,7 +2395,7 @@ setInterval(function () { var c = document.getElementById('liveClock'); if (c) c
 function shortChecked() {
   var el = document.getElementById('ckShort'); if (!el || !D) return;
   var nx = $('nextUp'), t = (nx.textContent || '').replace('Next update about ', 'next ').replace('Next update expected any moment', 'next any moment').replace('Update is running late', 'update running late').replace(/ \(in \d+ min\)/, '');
-  el.textContent = 'Checked ' + phTime(D.generated_ms) + (t ? ' · ' + t : ''); el.classList.toggle('late', nx.classList.contains('late'));
+  el.textContent = 'Updated ' + phTime(D.generated_ms) + (t ? ' · ' + t : ''); el.classList.toggle('late', nx.classList.contains('late'));
 }
 setInterval(shortChecked, 10000);
 function renderGlass() {
@@ -2399,6 +2415,7 @@ function renderGlass() {
   var tot = c.danger + c.warning + c.advisory + c.normal || 1, seg = [['danger', '#D82B2B'], ['warning', '#F5A623'], ['advisory', '#E8C21A'], ['normal', '#2E9B45']];
   $('statsBig').innerHTML = '<div class="nums">' + seg.map(function (x) { return '<button data-f="' + x[0] + '"' + (S.filter === x[0] ? ' class="on"' : '') + '><b>' + c[x[0]] + '</b><span>' + PILL[x[0]] + '</span></button>'; }).join('') + '</div>' +
     '<div class="sbar">' + seg.map(function (x) { return '<i style="width:' + (100 * c[x[0]] / tot) + '%;background:' + x[1] + '"></i>'; }).join('') + '</div>';
+  var cf = $('clearFilter'); if (cf) cf.hidden = (S.day === 'today' && S.filter === 'alerts');
   $('paneDetails').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk));
   $('cols').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk) && S.tab === 'details');
   volcanoFocus();
@@ -2431,8 +2448,8 @@ function sorted(list) { return list.slice().sort(function (a, b) { return (a.sor
 
 /* ---------- build the parts that depend only on the data ---------- */
 function renderData() {
-  $('checked').textContent = D.checked.split('. ')[0].replace(/\.$/, '') + ' (Philippine time)';
-  $('hChecked').textContent = D.checked;
+  $('checked').textContent = D.checked.split('. ')[0].replace(/\.$/, '').replace(/^Checked /, 'Last updated ') + ' (Philippine time)';
+  $('hChecked').textContent = String(D.checked || '').replace(/^Checked /, 'Last updated ');
   fillAirportPick();
 
   var h = '';
@@ -3112,6 +3129,7 @@ document.addEventListener('click', function (e) {
   clearSel();
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && GLASS && (S.sel || S.qk || S.vk) && !modal.classList.contains('open') && !WX.open) clearSel(); });
+$('clearFilter').addEventListener('click', function () { S.day = 'today'; S.filter = 'alerts'; applyState(); });
 $('kpis').addEventListener('click', function (e) {
   var k = e.target.closest('[data-k]'); if (!k) return;
   var key = k.getAttribute('data-k'), cur = S.day === 'tmr' ? 'tmr' : S.filter;
