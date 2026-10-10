@@ -1,7 +1,7 @@
 # 1AV Airport Weather Monitoring
 
 A view-only dashboard that watches the weather at the 36 Philippine airports served by Cebu Pacific
-and Cebgo, together with nearby earthquakes and typhoons. It shows which airports need attention,
+and Cebgo, together with nearby earthquakes, volcanoes and typhoons. It shows which airports need attention,
 why, and how reliable each reading is.
 
 ## Alert levels
@@ -47,9 +47,20 @@ why, and how reliable each reading is.
 
 **Alerts and automatic behaviour**
 
-- **Alert bar** for Danger airports, strong earthquakes and possible tsunami, with a warning sign in
-  the browser tab and an optional soft two-note chime. Earthquake alerts show the time it happened
-  and how long ago.
+- **Alerts as notifications.** Danger airports, strong earthquakes, possible tsunami, volcano alerts
+  and typhoon alerts pop in under the title bar as slim coloured chips when the page opens and
+  whenever a new alert arrives. After about 9 seconds they tuck away into the alert button in the
+  title bar (a warning triangle with a red count), so nothing covers the map. Pressing the button
+  brings them back; pressing a chip zooms to the place and opens its details. There is also a
+  warning sign in the browser tab and an optional soft two-note chime.
+- **Typhoons.** A swirl on the map for each tropical cyclone, labelled with its class (Tropical
+  Depression, Tropical Storm, Severe Tropical Storm, Typhoon, Super Typhoon) and name. Selecting one
+  shows how far its strong winds reach, where it is forecast to be in 24 hours, and only the
+  airports within reach. A cyclone that only one source has reported is drawn grey and dashed and
+  marked "not yet confirmed".
+- **Focus on what is affected.** Selecting a volcano, an earthquake or a cyclone hides every airport
+  except the ones it can affect (150 km ring for a volcano, 100 km ring for an earthquake, the
+  strong-wind area for a cyclone). Closing the selection brings all airports back.
 - **Nearest airport first.** On opening, the browser asks once for the viewer's location and shows
   the nearest airport. The location is used only in the browser and is not sent or stored.
 - **Auto-show alerts.** With nobody using the screen, the map zooms to each earthquake alert, then
@@ -61,7 +72,10 @@ why, and how reliable each reading is.
   ash cloud warning, and a Volcano tab. Volcano alerts appear in the alert bar and the auto-show, and
   are sent by Teams and email.
 - **Notifications by Teams and email** for the most critical events only: an airport at Danger, an
-  earthquake alert, or a possible tsunami. Each is sent once.
+  earthquake alert, a possible tsunami, volcanic ash or an eruption, and a confirmed tropical storm
+  or typhoon whose strong winds can reach an airport. Each is sent once; a typhoon alert is sent
+  again when the cyclone moves up a class, and as an update (at most every 6 hours) when more
+  airports come within reach.
 - **Early earthquake notice.** Between updates, an open page asks USGS once a minute and shows a
   qualifying earthquake at once, until the next update confirms it.
 - **Next update time.** Worked out from the average gap between recent updates.
@@ -95,7 +109,7 @@ When both ash sources report the same volcano, the aviation warning is used and 
 
 ## Map picture in alerts
 
-Each Teams and email alert shows a small zoomed map of what it is about: the Danger airport, the volcano with its 150 km ring and the airports named in the warning, or the earthquake with its nearest airport. `alert_map.py` draws the picture when the alert is found, saves it under `docs/alertmaps/`, and the dashboard is published before the alert is sent so the picture is online. Pictures older than 7 days are removed. If the picture library (Pillow) cannot be installed, alerts are sent without a map. Set `SEND_MAPS = False` in `notify.py` to switch this off.
+Each Teams and email alert shows a small zoomed map of what it is about: the Danger airport, the volcano with its 150 km ring and the airports named in the warning, the earthquake with its nearest airport, or the cyclone with its strong-wind area, its 24-hour forecast position and the airports within reach. `alert_map.py` draws the picture when the alert is found, saves it under `docs/alertmaps/`, and the dashboard is published before the alert is sent so the picture is online. Pictures older than 7 days are removed. If the picture library (Pillow) cannot be installed, alerts are sent without a map. Set `SEND_MAPS = False` in `notify.py` to switch this off.
 
 ## How fast alerts arrive
 
@@ -115,8 +129,9 @@ Earthquake and volcano alerts are treated as critical.
 | Airport reports and forecasts (issued by PAGASA) | aviationweather.gov | NOAA data server (same reports) |
 | Estimates (airports with no official report) | MET Norway | Open-Meteo |
 | Chance of rain and the 7-day outlook | Open-Meteo | none; the items are left out |
-| Typhoon watch and thunderstorm area warnings | Aviation storm warnings (aviationweather.gov) | GDACS (position only) |
-| Earthquakes | PHIVOLCS | USGS, then EMSC |
+| Tropical cyclones (typhoons) | Three sources read at every check: aviation storm warnings (aviationweather.gov) for position, movement and warning areas; RSMC Tokyo (Japan Meteorological Agency) for strength, wind reach and the 24-hour forecast; GDACS as an independent third | Each stands in for the others. A cyclone is confirmed only when at least two report it |
+| Thunderstorm area warnings | Aviation storm warnings (aviationweather.gov) | none |
+| Earthquakes | PHIVOLCS | USGS, then EMSC. Every earthquake of magnitude 5.0 or stronger is also cross-checked against USGS or EMSC |
 | Volcanic ash and eruptions | Aviation ash warnings (SIGMET), aviationweather.gov. Gives the ash area | Second source: Tokyo VAAC advisories (Japan Meteorological Agency). Confirms the warning, and stands in when it is missing or cannot be reached |
 | Volcano alert levels | PHIVOLCS volcano bulletins | Levels entered by hand in `volcano_levels.json` |
 | Rain on the map | MET Norway forecast grid | none |
@@ -125,6 +140,21 @@ Earthquake and volcano alerts are treated as critical.
 Accuracy ranking, highest first: official airport report, official airport forecast, official
 aviation area warning, computer forecast estimate. When sources differ, the higher-ranked one is
 used. Idle backups are tested every 6 hours and the result is shown in Help.
+
+## How readings are checked before they are shown or sent
+
+The dashboard is read by station staff, management and CAAP, so every reading says where it came
+from and whether a second source agrees.
+
+| Kind | What is compared | Rule |
+|---|---|---|
+| Airport weather | One official report exists per airport, so it is checked for age. It can be read from two servers | Danger is raised only from the official report, never from an Estimate. A report older than 90 minutes lowers the Confidence |
+| Earthquakes | PHIVOLCS against USGS and EMSC | Shown and sent as soon as the first agency reports, because minutes matter. Each one of magnitude 5.0 or stronger carries a Cross-check line: confirmed by a second agency, not yet confirmed, or could not be cross-checked |
+| Volcanic ash and eruptions | Aviation ash warning against the Tokyo VAAC advisory | Sent as soon as either official source reports. The details say whether Tokyo VAAC has confirmed it |
+| Tropical cyclones | Aviation storm warnings, RSMC Tokyo and GDACS | An alert is raised only after two of the three agree. Until then the cyclone is listed as "not yet confirmed" |
+
+If a source is down its backup is used and a yellow notice says so. A reading that could not be
+cross-checked says so in plain words; it is never shown as confirmed.
 
 ## The rules it follows
 
@@ -147,6 +177,22 @@ used. Idle backups are tested every 6 hours and the result is shown in Help.
   its details.
 - **Two agencies.** For strong earthquakes the USGS figure is shown beside the PHIVOLCS figure, and
   the more cautious of the two positions decides whether an airport is within 100 km.
+- **Typhoon classes** follow PAGASA, using winds averaged over 10 minutes: Tropical Depression up to
+  61 km/h, Tropical Storm 62 to 88, Severe Tropical Storm 89 to 117, Typhoon 118 to 184, Super
+  Typhoon 185 or more. GDACS measures over 1 minute, which reads higher, so its figure is shown for
+  comparison only.
+- **A confirmed cyclone** is reported by at least two of the three sources: the same name within
+  1,000 km, or positions within 300 km of each other.
+- **Typhoon alert:** a confirmed Tropical Storm or stronger whose strong winds (about 55 km/h or
+  more, the RSMC Tokyo 30-knot wind radius) can reach an airport now, or will at its forecast
+  position 24 hours ahead. When the wind reach is not reported, 300 km from the centre is used
+  (`TY_NEAR_KM` in `build.py`). A Tropical Depression is shown but raises no alert.
+- **Why that rule.** PAGASA raises Wind Signal No. 1 when winds of 39 to 61 km/h are expected within
+  36 hours and No. 2 (62 to 88 km/h) within 24 hours, and CAAP Memorandum Circular 013-2023 restricts
+  flights by aircraft of 5,700 kg and below in areas under Signal No. 1. Wind signals are not
+  published as data, so the measured reach of strong winds and the 24-hour forecast are used as the
+  nearest equivalent. The Safety office should confirm this rule; PAGASA's signal remains the
+  official one.
 - **Volcanoes** raise their own alerts, like earthquakes, and never change an airport's weather level.
   A volcano counts as near an airport within 150 km (no official standard exists; this covers about
   half of past airport disruptions in a US Geological Survey study).
@@ -171,8 +217,11 @@ used. Idle backups are tested every 6 hours and the result is shown in Help.
 - Agencies report different magnitudes for the same earthquake, and first figures are often
   revised. The dashboard shows the PHIVOLCS figure and follows its revisions.
 - No earthquake source is instant: agencies usually publish 5 to 20 minutes after the event.
-- PAGASA's public typhoon bulletins are not published as data, so they are not read directly.
-  Confirm typhoon decisions against PAGASA.
+- PAGASA's public typhoon bulletins and wind signals are not published as data, so they are not read
+  directly. The typhoon alert is based on measured wind reach, not on the wind signal. Confirm
+  typhoon decisions against PAGASA and CAAP advisories.
+- Low pressure areas are not shown: no reliable public data source was found, so a cyclone first
+  appears when it becomes a Tropical Depression.
 
 ## Data credits
 
