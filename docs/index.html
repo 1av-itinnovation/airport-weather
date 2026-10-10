@@ -1423,7 +1423,7 @@ body{background:var(--page);color:var(--ink)}
   body.glass{background:linear-gradient(155deg,#E9F0FB 0%,#E2EBF8 42%,#EEF1FB 100%) fixed}
   .glass .app{padding:16px 20px 18px;gap:12px;max-width:none;position:relative}
   .glass .rail{display:none}
-  .glass .gl,.glass header.top,.glass #kpis .k,.glass .col.list,.glass .col.side{background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);box-shadow:0 10px 30px rgba(52,84,140,.10),inset 0 0 0 1px rgba(255,255,255,.75)}
+  .glass .gl,.glass header.top,.glass #kpis .k,.glass .col.list,.glass .col.side{background:rgba(var(--g-surf),.66);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);box-shadow:0 10px 30px rgba(52,84,140,.10),inset 0 0 0 1px rgba(var(--g-surf),.75)}
 
   /* header bar */
   .glass header.top{border-radius:22px;padding:8px 10px 8px 8px;min-height:64px;align-items:center;gap:14px;color:var(--ink)}
@@ -1433,30 +1433,30 @@ body{background:var(--page);color:var(--ink)}
   .glass .brand h1,.glass .brand .checked{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .glass .brand img{display:block;height:36px;width:auto;background:none;padding:0 4px 0 8px;border-radius:0;box-sizing:content-box}
   .glass .brand>div{display:block}
-  .glass .brand h1{font-size:17px;font-weight:500;letter-spacing:-.01em;color:#1B2B45}
-  .glass .brand .checked{font-size:12px;color:#6B7A93;margin-top:1px}
-  .glass .brand .checked .nextup{color:#6B7A93;border-left-color:#C9D3E3}
-  .glass .pvtag{display:inline-flex;align-items:center;gap:8px;margin-left:10px;font-size:11px;font-weight:500;color:#4D5EE0;background:rgba(77,94,224,.10);border-radius:999px;padding:3px 10px;vertical-align:middle}
-  .glass .pvtag a{color:#4D5EE0;font-weight:600;text-decoration:none}
+  .glass .brand h1{font-size:17px;font-weight:500;letter-spacing:-.01em;color:var(--g-ink)}
+  .glass .brand .checked{font-size:12px;color:var(--g-muted);margin-top:1px}
+  .glass .brand .checked .nextup{color:var(--g-muted);border-left-color:var(--g-rule)}
+  .glass .pvtag{display:inline-flex;align-items:center;gap:8px;margin-left:10px;font-size:11px;font-weight:500;color:var(--g-accent-ink);background:rgba(77,94,224,.10);border-radius:999px;padding:3px 10px;vertical-align:middle}
+  .glass .pvtag a{color:var(--g-accent-ink);font-weight:600;text-decoration:none}
   .glass header.top .filters{flex:none;width:auto;flex-wrap:nowrap;display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:0;padding:0;overflow:visible}
   .glass header.top .filters .stat,.glass header.top .filters .spacer{display:none}
-  .glass header.top .filters select,.glass header.top .filters .daysw{height:44px;min-height:44px;border:none;border-radius:999px;background-color:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);font-size:13.5px;color:#1B2B45}
+  .glass header.top .filters select,.glass header.top .filters .daysw{height:44px;min-height:44px;border:none;border-radius:999px;background-color:rgba(var(--g-surf),.85);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);font-size:13.5px;color:var(--g-ink)}
   .glass header.top .filters select{padding:0 34px 0 18px;min-width:150px}
   .glass header.top .filters .daysw{padding:4px;gap:2px;overflow:hidden}
-  .glass header.top .filters .daysw button{border-radius:999px;height:36px;padding:0 16px;font-size:13px;background:transparent;color:#6B7A93;border:none}
-  .glass header.top .filters .daysw button.on{background:#4D5EE0;color:#FFFFFF}
+  .glass header.top .filters .daysw button{border-radius:999px;height:36px;padding:0 16px;font-size:13px;background:transparent;color:var(--g-muted);border:none}
+  .glass header.top .filters .daysw button.on{background:var(--g-accent);color:#FFFFFF}
   .glass header.top .tools{gap:6px;flex:none}
   .glass .chip{display:none}
-  .glass .sndbtn,.glass .helpbtn{width:44px;height:44px;border:none;border-radius:50%;background:rgba(255,255,255,.85);color:#4D5EE0;box-shadow:inset 0 0 0 1px rgba(120,140,180,.18)}
-  .glass .sndbtn.on{background:#4D5EE0;color:#FFFFFF}
+  .glass .sndbtn,.glass .helpbtn{width:44px;height:44px;border:none;border-radius:50%;background:rgba(var(--g-surf),.85);color:var(--g-accent-ink);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18)}
+  .glass .sndbtn.on{background:var(--g-accent);color:#FFFFFF}
 
   /* alerts and notes float over the map */
   .glass #alertBar{position:absolute;left:36px;top:calc(var(--maptop,92px) + 16px);width:min(470px,44%);z-index:12;gap:8px}
   .glass #alertBar .al{border-radius:16px;padding:9px 10px 9px 14px;box-shadow:0 10px 26px rgba(40,60,110,.22)}
   .glass #alertBar .al .tag{border-radius:999px}
   .glass #alertBar .al button.go{border-radius:999px}
-  .glass .almore{background:rgba(255,255,255,.9);border-radius:999px;padding:4px 12px}
-  .glass.app .notice,.glass .app .notice{position:absolute;right:150px;top:calc(var(--maptop,92px) + 20px);max-width:420px;z-index:11;background:rgba(255,255,255,.78);border-radius:999px;padding:6px 14px;box-shadow:0 6px 18px rgba(52,84,140,.12)}
+  .glass .almore{background:rgba(var(--g-surf),.9);border-radius:999px;padding:4px 12px}
+  .glass.app .notice,.glass .app .notice{position:absolute;right:150px;top:calc(var(--maptop,92px) + 20px);max-width:420px;z-index:11;background:rgba(var(--g-surf),.78);border-radius:999px;padding:6px 14px;box-shadow:0 6px 18px rgba(52,84,140,.12)}
   .glass .app .notice.open{border-radius:16px;white-space:normal}
 
   /* three rows: map, key figures, table + status */
@@ -1466,67 +1466,67 @@ body{background:var(--page);color:var(--ink)}
   .glass .app .cols .col.list,.glass .app .cols.tall .col.list{display:flex;grid-column:1;grid-row:3;border-radius:24px;padding:16px 20px 14px}
   .glass .app .cols .col.side,.glass .app .cols.tall .col.side{display:flex;grid-column:2;grid-row:3;border-radius:24px;padding:10px 20px 14px}
   .glass #kpis{display:grid;grid-column:1 / 3;grid-row:2;grid-template-columns:repeat(4,minmax(0,1.25fr)) repeat(2,minmax(0,1fr));grid-template-rows:auto auto;gap:8px}
-  .glass #kpis .k{border-radius:18px;padding:12px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-width:0;border:none;font:inherit;text-align:left;color:#1B2B45;cursor:default}
+  .glass #kpis .k{border-radius:18px;padding:12px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-width:0;border:none;font:inherit;text-align:left;color:var(--g-ink);cursor:default}
   .glass #kpis .k.big{grid-row:1 / 3}
   .glass #kpis .k .r{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-  .glass #kpis .k .t{font-size:12.5px;color:#56657F;line-height:1.3;min-width:0}
+  .glass #kpis .k .t{font-size:12.5px;color:var(--g-muted);line-height:1.3;min-width:0}
   .glass #kpis .k.sm{gap:8px}
   .glass #kpis .k.sm .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .glass #kpis .k.sm .t svg,.glass #kpis .k.sm .dot{flex:none}
-  .glass #kpis .k .v{font-size:15px;font-weight:500;color:#1B2B45;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .glass #kpis .k .v{font-size:15px;font-weight:500;color:var(--g-ink);white-space:nowrap;font-variant-numeric:tabular-nums}
   .glass #kpis .k .bar{height:4px;border-radius:2px;background:rgba(120,140,180,.18);overflow:hidden}
   .glass #kpis .k .bar i{display:block;height:100%;border-radius:2px;background:#2FC5B5}
   .glass #kpis .k.sm{flex-direction:row;align-items:center;padding:9px 16px}
   .glass #kpis .k.sm .t{display:flex;align-items:center;gap:8px}
-  .glass #kpis .k.sm .t svg{width:15px;height:15px;color:#4D5EE0}
+  .glass #kpis .k.sm .t svg{width:15px;height:15px;color:var(--g-accent-ink)}
   .glass #kpis .k.sm .dot{width:9px;height:9px;border-radius:50%;background:#2FC5B5;flex:none}
   .glass #kpis .k.sm.hot .v{color:#C62828;font-weight:600}
   .glass #kpis button.k{cursor:pointer}
-  .glass #kpis button.k.big:hover{background:rgba(255,255,255,.9)}
-  .glass #kpis button.k.big.on{background:#FFFFFF;box-shadow:0 0 0 2px #4D5EE0,0 10px 26px rgba(77,94,224,.16)}
-  .glass #kpis button.k.big.on .bar i{background:#4D5EE0}
+  .glass #kpis button.k.big:hover{background:rgba(var(--g-surf),.9)}
+  .glass #kpis button.k.big.on{background:var(--g-solid);box-shadow:0 0 0 2px var(--g-accent),0 10px 26px rgba(77,94,224,.16)}
+  .glass #kpis button.k.big.on .bar i{background:var(--g-accent)}
   .glass #kpis button.k.big .r{width:100%}
   .glass #kpis button.k.big .bar{width:100%}
 
   /* airport table */
   .glass .col.list .colhead{border:none;padding:0 0 8px}
-  .glass .col.list .colhead h2{font-size:21px;font-weight:500;letter-spacing:-.01em;color:#1B2B45}
-  .glass .col.list .colhead .sub{font-size:12.5px;color:#6B7A93}
+  .glass .col.list .colhead h2{font-size:21px;font-weight:500;letter-spacing:-.01em;color:var(--g-ink)}
+  .glass .col.list .colhead .sub{font-size:12.5px;color:var(--g-muted)}
   .glass .app .alert{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1.7fr) auto;align-items:center;gap:14px;padding:9px 6px;border-bottom:1px solid rgba(120,140,180,.16)}
-  .glass .app .alert::after{content:"Details";font-size:12.5px;font-weight:600;color:#FFFFFF;background:#4D5EE0;border-radius:999px;padding:8px 18px}
-  .glass .app .alert:hover{background:rgba(255,255,255,.55)}
+  .glass .app .alert::after{content:"Details";font-size:12.5px;font-weight:600;color:#FFFFFF;background:var(--g-accent);border-radius:999px;padding:8px 18px}
+  .glass .app .alert:hover{background:rgba(var(--g-surf),.55)}
   .glass .app .alert.on{background:rgba(77,94,224,.08);box-shadow:none;border-bottom:1px solid rgba(120,140,180,.16)}
   .glass .app .alert .a1{min-width:0;gap:10px}
   .glass .app .alert .a2{display:flex;justify-content:space-between;gap:12px;min-width:0}
   .glass .app .alert .a2>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .glass .app .alert .wh{white-space:nowrap;color:#1B2B45}
+  .glass .app .alert .wh{white-space:nowrap;color:var(--g-ink)}
   .glass .pill{border-radius:999px}
 
   /* status panel */
   .glass .col.side .stabs{border-bottom:none;gap:6px;padding:4px 0 8px}
-  .glass .app .col.side .stabs button{height:38px;padding:0 16px;border:none;border-radius:999px;background:transparent;color:#6B7A93;font-size:13.5px;margin:0}
-  .glass .app .col.side .stabs button.on{background:#FFFFFF;color:#1B2B45;font-weight:500;box-shadow:0 2px 8px rgba(52,84,140,.10)}
+  .glass .app .col.side .stabs button{height:38px;padding:0 16px;border:none;border-radius:999px;background:transparent;color:var(--g-muted);font-size:13.5px;margin:0}
+  .glass .app .col.side .stabs button.on{background:var(--g-solid);color:var(--g-ink);font-weight:500;box-shadow:0 2px 8px rgba(52,84,140,.10)}
   .glass .app .col.side .stabs button[data-tab="airports"]{display:none}
-  .glass .app .col.side .stabs #wxToggle{margin-left:auto;color:#4D5EE0}
+  .glass .app .col.side .stabs #wxToggle{margin-left:auto;color:var(--g-accent-ink)}
   .glass #statsBig{display:block;padding:6px 2px 4px}
   .glass #paneDetails.has-sel #statsBig{display:none}
   .glass #statsBig .nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-  .glass #statsBig button{border:none;background:transparent;text-align:left;padding:6px 6px 8px;border-radius:14px;cursor:pointer;font:inherit;color:#1B2B45;display:flex;align-items:baseline;gap:6px}
-  .glass #statsBig button:hover,.glass #statsBig button.on{background:rgba(255,255,255,.7)}
+  .glass #statsBig button{border:none;background:transparent;text-align:left;padding:6px 6px 8px;border-radius:14px;cursor:pointer;font:inherit;color:var(--g-ink);display:flex;align-items:baseline;gap:6px}
+  .glass #statsBig button:hover,.glass #statsBig button.on{background:rgba(var(--g-surf),.7)}
   .glass #statsBig button b{font-size:40px;font-weight:400;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
-  .glass #statsBig button span{font-size:12px;color:#6B7A93}
+  .glass #statsBig button span{font-size:12px;color:var(--g-muted)}
   .glass #statsBig .sbar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin:10px 2px 6px;background:rgba(120,140,180,.18)}
   .glass #statsBig .sbar i{display:block;height:100%}
   .glass .app .sum{border-top:1px solid rgba(120,140,180,.16);padding:11px 2px}
   .glass .hint{display:none}
 
   /* a selected airport, earthquake or volcano opens as a tall drawer on the right, so it has room to be read */
-  .glass .app .cols.has-sel .col.side{position:fixed;right:20px;top:92px;bottom:18px;width:440px;z-index:25;background:rgba(255,255,255,.92);box-shadow:0 24px 60px rgba(30,50,100,.28),inset 0 0 0 1px rgba(255,255,255,.8)}
+  .glass .app .cols.has-sel .col.side{position:fixed;right:20px;top:92px;bottom:18px;width:440px;z-index:25;background:rgba(var(--g-surf),.92);box-shadow:0 24px 60px rgba(30,50,100,.28),inset 0 0 0 1px rgba(var(--g-surf),.8)}
   .glass .app .cols.has-sel .col.list{grid-column:1 / 3}
   .glass .app .cols.has-sel .col.side .stabs{display:none}
   .glass .app .detail{padding:6px 2px 2px}
   /* map furniture */
-  .glass .lyrbtn,.glass .app .zoom,.glass .app .tour,.glass .app .vp>.rainbar{background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 8px 22px rgba(52,84,140,.16)}
+  .glass .lyrbtn,.glass .app .zoom,.glass .app .tour,.glass .app .vp>.rainbar{background:rgba(var(--g-surf),.82);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 8px 22px rgba(52,84,140,.16)}
   .glass .lyrbtn{border-radius:999px;height:44px;padding:0 18px}
   .glass .lyr{top:66px;border-radius:18px}
   .glass .app .zoom{border-radius:22px;left:auto;right:14px;bottom:14px;overflow:hidden}
@@ -1534,7 +1534,7 @@ body{background:var(--page);color:var(--ink)}
   .glass .app .tour{top:auto;bottom:70px;left:14px;right:auto;border-radius:999px;max-width:min(380px,36%)}
   .glass .app .vp>.rainbar{left:14px;right:auto;bottom:14px;margin:0;width:min(380px,36%);max-width:none;border-radius:999px;padding:6px 18px 6px 6px}
   .glass .app .vp>.rainbar .info{min-width:0}
-  .glass .app .vp>.rainbar #rainPlay{border-radius:50%;background:#4D5EE0}
+  .glass .app .vp>.rainbar #rainPlay{border-radius:50%;background:var(--g-accent)}
   /* ---------- the preview on smaller and larger screens ---------- */
 }
 @media (min-width:901px) and (max-width:1400px){
@@ -1590,7 +1590,7 @@ body{background:var(--page);color:var(--ink)}
    ===================================================================================== */
 @media (min-width:901px){
   .glass .app .cols,.glass .app .cols.tall{grid-template-columns:minmax(0,.86fr) minmax(0,.72fr) minmax(0,.48fr);grid-template-rows:auto minmax(0,1.25fr) minmax(170px,.75fr);gap:12px}
-  .glass .app .cols .col.map,.glass .app .cols.tall .col.map{grid-column:1;grid-row:1 / 4;display:flex;flex-direction:column;gap:8px;padding:8px;background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
+  .glass .app .cols .col.map,.glass .app .cols.tall .col.map{grid-column:1;grid-row:1 / 4;display:flex;flex-direction:column;gap:8px;padding:8px;background:rgba(var(--g-surf),.66);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
   .glass .app .vp{border-radius:20px;min-height:0}
   .glass #kpis{grid-column:2 / 4;grid-row:1;grid-template-columns:repeat(4,minmax(0,1fr))}
   .glass #kpis .k.big{grid-row:auto}
@@ -1602,15 +1602,15 @@ body{background:var(--page);color:var(--ink)}
   .glass .mapfoot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:none;padding:0 4px 0 2px}
   .glass .mapfoot .rainbar,.glass .app .mapfoot .rainbar{position:static;flex:1 1 260px;width:auto;max-width:none;margin:0;background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border:none;padding:2px 4px;display:flex;flex-wrap:nowrap;align-items:center;gap:12px}
   .glass .mapfoot .rainbar[hidden]{display:none}
-  .glass .mapfoot .rainbar #rainPlay{width:36px;min-height:36px;height:36px;padding:0;border:none;border-radius:50%;background:#4D5EE0;color:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none}
+  .glass .mapfoot .rainbar #rainPlay{width:36px;min-height:36px;height:36px;padding:0;border:none;border-radius:50%;background:var(--g-accent);color:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none}
   .glass .mapfoot .rainbar .info{flex:none;min-width:112px}
-  .glass .mapfoot .rainbar input[type=range]{flex:1;min-width:70px;accent-color:#4D5EE0}
-  .glass .app .mapfoot .tour{position:static;flex:none;max-width:100%;border-radius:999px;background:rgba(255,255,255,.9);box-shadow:inset 0 0 0 1px rgba(120,140,180,.2);-webkit-backdrop-filter:none;backdrop-filter:none;padding:6px 8px 6px 12px}
+  .glass .mapfoot .rainbar input[type=range]{flex:1;min-width:70px;accent-color:var(--g-accent)}
+  .glass .app .mapfoot .tour{position:static;flex:none;max-width:100%;border-radius:999px;background:rgba(var(--g-surf),.9);box-shadow:inset 0 0 0 1px rgba(120,140,180,.2);-webkit-backdrop-filter:none;backdrop-filter:none;padding:6px 8px 6px 12px}
   .glass .app .mapfoot .tour[hidden]{display:none}
   /* alerts float over the top of the map and never run past it */
   .glass #alertBar{left:36px;width:min(440px,calc(var(--mapw,520px) - 150px))}
   /* a data note is a slim line under the header */
-  .glass.app .notice,.glass .app .notice{position:static;max-width:none;align-self:flex-start;border-radius:999px;padding:5px 14px;box-shadow:none;background:rgba(255,255,255,.7)}
+  .glass.app .notice,.glass .app .notice{position:static;max-width:none;align-self:flex-start;border-radius:999px;padding:5px 14px;box-shadow:none;background:rgba(var(--g-surf),.7)}
 }
 @media (min-width:1500px){
   /* room for the airport list and the status panel side by side */
@@ -1645,68 +1645,68 @@ body{background:var(--page);color:var(--ink)}
 @media (max-width:900px){
   body.glass{background:linear-gradient(165deg,#E9F0FB 0%,#E2EBF8 45%,#EEF1FB 100%) fixed}
   .glass .app{padding:10px 10px 14px;gap:10px}
-  .glass header.top,.glass .app .col,.glass .app .ptabs,.glass .app .filters .stat{background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);box-shadow:0 8px 24px rgba(52,84,140,.10),inset 0 0 0 1px rgba(255,255,255,.8);border:none}
-  .glass .app header.top{border-radius:20px;padding:8px 10px 8px 8px;color:#1B2B45;align-items:center;gap:10px;flex-wrap:nowrap}
+  .glass header.top,.glass .app .col,.glass .app .ptabs,.glass .app .filters .stat{background:rgba(var(--g-surf),.72);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);box-shadow:0 8px 24px rgba(52,84,140,.10),inset 0 0 0 1px rgba(var(--g-surf),.8);border:none}
+  .glass .app header.top{border-radius:20px;padding:8px 10px 8px 8px;color:var(--g-ink);align-items:center;gap:10px;flex-wrap:nowrap}
   .glass .brand{gap:10px;align-items:center;min-width:0;flex:1 1 auto}
   .glass .brand>div{min-width:0}
   .glass .app .brand img{display:block;height:30px;width:auto;background:none;padding:0 2px 0 6px;border-radius:0;box-sizing:content-box}
-  .glass .app .brand h1{font-size:15px;font-weight:500;letter-spacing:-.01em;color:#1B2B45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .glass .app .brand .checked{font-size:11px;color:#6B7A93;line-height:1.3}
-  .glass .app .brand .checked .nextup{color:#6B7A93;border-left-color:#C9D3E3}
+  .glass .app .brand h1{font-size:15px;font-weight:500;letter-spacing:-.01em;color:var(--g-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .glass .app .brand .checked{font-size:11px;color:var(--g-muted);line-height:1.3}
+  .glass .app .brand .checked .nextup{color:var(--g-muted);border-left-color:var(--g-rule)}
   .glass .pvtag{display:none}
   .glass header.top .tools{gap:6px;flex:none}
-  .glass .app .sndbtn,.glass .app .helpbtn{width:40px;height:40px;border:none;border-radius:50%;background:rgba(255,255,255,.9);color:#4D5EE0;box-shadow:inset 0 0 0 1px rgba(120,140,180,.2)}
-  .glass .app .sndbtn.on{background:#4D5EE0;color:#FFFFFF}
+  .glass .app .sndbtn,.glass .app .helpbtn{width:40px;height:40px;border:none;border-radius:50%;background:rgba(var(--g-surf),.9);color:var(--g-accent-ink);box-shadow:inset 0 0 0 1px rgba(120,140,180,.2)}
+  .glass .app .sndbtn.on{background:var(--g-accent);color:#FFFFFF}
   .glass .chip{display:none}
 
   .glass #alertBar{gap:7px}
   .glass #alertBar .al{border-radius:16px;padding:8px 10px 8px 12px;box-shadow:0 8px 20px rgba(40,60,110,.18)}
   .glass #alertBar .al .tag,.glass #alertBar .al button.go{border-radius:999px}
-  .glass .almore{background:rgba(255,255,255,.9);border-radius:999px;padding:4px 12px;align-self:flex-start}
+  .glass .almore{background:rgba(var(--g-surf),.9);border-radius:999px;padding:4px 12px;align-self:flex-start}
 
-  .glass .app .filters .stat{border-radius:16px;border-top:none;padding:8px 2px 7px;color:#1B2B45}
+  .glass .app .filters .stat{border-radius:16px;border-top:none;padding:8px 2px 7px;color:var(--g-ink)}
   .glass .app .filters .stat .n{font-weight:500;font-size:19px}
-  .glass .app .filters .stat .l{color:#6B7A93;font-size:11px}
-  .glass .app .filters .stat.on{background:#FFFFFF;box-shadow:0 0 0 2px #4D5EE0,0 8px 20px rgba(77,94,224,.16)}
-  .glass .app .filters .daysw{border:none;border-radius:999px;background:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);padding:3px;gap:2px;height:40px;overflow:hidden}
-  .glass .app .filters .daysw button{border:none;border-radius:999px;background:transparent;color:#6B7A93;height:34px;padding:0 12px;font-size:12.5px}
-  .glass .app .filters .daysw button.on{background:#4D5EE0;color:#FFFFFF}
-  .glass .app .filters select{height:40px;min-height:40px;border:none;border-radius:999px;background-color:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);font-size:12.5px;color:#1B2B45;padding:0 24px 0 14px;min-width:0}
+  .glass .app .filters .stat .l{color:var(--g-muted);font-size:11px}
+  .glass .app .filters .stat.on{background:var(--g-solid);box-shadow:0 0 0 2px var(--g-accent),0 8px 20px rgba(77,94,224,.16)}
+  .glass .app .filters .daysw{border:none;border-radius:999px;background:rgba(var(--g-surf),.85);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);padding:3px;gap:2px;height:40px;overflow:hidden}
+  .glass .app .filters .daysw button{border:none;border-radius:999px;background:transparent;color:var(--g-muted);height:34px;padding:0 12px;font-size:12.5px}
+  .glass .app .filters .daysw button.on{background:var(--g-accent);color:#FFFFFF}
+  .glass .app .filters select{height:40px;min-height:40px;border:none;border-radius:999px;background-color:rgba(var(--g-surf),.85);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);font-size:12.5px;color:var(--g-ink);padding:0 24px 0 14px;min-width:0}
 
   .glass .app .ptabs{border-radius:999px;padding:4px;gap:2px;border-bottom:none}
-  .glass .app .ptabs button{height:36px;border:none;border-radius:999px;color:#6B7A93;font-weight:500;background:transparent}
-  .glass .app .ptabs button.on{background:#FFFFFF;color:#1B2B45;font-weight:600;border:none;box-shadow:0 2px 8px rgba(52,84,140,.14)}
+  .glass .app .ptabs button{height:36px;border:none;border-radius:999px;color:var(--g-muted);font-weight:500;background:transparent}
+  .glass .app .ptabs button.on{background:var(--g-solid);color:var(--g-ink);font-weight:600;border:none;box-shadow:0 2px 8px rgba(52,84,140,.14)}
 
   .glass .app .col{border-radius:22px;padding:10px}
   .glass .app .col.map{padding:6px}
   .glass .app .vp{border:none;border-radius:18px;background:#DDEEF3}
-  .glass .lyrbtn,.glass .app .zoom,.glass .app .tour{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 6px 18px rgba(52,84,140,.16);border:none}
+  .glass .lyrbtn,.glass .app .zoom,.glass .app .tour{background:rgba(var(--g-surf),.86);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 6px 18px rgba(52,84,140,.16);border:none}
   .glass .lyrbtn{border-radius:999px;height:38px;padding:0 14px}
   .glass .lyr{border-radius:16px}
   .glass .app .zoom{border-radius:18px;overflow:hidden}
   .glass .app .tour{border-radius:999px}
   .glass .app .rainbar{padding:6px 6px 2px}
-  .glass .app .rainbar #rainPlay{width:36px;min-height:36px;height:36px;padding:0;border:none;border-radius:50%;background:#4D5EE0;color:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none}
-  .glass .app .rainbar input[type=range]{accent-color:#4D5EE0}
+  .glass .app .rainbar #rainPlay{width:36px;min-height:36px;height:36px;padding:0;border:none;border-radius:50%;background:var(--g-accent);color:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none}
+  .glass .app .rainbar input[type=range]{accent-color:var(--g-accent)}
 
   .glass .col.list .colhead{border:none;padding:4px 6px 6px}
-  .glass .col.list .colhead h2{font-size:17px;font-weight:500;letter-spacing:-.01em;color:#1B2B45}
+  .glass .col.list .colhead h2{font-size:17px;font-weight:500;letter-spacing:-.01em;color:var(--g-ink)}
   .glass .app .alert{border-bottom:1px solid rgba(120,140,180,.16);border-radius:0;padding:10px 6px}
   .glass .app .alert.on{background:rgba(77,94,224,.08);box-shadow:none}
   .glass .pill{border-radius:999px}
 
   .glass .col.side .stabs{border-bottom:none;gap:4px;padding:2px 0 6px}
-  .glass .app .col.side .stabs button{height:36px;padding:0 14px;border:none;border-radius:999px;background:transparent;color:#6B7A93;font-size:13px;margin:0}
-  .glass .app .col.side .stabs button.on{background:#FFFFFF;color:#1B2B45;font-weight:500;box-shadow:0 2px 8px rgba(52,84,140,.10)}
+  .glass .app .col.side .stabs button{height:36px;padding:0 14px;border:none;border-radius:999px;background:transparent;color:var(--g-muted);font-size:13px;margin:0}
+  .glass .app .col.side .stabs button.on{background:var(--g-solid);color:var(--g-ink);font-weight:500;box-shadow:0 2px 8px rgba(52,84,140,.10)}
   .glass .app .col.side .stabs button[data-tab="airports"]{display:none}
-  .glass .app .col.side .stabs #wxToggle{margin-left:auto;color:#4D5EE0}
+  .glass .app .col.side .stabs #wxToggle{margin-left:auto;color:var(--g-accent-ink)}
   .glass #statsBig{display:block;padding:6px 2px 4px}
   .glass #paneDetails.has-sel #statsBig{display:none}
   .glass #statsBig .nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
-  .glass #statsBig button{border:none;background:transparent;text-align:left;padding:6px 6px 8px;border-radius:14px;cursor:pointer;font:inherit;color:#1B2B45;display:flex;flex-direction:column;gap:2px}
-  .glass #statsBig button.on{background:rgba(255,255,255,.8)}
+  .glass #statsBig button{border:none;background:transparent;text-align:left;padding:6px 6px 8px;border-radius:14px;cursor:pointer;font:inherit;color:var(--g-ink);display:flex;flex-direction:column;gap:2px}
+  .glass #statsBig button.on{background:rgba(var(--g-surf),.8)}
   .glass #statsBig button b{font-size:30px;font-weight:400;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
-  .glass #statsBig button span{font-size:11.5px;color:#6B7A93}
+  .glass #statsBig button span{font-size:11.5px;color:var(--g-muted)}
   .glass #statsBig .sbar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin:10px 2px 6px;background:rgba(120,140,180,.18)}
   .glass #statsBig .sbar i{display:block;height:100%}
   .glass .app .sum{border-top:1px solid rgba(120,140,180,.16)}
@@ -1727,7 +1727,7 @@ body{background:var(--page);color:var(--ink)}
 /* ---------- airport callouts on the map (all screen sizes) ----------
    Only Danger airports, the selected airport and the one under the pointer get a callout,
    so names never pile up. "All airport names" in Layers shows small name tags instead. */
-.glass .layer .pin.a .lab{display:none;left:16px;top:-21px;align-items:center;gap:9px;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:none;border-radius:15px;padding:5px 14px 5px 5px;box-shadow:0 8px 20px rgba(40,60,110,.18);font-size:11.5px;line-height:1.25;color:#1B2B45;white-space:nowrap}
+.glass .layer .pin.a .lab{display:none;left:16px;top:-21px;align-items:center;gap:9px;background:rgba(var(--g-surf),.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:none;border-radius:15px;padding:5px 14px 5px 5px;box-shadow:0 8px 20px rgba(40,60,110,.18);font-size:11.5px;line-height:1.25;color:var(--g-ink);white-space:nowrap}
 .glass .layer .pin.a.lv-danger .lab,.glass .layer .pin.a.sel .lab,.glass .layer .pin.a:hover .lab,.glass .layer .stage.all-labels .pin.a .lab{display:flex}
 .glass .layer .stage.few-labels:not(.all-labels) .pin.a.lv-warning:not(.sel):not(:hover) .lab{display:none}
 .glass .pin.a.lv-danger{z-index:5}.glass .pin.a.sel{z-index:7}.glass .pin.a:hover{z-index:8}
@@ -1739,7 +1739,7 @@ body{background:var(--page);color:var(--ink)}
 .glass .pin.a .lab b{display:block;font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis}
 .glass .pin.a .lab>span{min-width:0;overflow:hidden}
 .glass .pin.a .lab{box-sizing:border-box}
-.glass .pin.a .lab em{display:block;font-style:normal;color:#56657F;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glass .pin.a .lab em{display:block;font-style:normal;color:var(--g-muted);font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab{top:-9px;left:12px;padding:1px 7px;border-radius:7px;box-shadow:0 2px 6px rgba(40,60,110,.14);font-size:11px}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab .bd,.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab em{display:none}
 .glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab b{font-weight:500;font-size:11px}
@@ -1761,7 +1761,7 @@ body{background:var(--page);color:var(--ink)}
 
 /* zoom buttons: a clear focus ring that stays inside the button */
 .glass .app .zoom button:focus{outline:none}
-.glass .app .zoom button:focus-visible{outline:2px solid #4D5EE0;outline-offset:-4px;border-radius:14px}
+.glass .app .zoom button:focus-visible{outline:2px solid var(--g-accent);outline-offset:-4px;border-radius:14px}
 
 /* =====================================================================================
    MOTION: one calm, consistent feel. Things ease out and settle; nothing bounces or flashes.
@@ -1862,9 +1862,95 @@ body{background:var(--page);color:var(--ink)}
   .glass .app .sndbtn,.glass .app .helpbtn{width:36px;height:36px}
   .glass .app .brand .checked{font-size:11px}
 }
+
+/* =====================================================================================
+   DAY AND NIGHT. The button in the header switches between Auto (follows the device),
+   Day and Night. The choice is remembered on that device.
+   ===================================================================================== */
+.glass{--g-surf:255,255,255;--g-solid:#FFFFFF;--g-ink:#1B2B45;--g-muted:#5F6E88;--g-accent:#4D5EE0;--g-accent-ink:#4D5EE0;--g-rule:#C9D3E3}
+.themebtn{width:44px;height:44px;border:none;border-radius:50%;background:rgba(var(--g-surf),.85);color:var(--g-accent-ink);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
+.themebtn svg{width:18px;height:18px;display:block}
+@media (max-width:900px){.themebtn{width:40px;height:40px}}
+@media (max-width:480px){.glass .app .themebtn,.glass .app .sndbtn,.glass .app .helpbtn{width:34px;height:34px}.glass header.top .tools{gap:4px}.glass .app .brand h1{font-size:13px;letter-spacing:-.015em}.glass .app .brand img{height:26px;padding:0 0 0 4px}.glass .app .brand{gap:8px}}
+@media (max-width:350px){.glass .app .brand h1{font-size:12.5px}.glass .app .brand img{height:22px}}
+html[data-theme="dark"]{color-scheme:dark;--ink:#E8EDF6;--muted:#9AA8BF;--line:rgba(140,160,200,.20);--panel:#1B2335;--page:#0C111B;--brand:#A9BEFF;--action:#A9BEFF;--tint:#222B40}
+html[data-theme="dark"] .glass{--g-surf:30,39,58;--g-solid:#2A3550;--g-ink:#E8EDF6;--g-muted:#9AA8BF;--g-accent:#5B6BF0;--g-accent-ink:#AEB9FF;--g-rule:rgba(140,160,200,.28)}
+html[data-theme="dark"] body.glass{background:linear-gradient(160deg,#0B1019 0%,#0E1522 45%,#101726 100%) fixed;color:var(--g-ink)}
+/* the map: the same drawing, shown dark */
+html[data-theme="dark"] .glass .app .vp{background:#0F1A27}
+html[data-theme="dark"] .glass .app .zoom{background:rgba(30,39,58,.9)}
+html[data-theme="dark"] .glass .app .zoom button{background:transparent;color:#DCE4F2;border-bottom-color:rgba(140,160,200,.2)}
+html[data-theme="dark"] .glass .app .banner{background:rgba(30,39,58,.92);color:#E8EDF6;box-shadow:0 0 0 1px rgba(140,160,200,.2)}
+html[data-theme="dark"] .glass .lyr{background:#1F283B;box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 0 1px rgba(140,160,200,.2)}
+html[data-theme="dark"] .glass .lyr label{color:#E8EDF6}
+html[data-theme="dark"] .glass .lyr label:hover{background:#28334A}
+html[data-theme="dark"] .glass .pin.a .lab{background:rgba(30,39,58,.92);color:#E8EDF6;box-shadow:0 8px 20px rgba(0,0,0,.45)}
+html[data-theme="dark"] .glass .pin.a .dot{border-color:#E8EDF6 !important}
+html[data-theme="dark"] .glass .pin .qring{border-color:#C58BEA;background:rgba(179,106,226,.22)}
+html[data-theme="dark"] .glass .pin.q .qlab, html[data-theme="dark"] .glass .pin.q .ql, html[data-theme="dark"] .glass .pin.q span[class*=lab]{color:#D9B3F5;text-shadow:0 0 3px #0F1A27,0 0 3px #0F1A27}
+html[data-theme="dark"] .glass .pin.q.qs i{background:#C58BEA}
+html[data-theme="dark"] .glass .pin.v .vlab{color:#FFAE8A;text-shadow:0 0 3px #0F1A27,0 0 3px #0F1A27}
+html[data-theme="dark"] .glass .selbar{background:#1B2538;border-color:#5A9BE0;color:#E8EDF6}
+html[data-theme="dark"] .glass .selbar .btn, html[data-theme="dark"] .glass .app .btn{background:#26314A;color:#C9D4FF;border-color:rgba(140,160,200,.28)}
+html[data-theme="dark"] .glass .dtodo{background:#232C40;color:#E8EDF6;border-left-color:#6F8196}
+html[data-theme="dark"] .glass .dtodo.danger{background:rgba(198,40,40,.20);border-left-color:#EF5350}
+html[data-theme="dark"] .glass .dtodo.warning{background:rgba(245,124,0,.18);border-left-color:#FB8C00}
+html[data-theme="dark"] .glass .dtodo.advisory{background:rgba(224,174,0,.16);border-left-color:#E0AE00}
+html[data-theme="dark"] .glass .dtodo.normal{background:rgba(46,125,50,.20);border-left-color:#43A047}
+html[data-theme="dark"] .glass .dtodo.quake{background:rgba(142,68,190,.22);border-left-color:#B36AE2}
+html[data-theme="dark"] .glass .dtodo.volcano{background:rgba(191,54,12,.22);border-left-color:#F4683A}
+html[data-theme="dark"] .glass .dfacts div{background:#232C40}
+html[data-theme="dark"] .glass .hrs, html[data-theme="dark"] .glass .wks{background:#1B2335;border-color:rgba(140,160,200,.2)}
+html[data-theme="dark"] .glass .hr .hc{color:#E8EDF6}
+html[data-theme="dark"] .glass .hr .ht, html[data-theme="dark"] .glass .hr .hm, html[data-theme="dark"] .glass .hcap, html[data-theme="dark"] .glass .hkey, html[data-theme="dark"] .glass .wk .wl{color:#9AA8BF}
+html[data-theme="dark"] .glass .hr.now .ht{color:#A9BEFF}
+html[data-theme="dark"] .glass .hr .hbar{border-bottom-color:rgba(140,160,200,.25)}
+html[data-theme="dark"] .glass .hr .hw.light{color:#6CB8F5}
+html[data-theme="dark"] .glass .hr .hw.mod{color:#FF9B57}
+html[data-theme="dark"] .glass .hr .hw.heavy{color:#FF7A7A}
+html[data-theme="dark"] .glass .hr .hw.dry, html[data-theme="dark"] .glass .hr .hc.na{color:#6F7F97}
+html[data-theme="dark"] .glass .wk{border-top-color:rgba(140,160,200,.14)}
+html[data-theme="dark"] .glass .wk .wc{color:#8FBFFF}
+html[data-theme="dark"] .glass .wk .wt{color:#FFB25E}
+html[data-theme="dark"] .glass .wk .wd, html[data-theme="dark"] .glass .wk .wh{color:#E8EDF6}
+html[data-theme="dark"] .glass .app .detail .hd .btn.xbtn{background:#28334A;color:#C3CEE0}
+html[data-theme="dark"] .glass .app .detail .hd .btn.xbtn:hover{background:#34405C;color:#FFFFFF}
+html[data-theme="dark"] .glass .pill.est, html[data-theme="dark"] .glass .pill.nodata{border-color:rgba(160,180,215,.4);color:#B3C0D6}
+html[data-theme="dark"] .glass .pill.blue{background:rgba(90,155,224,.2);color:#9CCBFF}
+html[data-theme="dark"] .glass .empty{color:#9AA8BF}
+html[data-theme="dark"] .glass .hz .hzs.on{color:#FF7A7A}
+html[data-theme="dark"] .glass .vline b{color:#FF8A5C}
+html[data-theme="dark"] .glass .vline.quiet b{color:#9AA8BF}
+html[data-theme="dark"] .glass .app .notice{color:#F2C94C}
+html[data-theme="dark"] .glass .app .notice.open{background:#2B2718}
+html[data-theme="dark"] .glass .modal .back{background:rgba(4,8,14,.72)}
+html[data-theme="dark"] .glass .modal .box{background:#182033;color:#E8EDF6;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+html[data-theme="dark"] .glass .modal .mh{background:#182033;border-bottom-color:rgba(140,160,200,.2)}
+html[data-theme="dark"] .glass .modal .mh h2, html[data-theme="dark"] .glass .modal h3, html[data-theme="dark"] .glass .modal strong, html[data-theme="dark"] .glass .modal .subh, html[data-theme="dark"] .glass #modal .box > .sec .subh{color:#E8EDF6}
+html[data-theme="dark"] .glass .modal p, html[data-theme="dark"] .glass .modal li, html[data-theme="dark"] .glass .modal .t{color:#C3CEE0}
+html[data-theme="dark"] .glass .modal .sec, html[data-theme="dark"] .glass .modal .src{border-color:rgba(140,160,200,.18)}
+html[data-theme="dark"] .glass .modal .src b{color:#E8EDF6}
+html[data-theme="dark"] .glass .modal h3{color:#A9BEFF}
+html[data-theme="dark"] .glass .modal .mh .btn, html[data-theme="dark"] .glass .modal .btn{background:#26314A;color:#C9D4FF;border-color:rgba(140,160,200,.28)}
+html[data-theme="dark"] .glass .seg{background:#26314A;color:#C9D4FF;border-color:rgba(140,160,200,.28)}
+html[data-theme="dark"] .glass .seg.on{background:#5B6BF0;color:#FFFFFF;border-color:#5B6BF0}
+html[data-theme="dark"] .glass .wxframe{background:#0F1A27;border-color:rgba(140,160,200,.2)}
+html[data-theme="dark"] .glass .app .alert:hover{background:rgba(255,255,255,.05)}
+html[data-theme="dark"] .glass .app .alert.on{background:rgba(124,139,255,.16)}
+html[data-theme="dark"] .glass .app .alert .wh{color:#E8EDF6}
+html[data-theme="dark"] .glass #kpis button.k.big:hover{background:rgba(42,53,80,.95)}
+html[data-theme="dark"] .glass #kpis .k.sm.hot .v{color:#FF7A7A}
+html[data-theme="dark"] .glass .app .filters .stat .n{color:#E8EDF6}
+html[data-theme="dark"] .glass .app .filters .stat.danger .n{color:#FF7A7A}
+html[data-theme="dark"] .glass .app .filters select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.500-3.500' fill='none' stroke='%23E8EDF6' stroke-width='1.500' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html[data-theme="dark"] .glass .app .filters select option{background:#1F283B;color:#E8EDF6}
+html[data-theme="dark"] .glass .rainbar input[type=range]{accent-color:#7C8BFF}
+html[data-theme="dark"] .glass .app .rainbar .info .k{color:#9AA8BF}
+html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
 </style>
 </head>
 <body class="glass">
+<script>(function(){try{var p=localStorage.getItem('awm-theme')||'auto',d=p==='dark'||(p==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
 <div class="app">
 
 <nav class="rail" id="rail" aria-label="Hazards and tools">
@@ -1884,6 +1970,7 @@ body{background:var(--page);color:var(--ink)}
   </div>
   <div class="tools">
     <div class="chip" id="chip">Live, updates about every 22 minutes</div>
+    <button class="themebtn" id="themeBtn" aria-label="Colour theme"></button>
     <button class="sndbtn" id="sndBtn" aria-pressed="false" aria-label="Sound alerts are off" title="Sound alerts: off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.500 2-6.500zM10 19.500a2.200 2.200 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/><path class="off" d="M4 4l16 16" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"/></svg></button>
     <button class="helpbtn" id="helpBtn" aria-label="How this dashboard works" title="How this dashboard works"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.300 9.200a2.800 2.800 0 0 1 5.400 1c0 1.900-2.700 2.400-2.700 4M12 17.200h.010"/></svg></button>
   </div>
@@ -2031,7 +2118,7 @@ body{background:var(--page);color:var(--ink)}
         <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
         <li><strong>Details window.</strong> Selecting an airport, earthquake or volcano opens its details in a window on the right. Press the X to close it.</li>
         <li><strong>Alerts over the map.</strong> Earthquake, volcano and Danger alerts appear as coloured cards at the top of the map. Press Details on a card to open it. If there are more than three, press "more" to see the rest.</li>
-        <li><strong>Bell and question mark.</strong> At the top right. The bell turns the alert chime on or off, and the question mark opens this guide.</li>
+        <li><strong>Bell and question mark.</strong> At the top right. The bell turns the alert chime on or off, and the question mark opens this guide. The first button changes the colours: Auto follows the device, then Day, then Night; the choice is remembered on that device.</li>
         <li><strong>On a phone.</strong> The map, the airport list and the details become three tabs.</li>
       </ul>
       <p class="subh">An airport's details</p>
@@ -2810,6 +2897,24 @@ $('list').addEventListener('click', function (e) { var b = e.target.closest('[da
 $('rail').addEventListener('click', function (e) { var b = e.target.closest('.rz'); if (b) { S.tab = b.getAttribute('data-go'); applyState(); } });
 arrange();
 if (WIDE.addEventListener) WIDE.addEventListener('change', function () { arrange(); if (D) applyState(); fit(); }); else if (WIDE.addListener) WIDE.addListener(function () { arrange(); if (D) applyState(); fit(); });
+/* ---------- day / night / auto ---------- */
+var THEME = 'auto'; try { THEME = localStorage.getItem('awm-theme') || 'auto'; } catch (e) {}
+var DARKMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+var THEME_ICON = {
+  auto: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.800"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
+  light: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.500v2.500M12 19v2.500M2.500 12H5M19 12h2.500M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800"/></svg>',
+  dark: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linejoin="round"><path d="M20 14.500A8 8 0 0 1 9.500 4a7 7 0 1 0 10.500 10.500z"/></svg>' };
+var THEME_WORD = { auto: 'Auto (follows this device)', light: 'Day', dark: 'Night' };
+function applyTheme() {
+  var dark = THEME === 'dark' || (THEME === 'auto' && DARKMQ && DARKMQ.matches);
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  var mi = document.querySelector('#stage img'), wi = $('wideMap'), want = dark ? 'assets/map-dark.svg' : 'assets/map.svg', wantW = dark ? 'assets/map-wide-dark.svg' : 'assets/map-wide.svg';
+  if (mi && mi.getAttribute('src') !== want) mi.setAttribute('src', want); if (wi && wi.getAttribute('src') !== wantW) wi.setAttribute('src', wantW);
+  var b = $('themeBtn'); if (b) { b.innerHTML = THEME_ICON[THEME]; b.title = 'Colour theme: ' + THEME_WORD[THEME] + '. Press to change.'; b.setAttribute('aria-label', b.title); }
+}
+$('themeBtn').addEventListener('click', function () { THEME = THEME === 'auto' ? 'light' : THEME === 'light' ? 'dark' : 'auto'; try { localStorage.setItem('awm-theme', THEME); } catch (e) {} applyTheme(); });
+if (DARKMQ) { if (DARKMQ.addEventListener) DARKMQ.addEventListener('change', applyTheme); else if (DARKMQ.addListener) DARKMQ.addListener(applyTheme); }
+applyTheme();
 /* ---------- motion helpers ---------- */
 document.body.classList.add('booting'); setTimeout(function () { document.body.classList.remove('booting'); }, 1600);
 var MOTION_OK = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches), LASTKEY = '', CLOSING = 0;
