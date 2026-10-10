@@ -2023,7 +2023,7 @@ body{background:var(--page);color:var(--ink)}
       <ul>
         <li><strong>Level counts.</strong> The four large numbers (Danger, Warning, Advisory, Normal) show how many airports are at each level. Press one to show only that level on the map and in the list; press it again to go back. On a phone these are the five tiles under the alerts.</li>
         <li><strong>Today and Tomorrow.</strong> At the top. Switches the list between today's alerts and airports with bad weather forecast for tomorrow.</li>
-        <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport.</li>
+        <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport; when a region is chosen it lists only the airports in that region.</li>
         <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
         <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the whole map and clears the selection.</li>
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
@@ -2251,6 +2251,14 @@ function agoText(ms) {
 function phTime(ms) { return new Date(ms).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' }); }
 function phDay(ms) { return new Date(ms).toLocaleDateString('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' }); }
 function inRegion(a) { return !S.region || a.region === S.region; }
+/* the Find airport list only offers airports in the chosen region */
+var PICK_KEY = null;
+function fillAirportPick() {
+  if (!D) return; var key = S.region + '|' + D.generated_ms; if (key === PICK_KEY) return; PICK_KEY = key;
+  var opts = '<option value="">Find airport</option>';
+  D.airports.filter(inRegion).sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) { opts += '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>'; });
+  $('airportPick').innerHTML = opts;
+}
 function levelShown(lv, forMap) {
   if (S.filter === 'alerts' || S.filter === 'official') return forMap ? true : ORDER.indexOf(lv) >= 0;
   return lv === S.filter;
@@ -2261,9 +2269,7 @@ function sorted(list) { return list.slice().sort(function (a, b) { return (a.sor
 function renderData() {
   $('checked').textContent = D.checked.split('. ')[0].replace(/\.$/, '') + ' (Philippine time)';
   $('hChecked').textContent = D.checked;
-  var opts = '<option value="">Find airport</option>';
-  D.airports.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) { opts += '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>'; });
-  $('airportPick').innerHTML = opts;
+  fillAirportPick();
 
   var h = '';
   allQuakes().forEach(function (q) {
@@ -2479,7 +2485,7 @@ function applyState() {
   $('nAdv').textContent = c.advisory; $('nWarn').textContent = c.warning; $('nDanger').textContent = c.danger; $('nNormal').textContent = c.normal;
   Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.classList.toggle('on', b.getAttribute('data-f') === S.filter); var n = b.querySelector('.n'); b.classList.toggle('zero', !!n && n.textContent === '0'); });
   Array.prototype.forEach.call(document.querySelectorAll('.daysw button'), function (b) { b.classList.toggle('on', b.getAttribute('data-day') === S.day); });
-  $('region').value = S.region; $('airportPick').value = S.sel;
+  fillAirportPick(); $('region').value = S.region; $('airportPick').value = S.sel;
 
   Array.prototype.forEach.call(document.querySelectorAll('.pin.a'), function (el) {
     var a = byId(el.getAttribute('data-a'));
