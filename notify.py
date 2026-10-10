@@ -55,6 +55,10 @@ BRIEF_WINDOW_HOURS = 2       # a briefing is sent at the first refresh in this w
 PHT = dt.timezone(dt.timedelta(hours=8))
 def pht(ms): return dt.datetime.fromtimestamp(ms / 1000, PHT)
 def clock(ms): t = pht(ms); return f"{t.strftime('%b')} {t.day}, {t.strftime('%I:%M %p').lstrip('0')}"
+def exact(ms):
+    """A time for the record: date, clock time to the second when the source gives seconds, and the UTC time beside it."""
+    t = pht(ms); u = dt.datetime.fromtimestamp(ms / 1000, dt.timezone.utc); sec = bool(t.second)
+    return f"{t.strftime('%A')}, {t.strftime('%b')} {t.day}, {t.strftime('%I:%M:%S %p' if sec else '%I:%M %p').lstrip('0')} Philippine time ({u.strftime('%H:%M:%S' if sec else '%H:%M')} UTC)"
 def esc(s): return html.escape(str(s or ''))
 
 def as_of(d):
@@ -178,7 +182,7 @@ def _volcano_parts(a, v):
     name = (v or {}).get('title') or 'Volcano'
     title = {'ash': 'Volcanic ash warning: ' + name, 'eruption': 'Eruption: ' + name, 'level': name + (f": Alert Level {v['level']}" if v and v.get('level') is not None else '')}[a['kind']]
     if not v: return title, [('Details', a.get('text'))], ''
-    pairs = [('Volcanic ash', v.get('ashline')), ('Warning issued', (clock(v['ms']) + ' (Philippine time)') if v.get('ms') else ''), ('Alert level', v.get('levelline')),
+    pairs = [('Eruption started', v.get('eruptline')), ('Volcanic ash', v.get('ashline')), ('Ash warning issued', (clock(v['ms']) + ' (Philippine time)') if v.get('ms') else ''), ('Alert level', v.get('levelline')),
              ('Airports within 150 km', v.get('near')), ('Source', v.get('src'))]
     return title, pairs, v.get('todo')
 
@@ -228,7 +232,7 @@ def build_email(d, new_q, new_d):
         tsu = a['kind'] == 'tsunami'
         if q:
             title = f"Magnitude {q['mag']:.1f} earthquake"
-            when = f"{clock(q['ms'])} (Philippine time)" if q.get('ms') else q.get('when')
+            when = exact(q['ms']) if q.get('ms') else q.get('when')
             rows = [row('Time it happened', when), row('Where', q.get('where')), row('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), row('Depth', q.get('depth')),
                     row('Nearest airport', q.get('near')), row('Cross-check', q.get('check')), row('Tsunami', q.get('tsu')), row('Aftershocks', q.get('after')), row('Source', q.get('src'))]
             action = q.get('todo'); place = q.get('place', '')
@@ -353,7 +357,7 @@ def teams_card(d, new_q, new_d, test=False):
     for a, q in new_q:
         tsu = a['kind'] == 'tsunami'; colour = 'darkred' if tsu else 'purple'; tag = 'Possible tsunami' if tsu else 'Earthquake'
         if q:
-            when = f"{clock(q['ms'])} (Philippine time)" if q.get('ms') else q.get('when')
+            when = exact(q['ms']) if q.get('ms') else q.get('when')
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, f"Magnitude {q['mag']:.1f} earthquake",
                 [('Time it happened', when), ('Where', q.get('where')), ('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), ('Depth', q.get('depth')), ('Nearest airport', q.get('near')),
                  ('Cross-check', q.get('check')), ('Tsunami', q.get('tsu')), ('Aftershocks', q.get('after')), ('Source', q.get('src'))], q.get('todo'), map_url('quake', q, stamp)))

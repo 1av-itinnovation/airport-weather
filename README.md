@@ -126,6 +126,10 @@ each map has a caption naming what it should show. Before sending, `notify.py` c
 picture just drawn; if it is not, the alert goes without a picture. The refresh is never cancelled half-way, so an alert
 cannot be sent twice.
 
+**Times for the record.** An earthquake alert gives the time it happened to the second when the agency publishes seconds,
+with the UTC time beside it. A volcano alert gives the time the eruption started as stated in the Tokyo VAAC advisory; when
+no official source has published it, the alert says so and gives the time the first ash warning was issued instead.
+
 ## How fast alerts arrive
 
 Earthquake and volcano alerts are treated as critical.
