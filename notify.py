@@ -222,9 +222,9 @@ def build_email(d, new_q, new_d):
             subj.append(title); text.append(a['text'] + '\n')
         cards.append(card(DARKRED if tsu else PURPLE, 'Possible tsunami' if tsu else 'Earthquake', title, rows, action, map_url('quake', q, stamp)))
     for a in new_d:
-        rows = [row('Right now', a.get('now')), row('Rest of today', a.get('next')), row('Confidence', a.get('conf')), row('Updated', a.get('upd')), row('Source', a.get('src'))]
+        rows = [row('Right now', a.get('now')), row('Forecast for later today', a.get('next')), row('Updated', a.get('upd')), row('Source', a.get('src'))]
         cards.append(card(RED, 'Danger', a['name'], rows, a.get('todo'), map_url('danger', a, stamp)))
-        text.append(f"DANGER: {a['name']}\nRight now: {a.get('now')}\nRest of today: {a.get('next')}\nWhat to do: {a.get('todo')}\nUpdated: {a.get('upd')}\n")
+        text.append(f"DANGER: {a['name']}\nRight now: {a.get('now')}\nForecast for later today: {a.get('next')}\nWhat to do: {a.get('todo')}\nUpdated: {a.get('upd')}\n")
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         cards.append(card(VOLC, VOLC_TAG[a['kind']], title, [row(k, val) for k, val in pairs], action, map_url('volcano', v, stamp)))
@@ -327,7 +327,7 @@ def teams_card(d, new_q, new_d, test=False):
         else:
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, 'Earthquake alert', [('Details', a.get('text'))], ''))
     for a in new_d:
-        body.append(block('red', 'Attention', 'Danger', a['name'], [('Right now', a.get('now')), ('Rest of today', a.get('next')), ('Confidence', a.get('conf')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo'), map_url('danger', a, stamp)))
+        body.append(block('red', 'Attention', 'Danger', a['name'], [('Right now', a.get('now')), ('Forecast for later today', a.get('next')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo'), map_url('danger', a, stamp)))
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action, map_url('volcano', v, stamp)))

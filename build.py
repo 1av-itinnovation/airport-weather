@@ -766,7 +766,7 @@ def off_row(mt,tf,m):
         if re.search(r'\d{3}(CB|TCU)\b',raw.split(' RMK')[0]): s.append('Storm clouds near the airport.')
     k=round((mt.get('wspd') or 0)*1.852); g=round((mt.get('wgst') or 0)*1.852)
     obs=dt.datetime.fromtimestamp(mt['obsTime'],dt.timezone.utc)
-    s.append(f"{windword(max(k,g))} ({k} km/h{', gusts '+str(g)+' km/h' if g else ''}), {round(mt['temp'])}°C, as of {clock_plain(obs)}.")
+    s.append((f"Calm, no wind" if max(k,g)==0 else f"{windword(max(k,g))} ({k} km/h{', gusts '+str(g)+' km/h' if g else ''})")+f", {round(mt['temp'])}°C, as of {clock_plain(obs)}.")
     now=' '.join(s)
     # forecast periods
     periods=[]
@@ -791,6 +791,12 @@ def off_row(mt,tf,m):
     nx=[f"{p['text']} {p['long']} {pspan(p)}." for p in periods]
     if not tf: nx=['No airport forecast is available for the rest of today.']
     elif not nx: nx=['No thunderstorm or rain expected for the rest of today.']
+    # The report says what is happening now; the forecast was written earlier. When the two disagree, say so plainly instead of leaving a contradiction.
+    _nowbad='thunderstorm' if ts_here else ('rain' if precip else '')
+    if tf and _nowbad and not any(p['now'] for p in periods):
+        _iss=clock_plain(dt.datetime.fromisoformat(tf['issueTime'].replace('Z','+00:00')))
+        if not periods: nx=[f"The airport forecast (issued {_iss}) did not expect this {_nowbad} and shows no more thunderstorm or rain today. Go by the report above until the {_nowbad} has passed."]
+        else: nx=[f"The airport forecast (issued {_iss}) did not expect the {_nowbad} happening now. Later today it shows:"]+nx
     if m and m['runs']: nx.append('Estimate (MET Norway): '+' '.join(f"{r['kind']} possible {span(r)}." for r in m['runs']).replace('. m','. M').replace('. h','. H').replace('. s','. S'))
     strong_now=max(k,g)>=39
     heavy_now=bool(precip) and not all(t.startswith('-') for t in precip)

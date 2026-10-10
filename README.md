@@ -30,7 +30,7 @@ why, and how reliable each reading is.
 
 **An airport's details**
 
-- **Right now** and **Rest of today**, with clock times.
+- **Right now** (the latest official report) and **Forecast for later today** (the airport forecast). When weather arrives that the forecast did not expect, the forecast line says so.
 - **Rain in the next 12 hours:** chance of rain, how heavy (Dry, Light, Moderate, Heavy) and the
   amount, hour by hour, with a lightning mark where the official forecast has a thunderstorm.
 - **Tomorrow.**
@@ -58,12 +58,11 @@ why, and how reliable each reading is.
   shows how far its strong winds reach, where it is forecast to be in 24 hours, and only the
   airports within reach. A cyclone that only one source has reported is drawn grey and dashed and
   marked "not yet confirmed".
-- **Philippine Area of Responsibility.** Zooming all the way out shows the whole PAR (115 to 135 degrees
-  East, 5 to 25 degrees North) as a dashed outline, with the neighbouring countries drawn for
-  reference only. The usual view stays on the Philippines; the map opens zoomed out by itself when a
-  cyclone is inside the PAR but still far out at sea. Cyclones and low pressure areas outside the PAR
-  are drawn too, as far east as about 160 degrees East, and the zoom-out stretches to include them.
-  The map opens wide enough to show any that are within roughly 1,000 km of the PAR.
+- **Philippine Area of Responsibility.** The usual view shows the whole PAR (115 to 135 degrees East,
+  5 to 25 degrees North) as a dashed outline. The viewer can zoom out further and drag in any
+  direction to see the wider region; the neighbouring countries are drawn for reference only.
+  Cyclones and low pressure areas outside the PAR are drawn as far east as about 160 degrees East,
+  and the usual view widens to include any that are within roughly 1,000 km of the PAR.
 - **Low pressure areas.** A red circle with an L marks each area the Joint Typhoon Warning Center is
   watching, with its chance (low, medium or high) of becoming a tropical cyclone within 24 hours.
   Press one for its details. Information only: one source, no alert.
