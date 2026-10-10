@@ -59,6 +59,33 @@ def dashboard_url():
     return os.environ.get('DASHBOARD_URL', '')
 
 # ---------- what is new ----------
+SEND_MAPS = True             # show a small zoomed map of the airport, earthquake or volcano in each alert
+def map_file(kind, obj):
+    """File name of the map picture for this alert, if one has been drawn (see alert_map.py)."""
+    if not SEND_MAPS or not obj: return ''
+    try:
+        import alert_map
+        name = alert_map.name_for(kind, obj)
+        return name if os.path.exists(os.path.join(alert_map.OUT_DIR, name)) else ''
+    except Exception: return ''
+def map_url(kind, obj, stamp=''):
+    name = map_file(kind, obj); url = dashboard_url()
+    return f'{url}alertmaps/{name}?v={stamp}' if name and url else ''
+def draw_maps(d, quakes, dangers, volcanoes):
+    """Draw the map pictures for the alerts about to be sent. Runs before the dashboard is published, so the pictures are online when the alert arrives."""
+    if not SEND_MAPS: return 0
+    try: import alert_map
+    except Exception as e: print('Alert maps not available:', e); return 0
+    n = 0
+    for a, q in quakes:
+        if q and alert_map.render('quake', q, d): n += 1
+    for a in dangers:
+        if alert_map.render('danger', a, d): n += 1
+    for a, v in volcanoes:
+        if v and alert_map.render('volcano', v, d, a): n += 1
+    alert_map.tidy()
+    return n
+
 NEW_V = []      # volcano alerts found at this refresh (filled by find_volcano, read by the message builders)
 VOLC = '#BF360C'
 VOLC_TAG = {'ash': 'Volcanic ash', 'eruption': 'Eruption', 'level': 'Volcano'}
@@ -117,17 +144,18 @@ def row(label, value):
     return (f'<tr><td style="padding:7px 0;border-top:1px solid #E6EEF1;{FONT};font-size:12px;color:{MUTED};width:132px;vertical-align:top">{esc(label)}</td>'
             f'<td style="padding:7px 0 7px 10px;border-top:1px solid #E6EEF1;{FONT};font-size:13.5px;line-height:1.5;color:{INK};vertical-align:top">{esc(value)}</td></tr>')
 
-def card(colour, tag, title, rows, action):
+def card(colour, tag, title, rows, action, pic=''):
     return (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;border:1px solid #DCE7EB;border-left:5px solid {colour};border-radius:6px;background:#FFFFFF">'
             f'<tr><td style="padding:16px 18px 14px">'
             f'<span style="display:inline-block;background:{colour};color:#FFFFFF;{FONT};font-size:11px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:4px;text-transform:uppercase">{esc(tag)}</span>'
             f'<div style="{FONT};font-size:18px;font-weight:600;color:{INK};margin:9px 0 10px;line-height:1.3">{esc(title)}</div>'
+            + (f'<img src="{esc(pic)}" width="592" alt="Map showing {esc(title)}" style="display:block;width:100%;max-width:592px;height:auto;border:0;border-radius:6px;margin:0 0 10px">' if pic else '') +
             f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0">{"".join(rows)}</table>'
             + (f'<div style="margin-top:12px;background:#F3F8FA;border-radius:5px;padding:10px 12px;{FONT};font-size:13.5px;line-height:1.5;color:{INK}"><strong>What to do.</strong> {esc(action)}</div>' if action else '')
             + '</td></tr></table>')
 
 def build_email(d, new_q, new_d):
-    url = dashboard_url(); cards = []; text = []; subj = []
+    url = dashboard_url(); cards = []; text = []; subj = []; stamp = d.get('generated_ms', '')
     for a, q in new_q:
         tsu = a['kind'] == 'tsunami'
         if q:
@@ -142,14 +170,14 @@ def build_email(d, new_q, new_d):
         else:
             title = 'Possible tsunami' if tsu else 'Earthquake alert'; rows = [row('Details', a['text'])]; action = ''
             subj.append(title); text.append(a['text'] + '\n')
-        cards.append(card(DARKRED if tsu else PURPLE, 'Possible tsunami' if tsu else 'Earthquake', title, rows, action))
+        cards.append(card(DARKRED if tsu else PURPLE, 'Possible tsunami' if tsu else 'Earthquake', title, rows, action, map_url('quake', q, stamp)))
     for a in new_d:
         rows = [row('Right now', a.get('now')), row('Rest of today', a.get('next')), row('Confidence', a.get('conf')), row('Updated', a.get('upd')), row('Source', a.get('src'))]
-        cards.append(card(RED, 'Danger', a['name'], rows, a.get('todo')))
+        cards.append(card(RED, 'Danger', a['name'], rows, a.get('todo'), map_url('danger', a, stamp)))
         text.append(f"DANGER: {a['name']}\nRight now: {a.get('now')}\nRest of today: {a.get('next')}\nWhat to do: {a.get('todo')}\nUpdated: {a.get('upd')}\n")
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
-        cards.append(card(VOLC, VOLC_TAG[a['kind']], title, [row(k, val) for k, val in pairs], action))
+        cards.append(card(VOLC, VOLC_TAG[a['kind']], title, [row(k, val) for k, val in pairs], action, map_url('volcano', v, stamp)))
         text.append(f"{VOLC_TAG[a['kind']].upper()}: {title}\n" + '\n'.join(f'{k}: {val}' for k, val in pairs if val) + (f'\nWhat to do: {action}' if action else '') + '\n')
         subj.append(title if len(title) <= 46 else VOLC_TAG[a['kind']] + ': ' + ((v or {}).get('name') or 'volcano'))
     if new_d: subj.append('Danger: ' + (', '.join(a['name'] for a in new_d) if len(new_d) <= 2 else f'{len(new_d)} airports'))
@@ -207,14 +235,15 @@ def teams_card(d, new_q, new_d, test=False):
         return {'type': 'ColumnSet', 'spacing': 'Small', 'columns': [
             {'type': 'Column', 'width': '120px', 'items': [tb(label, size='Small', isSubtle=True)]},
             {'type': 'Column', 'width': 'stretch', 'items': [tb(value)]}]}
-    def block(colour, fallback, tag, title, pairs, action):
+    stamp = d.get('generated_ms', '')
+    def block(colour, fallback, tag, title, pairs, action, pic=''):
         key = {'Earthquake': 'earthquake', 'Danger': 'danger', 'Possible tsunami': 'tsunami', 'Volcanic ash': 'ash', 'Eruption': 'eruption', 'Volcano': 'volcano'}[tag]
         if have and all(os.path.exists(os.path.join(HERE, 'docs', 'assets', f)) for f in (f'card-bar-{colour}.png', f'card-tag-{key}.png')):
             top = [{'type': 'Image', 'url': f'{url}assets/card-bar-{colour}.png', 'size': 'Stretch', 'altText': ''},
                    {'type': 'Image', 'url': f'{url}assets/card-tag-{key}.png', 'height': '22px', 'altText': tag, 'spacing': 'Medium'}]
         else:
             top = [tb(tag.upper(), size='Small', weight='Bolder', color=fallback)]
-        items = top + [tb(title, size='Large', weight='Bolder', spacing='Small')] + [line(k, v) for k, v in pairs if v]
+        items = top + [tb(title, size='Large', weight='Bolder', spacing='Small')] + ([{'type': 'Image', 'url': pic, 'size': 'Stretch', 'altText': 'Map showing ' + title, 'spacing': 'Small'}] if pic else []) + [line(k, v) for k, v in pairs if v]
         if action: items.append({'type': 'Container', 'style': 'emphasis', 'spacing': 'Medium', 'items': [tb('**What to do.** ' + action)]})
         return {'type': 'Container', 'spacing': 'Large', 'separator': not have, 'items': items}
     checked = (d.get('checked') or '').split('. ')[0].rstrip('.')
@@ -236,14 +265,14 @@ def teams_card(d, new_q, new_d, test=False):
             when = f"{clock(q['ms'])} (Philippine time)" if q.get('ms') else q.get('when')
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, f"Magnitude {q['mag']:.1f} earthquake",
                 [('Time it happened', when), ('Where', q.get('where')), ('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), ('Depth', q.get('depth')), ('Nearest airport', q.get('near')),
-                 ('Tsunami', q.get('tsu')), ('Aftershocks', q.get('after')), ('Source', q.get('src'))], q.get('todo')))
+                 ('Tsunami', q.get('tsu')), ('Aftershocks', q.get('after')), ('Source', q.get('src'))], q.get('todo'), map_url('quake', q, stamp)))
         else:
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, 'Earthquake alert', [('Details', a.get('text'))], ''))
     for a in new_d:
-        body.append(block('red', 'Attention', 'Danger', a['name'], [('Right now', a.get('now')), ('Rest of today', a.get('next')), ('Confidence', a.get('conf')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo')))
+        body.append(block('red', 'Attention', 'Danger', a['name'], [('Right now', a.get('now')), ('Rest of today', a.get('next')), ('Confidence', a.get('conf')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo'), map_url('danger', a, stamp)))
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
-        body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action))
+        body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action, map_url('volcano', v, stamp)))
     card = {'type': 'AdaptiveCard', '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json', 'version': '1.4', 'msteams': {'width': 'Full'}, 'body': body}
     if url and have:        # a picture of a button in the dashboard's blue, because Teams draws its own buttons in its own colours
         body.append({'type': 'Image', 'url': f'{url}assets/card-button.png', 'height': '36px', 'altText': 'Open the dashboard', 'spacing': 'Large',
@@ -486,6 +515,15 @@ def briefing_message(d, slot_hour, now_ms, test=False):
     teams = '<br>'.join(esc(t) for t in text) + (f'<br><a href="{esc(url)}">Open the dashboard</a>' if url else '')
     return subject, '\n'.join(text) + (f'\nDashboard: {url}\n' if url else ''), body, teams, _card(d, name, intro, blocks, test)
 
+def test_sample(d):
+    """What the test button sends: one earthquake, one airport and one volcano alert, taken from what the dashboard shows now."""
+    tq = [(a, {q['id']: q for q in d.get('quakes', [])}.get(a.get('q'))) for a in d.get('eq_alerts', [])][:1]
+    if not tq and d.get('quakes'): tq = [(dict(kind='strong', q=d['quakes'][0]['id'], text=''), d['quakes'][0])]
+    td = [a for a in d.get('airports', []) if a.get('level') == 'danger'][:1] or [a for a in d.get('airports', []) if a.get('level') == 'warning'][:1]
+    _vols = {v['id']: v for v in d.get('volcanoes', [])}
+    tv = [(a, _vols.get(a.get('v'))) for a in d.get('vol_alerts', [])][:1]
+    return tq, td, tv
+
 def main():
     d = json.load(open(DATA, encoding='utf-8'))
     try: state = json.load(open(STATE, encoding='utf-8'))
@@ -499,6 +537,9 @@ def main():
         q_, d_ = find_new(d, _copy, now_ms); v_ = find_volcano(d, _copy, now_ms)
         pending = bool(q_ or d_ or v_)
         print('Alerts waiting to be sent:', len(q_) + len(d_) + len(v_))
+        if os.environ.get('NOTIFY_TEST_MAPS', '').lower() in ('1', 'true', 'yes'):      # the test button: draw the pictures for the sample alert too
+            tq, td, tv = test_sample(d); q_ = q_ + tq; d_ = d_ + td; v_ = v_ + tv; pending = True
+        if pending: print('Map pictures drawn:', draw_maps(d, q_, d_, v_))
         out = os.environ.get('GITHUB_OUTPUT')
         if out: open(out, 'a').write(f"pending={'true' if pending else 'false'}\n")
         return
@@ -506,11 +547,7 @@ def main():
     NEW_V[:] = find_volcano(d, state, now_ms)
     if os.environ.get('NOTIFY_TEST', '').lower() in ('1', 'true', 'yes'):
         # Test button: sends a sample email built from whatever is on the dashboard now. Nothing is recorded as sent.
-        tq = [(a, {q['id']: q for q in d.get('quakes', [])}.get(a.get('q'))) for a in d.get('eq_alerts', [])][:1]
-        if not tq and d.get('quakes'): tq = [(dict(kind='strong', q=d['quakes'][0]['id'], text=''), d['quakes'][0])]
-        td = [a for a in d.get('airports', []) if a.get('level') == 'danger'][:1] or [a for a in d.get('airports', []) if a.get('level') == 'warning'][:1]
-        _vols = {v['id']: v for v in d.get('volcanoes', [])}
-        NEW_V[:] = [(a, _vols.get(a.get('v'))) for a in d.get('vol_alerts', [])][:1]
+        tq, td, tv = test_sample(d); NEW_V[:] = tv
         subject, plain, body = build_email(d, tq, td)
         subject = 'TEST | ' + subject
         note = 'THIS IS A TEST. It shows what an alert email looks like, using what is on the dashboard now. It is not a new alert.'

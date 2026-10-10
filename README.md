@@ -82,6 +82,10 @@ why, and how reliable each reading is.
 
 The moving rain layer is built separately every 3 hours and saved.
 
+## Map picture in alerts
+
+Each Teams and email alert shows a small zoomed map of what it is about: the Danger airport, the volcano with its 150 km ring and the airports named in the warning, or the earthquake with its nearest airport. `alert_map.py` draws the picture when the alert is found, saves it under `docs/alertmaps/`, and the dashboard is published before the alert is sent so the picture is online. Pictures older than 7 days are removed. If the picture library (Pillow) cannot be installed, alerts are sent without a map. Set `SEND_MAPS = False` in `notify.py` to switch this off.
+
 ## How fast alerts arrive
 
 Earthquake and volcano alerts are treated as critical.
