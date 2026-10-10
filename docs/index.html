@@ -123,6 +123,7 @@ h2{font-size:18px;font-weight:700;color:#005687}
 .rainbar .info .v{font-size:16px;font-weight:700}
 .rainbar input[type=range]{flex:1 1 100%;min-height:32px;accent-color:#005687;margin:0}
 .rainbar .keys{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;flex:1 1 100%;align-items:center}
+.rainbar .keys[hidden]{display:none}
 .rainbar .keys i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
 .rainbar .keys .bolt{display:inline-block;width:8px;height:11px;margin-right:4px;vertical-align:middle;filter:drop-shadow(0 0 1px #12303F)}
 .wxbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -1309,7 +1310,8 @@ body{background:var(--page);color:var(--ink)}
 .lyr input{width:15px;height:15px;accent-color:#0077C8;flex:none}
 .lyr .ks{border-top:1px solid var(--line,#E6EEF1);margin-top:4px;padding:8px 8px 4px;display:flex;flex-wrap:wrap;gap:5px 10px;font-size:11px;color:var(--muted,#5B7180)}
 .lyr .ks i{display:inline-block;width:12px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
-.app .rainbar .keys,.app .rainbar #rainShow{display:none}
+.app .rainbar #rainShow{display:none}
+.lyr .ks{display:none}
 
 /* side panel: Details, Hazards, Windy map */
 .app .col.side .stabs button{padding:0 12px;font-size:13px;letter-spacing:0}
@@ -2133,6 +2135,14 @@ html[data-theme="dark"] .glass .hr .hw.dry, html[data-theme="dark"] .glass .hr .
 html[data-theme="dark"] .glass .app .rainbar .info .k{color:#9AA8BF}
 html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
 
+/* the rain colour key sits under the map, below the timeline it belongs to */
+.glass .rainbar .keys{order:-1;flex:1 1 100%}
+.glass .mapfoot>.keys{display:flex;flex:1 1 100%;order:-1;margin:0;padding:2px 4px 0 6px;gap:4px 14px;font-size:11.5px;color:#4F6373;flex-wrap:wrap;align-items:center}
+.glass .mapfoot>.keys[hidden]{display:none}
+.glass .mapfoot>.keys i{display:inline-block;width:14px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.glass .mapfoot>.keys .bolt{display:inline-block;width:8px;height:11px;margin-right:4px;vertical-align:middle}
+html[data-theme="dark"] .glass .mapfoot>.keys{color:#A7B4C9}
+@media (max-width:480px){.glass .mapfoot>.keys{gap:4px 10px;font-size:11px}}
 /* alerts: pop in under the title bar like a notification, then tuck away into the alert button in the title bar */
 .glass.glass #alertBar{position:fixed!important;top:calc(var(--hdrb,84px) + 10px)!important;right:24px;left:auto!important;width:auto!important;max-width:min(540px,calc(100vw - 32px));display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-end;gap:8px;margin:0;padding:0;z-index:60;opacity:0!important;transform:translateY(-12px) scale(.98)!important;transform-origin:top right;pointer-events:none!important;transition:opacity .32s ease,transform .42s cubic-bezier(.22,1,.36,1)}
 .glass.glass #alertBar.show{opacity:1!important;transform:none!important;pointer-events:auto!important}
@@ -2244,7 +2254,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
       <div class="info"><span class="k">Forecast rain</span><span class="v" id="rainTime"></span></div>
       <button class="btn" id="rainShow" aria-pressed="true">Hide rain</button>
       <input type="range" id="rainSlider" min="0" max="23" step="1" value="0" aria-label="Forecast hour">
-      <div class="keys"><span><i style="background:rgba(90,160,235,.7)"></i>Light</span><span><i style="background:rgba(0,170,150,.8)"></i>Moderate</span><span><i style="background:rgba(255,190,0,.9)"></i>Heavy</span><span><i style="background:rgba(230,60,60,.9)"></i>Very heavy</span><span><span class="bolt"></span>Thunder</span></div>
+      <div class="keys"><span><i style="background:rgba(90,160,235,.7)"></i>Light rain</span><span><i style="background:rgba(0,170,150,.8)"></i>Moderate</span><span><i style="background:rgba(255,190,0,.9)"></i>Heavy</span><span><i style="background:rgba(230,60,60,.9)"></i>Very heavy</span><span><span class="bolt"></span>Thunder</span></div>
     </div>
   </section>
 
@@ -2353,7 +2363,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
       </ul>
       <p class="subh">Rain on the map</p>
       <ul>
-        <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Use the pause and play button, or drag the slider to any hour. The Layers button turns the rain off.</li>
+        <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Use the pause and play button, or drag the slider to any hour. The colour key just above the timeline shows what the colours mean: blue is light rain, green moderate, yellow heavy, red very heavy, and a lightning mark is forecast thunder. The Layers button turns the rain off.</li>
         <li><strong>Lightning marks and dashed areas.</strong> These come only from official sources: thunderstorm area warnings and official airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>It is a picture of the forecast.</strong> It plays no part in the alert levels, which take priority when the two differ. The Windy map is a different forecast again, so it can differ from both.</li>
       </ul>
@@ -2518,6 +2528,7 @@ function arrange() {
     if (filters.parentNode !== top) top.insertBefore(filters, tools);
     if ($('sndBtn').parentNode !== tools) { tools.appendChild($('sndBtn')); tools.appendChild($('helpBtn')); }
     var mf = $('mapFoot'); if (mf.parentNode !== mapCol) mapCol.appendChild(mf);
+    var rk = document.querySelector('#rainBar .keys') || mf.querySelector('.keys'); if (rk) { mf.appendChild(rk); rk.hidden = $('rainBar').hidden; }      // the colour key takes its own line under the timeline
     if (rb.parentNode !== mf) mf.appendChild(rb);
     if ($('tourBar').parentNode !== mf) mf.appendChild($('tourBar'));
     if (S.tab === 'airports') S.tab = 'details';
@@ -3616,7 +3627,7 @@ function rainSetup() {
     R.i0 = i0; R.n = Math.min(24, RAIN.times.length - i0);
   }
   var ok = R.n >= 6;
-  $('rainBar').hidden = !ok; cv.style.display = (ok && R.show) ? '' : 'none'; fit();
+  $('rainBar').hidden = !ok; cv.style.display = (ok && R.show) ? '' : 'none'; var rkey = document.querySelector('#mapFoot > .keys, #rainBar .keys'); if (rkey) rkey.hidden = !(ok && R.show); fit();
   if (!ok) return;
   small.width = RAIN.grid.cols; small.height = RAIN.grid.rows;
   $('rainSlider').max = R.n - 1; R.pos = Math.min(R.pos, R.n - 1); R.lab = -1;
@@ -3678,7 +3689,7 @@ function rainTick(ts) {
 $('rainPlay').addEventListener('click', function () { R.playing = !R.playing; this.innerHTML = R.playing ? RAIN_PAUSE : RAIN_PLAY; this.setAttribute('aria-label', R.playing ? 'Pause the rain forecast' : 'Play the rain forecast'); this.title = R.playing ? 'Pause' : 'Play'; if (R.playing && R.pos >= R.n - 1) { R.pos = 0; R.hold = 0; } });
 $('rainPlay').innerHTML = R.playing ? RAIN_PAUSE : RAIN_PLAY; $('rainPlay').setAttribute('aria-label', R.playing ? 'Pause the rain forecast' : 'Play the rain forecast');
 $('rainSlider').addEventListener('input', function () { R.pos = +this.value; R.hold = 0; R.lab = -1; rainDraw(); });
-$('rainShow').addEventListener('click', function () { R.show = !R.show; this.textContent = R.show ? 'Hide rain' : 'Show rain'; this.setAttribute('aria-pressed', R.show ? 'true' : 'false'); cv.style.display = (R.show && R.n >= 6) ? '' : 'none'; if (R.show) rainDraw(); });
+$('rainShow').addEventListener('click', function () { R.show = !R.show; this.textContent = R.show ? 'Hide rain' : 'Show rain'; this.setAttribute('aria-pressed', R.show ? 'true' : 'false'); cv.style.display = (R.show && R.n >= 6) ? '' : 'none'; var rkey2 = document.querySelector('#mapFoot > .keys, #rainBar .keys'); if (rkey2) rkey2.hidden = !(R.show && R.n >= 6); if (R.show) rainDraw(); });
 function loadRain() {
   fetch('rain.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
     if (!RAIN || j.generated_ms !== RAIN.generated_ms) { RAIN = j; if (typeof fit === 'function') fit(); }
