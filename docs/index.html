@@ -1041,6 +1041,7 @@ header.top{padding:10px 16px;border-radius:10px}
 .tscale b{display:block;margin-top:5px;font-size:11px;font-weight:500;line-height:1.2;color:#5B7180}.tscale span{display:block;font-size:11px;color:#7A8C98;line-height:1.25}
 .tscale .on i{background:#0B6E8A;height:8px;margin-top:-1px}.tscale .on b{color:#0B5A72;font-weight:700}.tscale .on span{color:#0B5A72}
 .tynote{margin-top:10px;font-size:12px;color:#5B7180}
+.vline.tline{display:block}.vline.tline b{display:block;min-width:0;margin-bottom:2px}.vline.tline span{display:block}
 .vline.tline b{color:#0B5A72}.vline.tline.quiet b{color:#4A5D6B}
 .tour.volcano{border-color:#BF360C}.tour.volcano .tdot{background:#BF360C}
 .vline{font-size:12.5px;line-height:1.45;border:none;border-bottom:1px solid var(--line,#E6EEF1);background:transparent;padding:6px 0;text-align:left;color:inherit;cursor:pointer;width:100%;display:flex;gap:8px;align-items:baseline;font-family:inherit}
@@ -2326,7 +2327,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
         <li><strong>Today and Tomorrow.</strong> At the top. Switches the list between today's alerts and airports with bad weather forecast for tomorrow.</li>
         <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport; when a region is chosen it lists only the airports in that region.</li>
         <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Selecting a volcano zooms to it, shows its name and status, and draws a dashed ring 150 km around it. While it is selected, only the airports it can affect are shown, with their names: those inside the ring and any under its ash. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. Selecting an earthquake zooms to it and draws a dashed ring 100 km around it; while it is selected, only the airports inside the ring are shown (or the nearest airport when none is inside). A round swirl is a tropical cyclone, labelled with its class and name. A grey dashed swirl is one that only a single source has reported so far. Selecting a cyclone draws how far its strong winds reach and where it is forecast to be in 24 hours, and shows only the airports within reach. Closing the selection brings every airport back. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
-        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the usual view of the Philippines and clears the selection. Zooming all the way out shows the whole Philippine Area of Responsibility (PAR), the area PAGASA watches for tropical cyclones, drawn as a dashed outline from 115 to 135 degrees East and 5 to 25 degrees North. The neighbouring countries are drawn for reference only and cannot be selected. Cyclones and low pressure areas outside the PAR are drawn too, as far east as about 160 degrees East, and the furthest zoom-out stretches to include them. When one is within roughly 1,000 km of the PAR, the map opens zoomed out far enough to show it; ones further away are seen by pressing the zoom-out button, and are always named on the Typhoon tile and listed under Hazards. A red circle with an L is a low pressure area, where a cyclone can start; press it for details. It is for information only and raises no alert.</li>
+        <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the usual view and clears the selection. The usual view shows the whole Philippine Area of Responsibility (PAR), the area PAGASA watches for tropical cyclones, drawn as a dashed outline from 115 to 135 degrees East and 5 to 25 degrees North. You can zoom out further to see the wider region, and drag the map in any direction; the neighbouring countries are drawn for reference only and cannot be selected. Cyclones and low pressure areas outside the PAR are drawn too, as far east as about 160 degrees East. When one is within roughly 1,000 km of the PAR, the usual view widens to include it; ones further away are seen by zooming out or dragging, and are always named on the Typhoon tile and listed under Hazards. A red circle with an L is a low pressure area, where a cyclone can start; press it for details. It is for information only and raises no alert.</li>
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
         <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. Press one to show those airports in the list. To go back, press it again or press "Clear filter" beside the list title. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
         <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
@@ -2336,7 +2337,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
       </ul>
       <p class="subh">An airport's details</p>
       <ul>
-        <li><strong>Right now and Rest of today.</strong> What the latest report or estimate says, with clock times.</li>
+        <li><strong>Right now and Forecast for later today.</strong> "Right now" is what the latest official report says is happening at the airport. "Forecast for later today" is what the airport forecast, written earlier, expects for the hours ahead. When weather arrives that the forecast did not expect, the forecast line says so; go by "Right now".</li>
         <li><strong>Rain in the next 12 hours.</strong> For each hour: the chance of rain as a percentage, a bar and a word for how heavy (Dry, Light, Moderate, Heavy), and the amount in millimetres. A lightning mark shows hours when the official airport forecast says a thunderstorm is possible.</li>
         <li><strong>Tomorrow.</strong> What the official forecast and the estimate say about tomorrow.</li>
         <li><strong>Next 7 days.</strong> For each day: the chance of rain, a day picture and a night picture (a lightning bolt means a thunderstorm is forecast), and the high and low temperature. It is for planning and is less certain the further ahead.</li>
@@ -2736,7 +2737,8 @@ function renderNotice() {
 }
 
 /* ---------- map view ---------- */
-function clampC(c, z) { var half = 50 / z; return Math.min(100 - half, Math.max(half, c)); }
+var PANX = [0, 100], PANY = [0, 100];      // how far the view can be dragged, as a share of the panel (set in fit)
+function clampC(c, z, R) { var half = 50 / z; R = R || PANX; return R[1] - R[0] <= 2 * half ? (R[0] + R[1]) / 2 : Math.min(R[1] - half, Math.max(R[0] + half, c)); }
 function selPoint() {
   if (S.sel) { return byId(S.sel); }
   if (S.qk) { var q = quakeById(S.qk); return q && q.onmap ? q : null; }
@@ -2746,7 +2748,7 @@ function selPoint() {
 }
 function viewNow() {
   var p = selPoint(), v = S.view, zsel = 2.2;
-  if (p && S.tk && !S.sel && !p.onmap && !v) return { z: 1, cx: 50, cy: 50 };      // far out at sea: stay on the widest view so it and the Philippines are both in sight
+  if (p && S.tk && !S.sel && !p.onmap && !v) { var fz = Math.min(VIEWN.z, 1.6), mx = OFFX + (p.x + 50) / 2 * FITX, my = OFFY + (p.y + 36) / 2 * FITY; return { z: fz, cx: clampC(mx, fz, PANX), cy: clampC(my, fz, PANY) }; }      // far out at sea: stay on the widest view so it and the Philippines are both in sight
   if (p && S.tk && !S.sel) {      // a cyclone: frame it together with where it is heading, a little wider than an airport
     var tx = p.fx != null ? p.fx : null, ty = p.fy != null ? p.fy : null;
     if (tx == null) { var bd = 1e9; D.airports.forEach(function (a) { var d = Math.pow(a.x - p.x, 2) + Math.pow((a.y - p.y) * 1.5, 2); if (d < bd) { bd = d; tx = a.x; ty = a.y; } }); }
@@ -2754,11 +2756,11 @@ function viewNow() {
   }
   if (p) p = { x: OFFX + p.x * FITX, y: OFFY + p.y * FITY };      // map position -> position inside the wider panel
   // nothing selected: the Philippines fills the panel, unless a cyclone is inside the PAR but off that view, in which case the whole PAR is shown
-  var farCyc = farThings().some(function (o) { return o.near !== false; });      // something just outside the usual view: open wide enough to show it
-  var z = v ? v.z : (p ? zsel * HOMEZ : (farCyc ? VIEWN.z : HOMEZ));
-  return { z: z, cx: clampC(v ? v.cx : (p ? p.x : (farCyc ? VIEWN.x : HOMEC.x)), z), cy: clampC(v ? v.cy : (p ? p.y : (farCyc ? VIEWN.y : HOMEC.y)), z) };
+  // nothing selected: the map shows the whole Philippine Area of Responsibility (and anything just outside it)
+  var z = v ? v.z : (p ? zsel * HOMEZ : VIEWN.z);
+  return { z: z, cx: clampC(v ? v.cx : (p ? p.x : VIEWN.x), z, PANX), cy: clampC(v ? v.cy : (p ? p.y : VIEWN.y), z, PANY) };
 }
-function setView(z, cx, cy, drag) { S.view = { z: z, cx: clampC(cx, z), cy: clampC(cy, z) }; S.drag = !!drag; applyView(); }
+function setView(z, cx, cy, drag) { S.view = { z: z, cx: clampC(cx, z, PANX), cy: clampC(cy, z, PANY) }; S.drag = !!drag; applyView(); }
 var VIEW_READY = 0;
 function applyView() {
   var v = viewNow(), L = $('layer');
@@ -2766,8 +2768,8 @@ function applyView() {
   L.classList.toggle('nodrag', S.drag);
   L.style.transform = 'translate(' + ((0.5 - v.z * v.cx / 100) * 100).toFixed(2) + '%,' + ((0.5 - v.z * v.cy / 100) * 100).toFixed(2) + '%) scale(' + v.z.toFixed(3) + ')';
   L.style.setProperty('--inv', (v.z >= HOMEZ ? Math.min(1, 1.35 * HOMEZ / v.z) : Math.min(3, 0.9 * HOMEZ / v.z + 0.1)).toFixed(3));      // zoomed right out, dots and names stay readable
-  L.classList.toggle('zoomed', v.z >= 1.7 * HOMEZ); L.classList.toggle('parview', v.z < HOMEZ * 0.93);
-  L.style.touchAction = Math.abs(v.z - HOMEZ) > 0.02 ? 'none' : 'pan-x pan-y';
+  L.classList.toggle('zoomed', v.z >= 1.7 * HOMEZ); L.classList.toggle('parview', v.z < HOMEZ * 0.93 && v.z > VIEWN.z * 0.6);
+  L.style.touchAction = (S.view || selPoint()) ? 'none' : 'pan-x pan-y';      // at the usual view a finger still scrolls the page
   L.style.cursor = v.z > 1 ? 'grab' : 'default';
   if (typeof R !== 'undefined' && R && !R.playing) rainDraw();
 }
@@ -2901,7 +2903,7 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
   if (a) {
     d.innerHTML = '<div class="detail"><div class="hd"><div class="ttl"><h3>' + esc(a.name) + '</h3>' + pill(a.level) + (a.est ? EST : '') + '</div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      todoBox(a.level, a.todo) + nowBlock(a) + field('Rest of today', a.next) + hoursStrip(a) +
+      todoBox(a.level, a.todo) + nowBlock(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
       fold('out', 'Tomorrow and the week ahead', '', field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days))) +
       fold('about', 'About this reading', a.est ? 'Estimate' : 'Official report', field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src)) + '</div>';
   } else if (q) {
@@ -2953,8 +2955,8 @@ function applyState() {
   var hzb = document.querySelector('.stabs button[data-tab="hazards"]'); if (hzb) hzb.classList.toggle('on', hzTab);
   Array.prototype.forEach.call(document.querySelectorAll('.ptabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === S.pane); });
   Array.prototype.forEach.call(document.querySelectorAll('.col'), function (el) { el.classList.toggle('show', el.getAttribute('data-pane') === S.pane); });
-  var sb = $('selBar'); sb.classList.toggle('has', !!(a || q || vo));
-  if (a) { $('selName').textContent = a.name; $('selPill').innerHTML = pill(a.level); } else if (q) { $('selName').textContent = q.title; $('selPill').innerHTML = ''; } else if (vo) { $('selName').textContent = vo.title; $('selPill').innerHTML = ''; }
+  var sb = $('selBar'); sb.classList.toggle('has', !!(a || q || vo || cy));
+  if (a) { $('selName').textContent = a.name; $('selPill').innerHTML = pill(a.level); } else if (q) { $('selName').textContent = q.title; $('selPill').innerHTML = ''; } else if (vo) { $('selName').textContent = vo.title; $('selPill').innerHTML = ''; } else if (cy) { $('selName').textContent = cy.low ? cy.name : cy.title; $('selPill').innerHTML = cy.low ? '<span class="pill unconf">For information</span>' : '<span class="pill ' + (cy.confirmed ? 'typhoon' : 'unconf') + '">' + (cy.confirmed ? 'Confirmed' : 'Not yet confirmed') + '</span>'; }
   renderGlass();
   fit();
   renderAlerts();
@@ -3303,7 +3305,8 @@ function volcanoFocus() {
     var kx = 111 * Math.cos((o.lat || 12) * Math.PI / 180) / 8.69278161, ky = 111 / 5.91775171, best = null, bd = 1e9;      // km for one percent of the map, east-west and north-south
     D.airports.forEach(function (a) { var dx = (a.x - o.x) * kx, dy = (a.y - o.y) * ky, d = Math.sqrt(dx * dx + dy * dy); if (d <= F.km) names[a.name] = 1; if (d < bd) { bd = d; best = a; } });
     for (var n in names) any++;
-    if (!any && best) names[best.name] = 1;      // nothing inside the ring: keep the nearest airport, so the map is never empty
+    if (!any && best && F.k !== 't') names[best.name] = 1;      // nothing inside the ring: keep the nearest airport, so the map is never empty
+    if (!any && F.k === 't') focus = false;      // a cyclone with no airport within reach: every airport stays on the map as usual, so none looks singled out
   }
   pins.classList.toggle('vfocus', focus);
   ['v', 'q', 't'].forEach(function (k) { pins.classList.toggle('f-' + k, !!(F && F.k === k)); });
@@ -3317,7 +3320,7 @@ function volcanoFocus() {
   if (!old) { old = document.createElement('div'); pins.insertBefore(old, pins.firstChild); }
   if (!rl) { rl = document.createElement('span'); pins.appendChild(rl); }
   old.className = 'vrange k-' + F.k; rl.className = 'vrangelab k-' + F.k;
-  rl.style.left = o.x.toFixed(2) + '%'; rl.style.top = (o.y + (F.k === 't' ? -1 : 1) * hPct / 2).toFixed(2) + '%'; rl.textContent = F.lab;
+  rl.style.left = o.x.toFixed(2) + '%'; rl.style.top = (o.y + (F.k === 't' && !(o.fy != null && o.fy < o.y) ? -1 : 1) * hPct / 2).toFixed(2) + '%';      // the label sits on the side of the ring away from the forecast marker rl.textContent = F.lab;
   old.style.left = o.x.toFixed(2) + '%'; old.style.top = o.y.toFixed(2) + '%'; old.style.width = wPct.toFixed(2) + '%'; old.style.height = hPct.toFixed(2) + '%';
   if (F.k === 't' && o.fx != null && o.fy != null) {      // where the cyclone is forecast to be in 24 hours
     var tr = document.createElement('div'); tr.className = 'ttrack';
@@ -3451,10 +3454,11 @@ $('tyList').addEventListener('click', function (e) { var b = e.target.closest('[
 $('vList').addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (b) { selectVolcano(b.getAttribute('data-v')); } });
 $('qList').addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) { selectQuake(b.getAttribute('data-q')); } });
 $('airportPick').addEventListener('change', function () { if (S.sel) { S.pane = 'side'; applyState(); } });
-$('zIn').addEventListener('click', function () { var v = viewNow(), p = selPoint(), nz = v.z < HOMEZ * 0.98 ? HOMEZ : Math.min(6 * HOMEZ, v.z * 1.5); if (v.z < HOMEZ * 0.98 && !p) { setView(HOMEZ, HOMEC.x, HOMEC.y, false); return; } if (p && !S.drag) setView(nz, OFFX + p.x * FITX, OFFY + p.y * FITY, false); else setView(nz, v.cx, v.cy, false); });     // keep the selected point in view
-$('zOut').addEventListener('click', function () { var v = viewNow(); var nz = v.z > HOMEZ * 1.02 ? Math.max(HOMEZ, v.z / 1.5) : 1;      // steps back to the usual view, then one more press shows the whole PAR
-  if (nz < HOMEZ * 1.1 && nz > HOMEZ) nz = HOMEZ;
-  if (nz === 1) setView(1, 50, 50, false); else setView(nz, v.cx, v.cy, false); });
+$('zIn').addEventListener('click', function () { var v = viewNow(), p = selPoint(), nz = v.z < VIEWN.z * 0.98 ? Math.min(VIEWN.z, v.z * 1.5) : Math.min(6 * HOMEZ, v.z * 1.5); if (nz > VIEWN.z * 0.92 && nz < VIEWN.z) nz = VIEWN.z; if (p && !S.drag) setView(nz, OFFX + p.x * FITX, OFFY + p.y * FITY, false); else setView(nz, v.cx, v.cy, false); });     // keep the selected point in view
+$('zOut').addEventListener('click', function () { var v = viewNow(); var DZ = VIEWN.z, nz = v.z > DZ * 1.02 ? Math.max(DZ, v.z / 1.5) : Math.max(1, v.z / 1.5);      // steps back to the usual view (the PAR), then further out
+  if (nz < DZ * 1.1 && nz > DZ) nz = DZ;
+  if (nz < 1.12) nz = 1;
+  setView(nz, v.cx, v.cy, false); });
 $('zAll').addEventListener('click', clearSel);
 var modal = $('modal');
 $('helpBtn').addEventListener('click', function () { modal.classList.add('open'); $('modalClose').focus(); });
@@ -3479,31 +3483,34 @@ function fit() {
   if (avail > natural + 2) { v.style.flex = '0 0 auto'; v.style.height = Math.round(natural) + 'px'; col.style.alignSelf = window.matchMedia('(max-width:900px)').matches ? '' : 'start'; }
   else { v.style.flex = ''; v.style.height = ''; col.style.alignSelf = ''; }
   grid.classList.toggle('tall', avail > natural + 340);          // enough spare height to put the details under the map
-  // The panel is never taller than the rain forecast can fill at the widest zoom, so no part of the map is left without a forecast.
-  var COV = rainCover(), bwc = PARB.w, far0 = farThings();
-  far0.forEach(function (o) { bwc = Math.max(bwc, Math.min(3.95, Math.max(PARB.l + PARB.w, o.x / 100 + 0.12)) - Math.max(-1.6, Math.min(PARB.l, o.x / 100 - 0.12))); });
-  var capH = Math.floor((COV.b - COV.t) * 1.506 * (v.clientWidth / (bwc * 1.08)) * 0.985);
-  if (v.style.maxHeight) { v.style.maxHeight = ''; if (v.getAttribute('data-cap')) { v.removeAttribute('data-cap'); v.style.removeProperty('height'); v.style.removeProperty('flex'); col.style.removeProperty('align-self'); } }      // measure the free height first
+  if (v.style.maxHeight) { v.style.maxHeight = ''; if (v.getAttribute('data-cap')) { v.removeAttribute('data-cap'); v.style.removeProperty('height'); v.style.removeProperty('flex'); col.style.removeProperty('align-self'); } }
+  // On a tall, narrow panel the usual view (the whole PAR) would need more height than the forecast covers.
+  // There the panel is kept short enough for the PAR to fit, and its card shrinks with it.
+  var COV = rainCover(), bn0 = [PARB.l, PARB.l + PARB.w];
+  farThings().forEach(function (o) { if (o.near !== false) { bn0[0] = Math.min(bn0[0], o.x / 100 - 0.12); bn0[1] = Math.max(bn0[1], o.x / 100 + 0.12); } });
+  var capH = Math.floor((COV.b - COV.t) * 1.506 * v.clientWidth / ((bn0[1] - bn0[0]) * 1.08) * 0.985);
   if (v.clientHeight > capH + 1) {
     v.style.maxHeight = capH + 'px';
-    if (!window.matchMedia('(max-width:900px)').matches) { v.setAttribute('data-cap', '1'); v.style.setProperty('height', capH + 'px', 'important'); v.style.setProperty('flex', '0 0 auto', 'important'); col.style.setProperty('align-self', 'start', 'important'); }      // the card shrinks to fit, instead of leaving an empty space under the map
+    if (!window.matchMedia('(max-width:900px)').matches) { v.setAttribute('data-cap', '1'); v.style.setProperty('height', capH + 'px', 'important'); v.style.setProperty('flex', '0 0 auto', 'important'); col.style.setProperty('align-self', 'start', 'important'); }
   }
   if (!v.clientHeight) return;
   var W = v.clientWidth, H = v.clientHeight, swHome = Math.min(W, H * 1000 / 1506);
-  // Fully zoomed out, the panel shows the whole Philippine Area of Responsibility (PAR) with a small margin.
-  // The usual view (HOMEZ) is zoomed in from there so the Philippines fills the panel as before.
-  var grow = function (B, o) {
-    B.l = Math.max(-1.6, Math.min(B.l, o.x / 100 - 0.12)); B.r = Math.min(3.95, Math.max(B.r, o.x / 100 + 0.12));
-    B.t = Math.max(-0.85, Math.min(B.t, o.y / 100 - 0.08)); B.b = Math.min(1.19, Math.max(B.b, o.y / 100 + 0.08));
-  };
-  // B: everything drawn, which sets how far the map can zoom out. BN: the PAR plus anything just outside it, which is what the map opens on.
-  var B = { l: PARB.l, t: PARB.t, r: PARB.l + PARB.w, b: PARB.t + PARB.h }, BN = { l: B.l, t: B.t, r: B.r, b: B.b };
-  farThings().forEach(function (o) { grow(B, o); if (o.near !== false) grow(BN, o); });
-  var bw = B.r - B.l, bh = B.b - B.t;
-  var sw = Math.min(swHome, W / (bw * 1.08), H / (bh * 1.08 * 1.506)), sh = sw * 1506 / 1000;
-  var OX = W / 2 - (B.l + bw / 2) * sw, OY = H / 2 - (B.t + bh / 2) * sh;
-  if (H - COV.b * sh <= -COV.t * sh) OY = Math.max(H - COV.b * sh, Math.min(-COV.t * sh, OY));      // keep the view inside the forecast area
+  // EXT is the whole area that can be looked at: east-west from about 104E to 160E (wider if something is drawn beyond that),
+  // north-south as far as the rain forecast reaches. Zooming and dragging never leave it, so there is never a part of the map without a forecast.
+  var EXT = { l: -1.05, r: 3.85, t: COV.t, b: COV.b };
+  // BN is what the map opens on: the Philippine Area of Responsibility, stretched to take in a cyclone or low pressure area just outside it.
+  var BN = { l: PARB.l, t: PARB.t, r: PARB.l + PARB.w, b: PARB.t + PARB.h };
+  farThings().forEach(function (o) {
+    EXT.l = Math.min(EXT.l, o.x / 100 - 0.2); EXT.r = Math.max(EXT.r, o.x / 100 + 0.2);
+    if (o.near !== false) { BN.l = Math.min(BN.l, o.x / 100 - 0.12); BN.r = Math.max(BN.r, o.x / 100 + 0.12); BN.t = Math.max(EXT.t, Math.min(BN.t, o.y / 100 - 0.08)); BN.b = Math.min(EXT.b, Math.max(BN.b, o.y / 100 + 0.08)); }
+  });
+  var ew = EXT.r - EXT.l, eh = EXT.b - EXT.t;
+  // the furthest zoom-out: as far as the panel can go while still being filled by EXT
+  var sw = Math.max(W / ew, H / (eh * 1.506)), sh = sw * 1506 / 1000;
+  var pcx = PARB.l + PARB.w / 2, pcy = PARB.t + PARB.h / 2;
+  var OX = Math.max(W - EXT.r * sw, Math.min(-EXT.l * sw, W / 2 - pcx * sw)), OY = Math.max(H - EXT.b * sh, Math.min(-EXT.t * sh, H / 2 - pcy * sh));
   HOMEZ = swHome / sw; OFFX = OX / W * 100; OFFY = OY / H * 100; HOMEC = { x: OFFX + 50 * sw / W, y: OFFY + 50 * sh / H };
+  PANX = [(OX + EXT.l * sw) / W * 100, (OX + EXT.r * sw) / W * 100]; PANY = [(OY + EXT.t * sh) / H * 100, (OY + EXT.b * sh) / H * 100];
   var bnw = BN.r - BN.l, bnh = BN.b - BN.t, swN = Math.min(swHome, W / (bnw * 1.08), H / (bnh * 1.08 * 1.506));
   VIEWN = { z: Math.max(1, swN / sw), x: (OX + (BN.l + bnw / 2) * sw) / W * 100, y: (OY + (BN.t + bnh / 2) * sh) / H * 100 };
   var appEl = document.querySelector('.app'); if (appEl) { appEl.style.setProperty('--maptop', Math.round(v.getBoundingClientRect().top - appEl.getBoundingClientRect().top) + 'px'); appEl.style.setProperty('--mapw', Math.round(W) + 'px'); }   // lets floating items line up with the map
@@ -3512,12 +3519,13 @@ function fit() {
   var pn = $('pins'); pn.style.width = (sw * HOMEZ) + 'px'; pn.style.height = (sh * HOMEZ) + 'px'; pn.style.transformOrigin = '0 0'; pn.style.transform = 'scale(' + (1 / HOMEZ).toFixed(5) + ')';
   // the neighbouring countries fill the space beside the Philippines on wide screens (picture only, nothing to press)
   var wm = $('wideMap'); if (wm) { wm.style.left = (OX + sw * WIDE_BOX.l) + 'px'; wm.style.top = (OY + sh * WIDE_BOX.t) + 'px'; wm.style.width = (sw * WIDE_BOX.w) + 'px'; wm.style.height = (sh * WIDE_BOX.h) + 'px'; }
-  // the rain canvas covers the whole panel; GEO says where the map image sits inside it, in canvas pixels
-  var cw = Math.min(1600, Math.round(480 * W / sw)), ch = Math.round(cw * H / W), sc = cw / W, c = $('rainCv');
+  // the rain canvas covers the whole of EXT; GEO says where the map image sits inside it, in canvas pixels
+  var cwp = ew * sw, chp = eh * sh, cw = Math.min(1800, Math.round(480 * ew)), ch = Math.round(cw * chp / cwp), sc = cw / cwp, c = $('rainCv');
   if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
-  GEO = { sl: OX * sc, st: OY * sc, sw: sw * sc, sh: sh * sc };
+  c.style.left = (OX + EXT.l * sw) + 'px'; c.style.top = (OY + EXT.t * sh) + 'px'; c.style.width = cwp + 'px'; c.style.height = chp + 'px';
+  GEO = { sl: -EXT.l * sw * sc, st: -EXT.t * sh * sc, sw: sw * sc, sh: sh * sc };
   if (typeof rainDraw === 'function' && typeof R !== 'undefined' && R) rainDraw();
-  var fx = sw / W, fy = sh / H, key = [fx.toFixed(4), fy.toFixed(4), OFFX.toFixed(2), OFFY.toFixed(2), VIEWN.z.toFixed(3)].join(), changed = key !== FITKEY;
+  var fx = sw / W, fy = sh / H, key = [fx.toFixed(4), fy.toFixed(4), OFFX.toFixed(2), OFFY.toFixed(2), VIEWN.z.toFixed(3), VIEWN.x.toFixed(1), PANX[1].toFixed(0)].join(), changed = key !== FITKEY;
   FITX = fx; FITY = fy; FITKEY = key;
   if (changed && D) applyView();
 }
@@ -3539,7 +3547,7 @@ layer.addEventListener('pointerdown', function (e) {
   var ids = Object.keys(pts), v = viewNow();
   if (ids.length === 1) {
     moved = false; pinch = null; drag = null;
-    if (v.z > 1) { var R = vp.getBoundingClientRect(); drag = { id: e.pointerId, x: e.clientX, y: e.clientY, cx: v.cx, cy: v.cy, w: R.width, h: R.height, z: v.z, moved: false }; }
+    if (v.z >= 1) { var R = vp.getBoundingClientRect(); drag = { id: e.pointerId, x: e.clientX, y: e.clientY, cx: v.cx, cy: v.cy, w: R.width, h: R.height, z: v.z, moved: false }; }
   } else if (ids.length === 2) {
     var a = pts[ids[0]], b = pts[ids[1]], f = frac((a.x + b.x) / 2, (a.y + b.y) / 2);
     drag = null; moved = true; lastTap = null;
