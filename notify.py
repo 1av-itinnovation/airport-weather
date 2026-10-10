@@ -241,8 +241,8 @@ def build_email(d, new_q, new_d):
         cards.append(card(DARKRED if tsu else PURPLE, 'Possible tsunami' if tsu else 'Earthquake', title, rows, action, map_url('quake', q, stamp)))
     for a in new_d:
         rows = [row('Right now', a.get('now')), row('Forecast for later today', a.get('next')), row('Updated', a.get('upd')), row('Source', a.get('src'))]
-        cards.append(card(RED, 'Danger', a['name'], rows, a.get('todo'), map_url('danger', a, stamp)))
-        text.append(f"DANGER: {a['name']}\nRight now: {a.get('now')}\nForecast for later today: {a.get('next')}\nWhat to do: {a.get('todo')}\nUpdated: {a.get('upd')}\n")
+        cards.append(card(RED, 'Danger: thunderstorm', 'Thunderstorm at the airport: ' + a['name'], rows, a.get('todo'), map_url('danger', a, stamp)))
+        text.append(f"DANGER, THUNDERSTORM AT THE AIRPORT: {a['name']}\nRight now: {a.get('now')}\nForecast for later today: {a.get('next')}\nWhat to do: {a.get('todo')}\nUpdated: {a.get('upd')}\n")
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         cards.append(card(VOLC, VOLC_TAG[a['kind']], title, [row(k, val) for k, val in pairs], action, map_url('volcano', v, stamp)))
@@ -253,12 +253,12 @@ def build_email(d, new_q, new_d):
         cards.append(card(TEAL, tag, title, [row(k, val) for k, val in pairs], action, map_url('typhoon', c, stamp)))
         text.append(f"TYPHOON: {title}\n" + '\n'.join(f'{k}: {val}' for k, val in pairs if val) + (f'\nWhat to do: {action}' if action else '') + '\n')
         subj.append((c or {}).get('title', 'Typhoon') + (' update' if upd else (': strong winds near airports' if a.get('kind') == 'near' else ': strong winds within 24 hours')))
-    if new_d: subj.append('Danger: ' + (', '.join(a['name'] for a in new_d) if len(new_d) <= 2 else f'{len(new_d)} airports'))
+    if new_d: subj.append('Thunderstorm at ' + (', '.join(a['name'] for a in new_d) if len(new_d) <= 2 else f'{len(new_d)} airports'))
     subject = 'Airport Weather: ' + ' | '.join(subj)
     if len(subject) > 90: subject = subject[:87] + '...'
     checked = as_of(d)
     n = len(new_q) + len(new_d) + len(NEW_V) + len(NEW_T)
-    intro = ('A new alert has been raised on the Airport Weather Monitoring dashboard.' if n == 1 else f'{n} new alerts have been raised on the Airport Weather Monitoring dashboard.')
+    intro = what_is_new(new_q, new_d)
     button = (f'<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 6px"><tr><td style="background:{BLUE};border-radius:5px">'
               f'<a href="{esc(url)}" style="display:inline-block;padding:10px 20px;{FONT};font-size:14px;font-weight:600;color:#FFFFFF;text-decoration:none">Open the dashboard</a></td></tr></table>') if url else ''
     body = f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{esc(subject)}</title></head>
@@ -281,6 +281,20 @@ Developed by the 1AV IT Department. &copy; 2026 1Aviation Groundhandling Service
     plain = intro + '\n\n' + '\n'.join(text) + (f'\nDashboard: {url}\n' if url else '') + '\nAutomatic message from Airport Weather Monitoring. Developed by the 1AV IT Department.'
     return subject, plain, body
 
+def what_is_new(new_q, new_d):
+    """One plain line saying exactly what each new alert is about, so nobody has to work it out from a tag."""
+    bits = []
+    for a, q in new_q:
+        bits.append(('possible tsunami after a ' if a.get('kind') == 'tsunami' else '') + (f"magnitude {q['mag']:.1f} earthquake" + (f", nearest airport {str(q.get('near') or '').split(',')[0]}" if q.get('near') else '') if q else 'earthquake'))
+    for a, v in NEW_V:
+        nm = (v or {}).get('title') or 'a volcano'
+        bits.append({'ash': 'volcanic ash from ' + nm, 'eruption': 'eruption at ' + nm, 'level': 'raised alert level at ' + nm}.get(a.get('kind'), 'volcano alert, ' + nm))
+    for a, c, upd in NEW_T:
+        bits.append(((c or {}).get('title') or 'tropical cyclone') + (', update' if upd else ', strong winds within reach of airports'))
+    for a in new_d: bits.append('thunderstorm at ' + a['name'] + ' airport')
+    if not bits: return 'A new alert has been raised on the Airport Weather Monitoring dashboard.'
+    return ('New alert: ' if len(bits) == 1 else f'{len(bits)} new alerts: ') + '; '.join(bits) + '.'
+
 def teams_text(new_q, new_d):
     """A short version for a Teams channel message."""
     out = []
@@ -288,7 +302,7 @@ def teams_text(new_q, new_d):
         if q: out.append(f"<b>{'Possible tsunami' if a['kind'] == 'tsunami' else 'Earthquake'}: magnitude {q['mag']:.1f}</b>, {esc(q.get('place'))}<br>Happened: {esc(clock(q['ms']) if q.get('ms') else q.get('when'))} (Philippine time)<br>Nearest airport: {esc(q.get('near'))}<br>What to do: {esc(q.get('todo'))}")
         else: out.append(esc(a.get('text')))
     for a in new_d:
-        out.append(f"<b>Danger: {esc(a['name'])}</b><br>{esc(a.get('now'))}<br>What to do: {esc(a.get('todo'))}")
+        out.append(f"<b>Danger, thunderstorm at the airport: {esc(a['name'])}</b><br>{esc(a.get('now'))}<br>What to do: {esc(a.get('todo'))}")
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         out.append(f"<b>{esc(title)}</b><br>{esc(a.get('text'))}" + (f"<br>What to do: {esc(action)}" if action else ''))
@@ -315,7 +329,7 @@ def teams_card(d, new_q, new_d, test=False):
     def block(colour, fallback, tag, title, pairs, action, pic='', what=''):
         # The tag is plain text in Teams' own colours, not a picture. Teams (the phone app especially) can show a stale or
         # mismatched picture, and a wrong tag on a safety alert is worse than a plainer one.
-        tone = {'Danger': 'Attention', 'Possible tsunami': 'Attention', 'Volcanic ash': 'Warning', 'Eruption': 'Warning', 'Volcano': 'Warning', 'Earthquake': 'Accent', 'Typhoon': 'Accent'}.get(tag, fallback)
+        tone = {'Danger': 'Attention', 'Possible tsunami': 'Attention', 'Volcanic ash': 'Warning', 'Eruption': 'Warning', 'Volcano': 'Warning', 'Earthquake': 'Accent', 'Typhoon': 'Accent'}.get(tag.split(':')[0], fallback)
         top = [tb(tag.upper(), size='Medium', weight='Bolder', color=tone)]
         items = top + [tb(title, size='Large', weight='Bolder', spacing='Small')]
         if pic: items += [{'type': 'Image', 'url': pic, 'size': 'Stretch', 'altText': 'Map: ' + (what or title), 'spacing': 'Small'},
@@ -335,7 +349,7 @@ def teams_card(d, new_q, new_d, test=False):
         header = {'type': 'Container', 'style': 'accent', 'bleed': True, 'items': head}
     body = [header]
     if test: body.append({'type': 'Container', 'style': 'warning', 'items': [tb('**THIS IS A TEST.** It uses what is on the dashboard now. It is not a new alert.', size='Small')]})
-    body.append(tb('A new alert has been raised on the dashboard.' if n == 1 else f'{n} new alerts have been raised on the dashboard.'))
+    body.append(tb(what_is_new(new_q, new_d)))
     for a, q in new_q:
         tsu = a['kind'] == 'tsunami'; colour = 'darkred' if tsu else 'purple'; tag = 'Possible tsunami' if tsu else 'Earthquake'
         if q:
@@ -346,7 +360,7 @@ def teams_card(d, new_q, new_d, test=False):
         else:
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, 'Earthquake alert', [('Details', a.get('text'))], ''))
     for a in new_d:
-        body.append(block('red', 'Attention', 'Danger', a['name'], [('Right now', a.get('now')), ('Forecast for later today', a.get('next')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo'), map_url('danger', a, stamp)))
+        body.append(block('red', 'Attention', 'Danger: thunderstorm', 'Thunderstorm at the airport: ' + a['name'], [('Right now', a.get('now')), ('Forecast for later today', a.get('next')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo'), map_url('danger', a, stamp)))
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action, map_url('volcano', v, stamp), (v or {}).get('title', '')))
