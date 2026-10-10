@@ -2479,6 +2479,10 @@ var LIVE = [];                             // early notices read straight from U
 function allQuakes() { return LIVE.concat((D && D.quakes) || []); }
 function quakeById(id) { var L = allQuakes(); for (var i = 0; i < L.length; i++) { if (L[i].id === id) return L[i]; } return null; }
 function cycloneById(id) { var L = (D && D.cyclones) || [], W = (D && D.lows) || [], i; for (i = 0; i < L.length; i++) { if (L[i].id === id) return L[i]; } for (i = 0; i < W.length; i++) { if (W[i].id === id) { W[i].low = true; return W[i]; } } return null; }
+function rainCover() {      // how far north and south the rain forecast reaches, as a share of the Philippine map's height
+  var g = (typeof RAIN !== 'undefined' && RAIN && RAIN.grid) || { lat0: 40.5, step: 0.75, rows: 71 };
+  return { t: (-5.91775171 * (g.lat0 + g.step / 2) + 125.45788502) / 100, b: (-5.91775171 * (g.lat0 - (g.rows - 0.5) * g.step) + 125.45788502) / 100 };
+}
 function farThings() { return D ? cyclonesShown().concat(D.lows || []).filter(function (o) { return o.show && !o.onmap; }) : []; }
 function cyclonesShown() { return ((D && D.cyclones) || []).filter(function (c) { return c.confirmed || c.inpar; }); }
 // PAR corners (PAGASA): 5N 115E, 15N 115E, 21N 120E, 25N 120E, 25N 135E, 5N 135E, as map percentages
@@ -3471,6 +3475,15 @@ function fit() {
   if (avail > natural + 2) { v.style.flex = '0 0 auto'; v.style.height = Math.round(natural) + 'px'; col.style.alignSelf = window.matchMedia('(max-width:900px)').matches ? '' : 'start'; }
   else { v.style.flex = ''; v.style.height = ''; col.style.alignSelf = ''; }
   grid.classList.toggle('tall', avail > natural + 340);          // enough spare height to put the details under the map
+  // The panel is never taller than the rain forecast can fill at the widest zoom, so no part of the map is left without a forecast.
+  var COV = rainCover(), bwc = PARB.w, far0 = farThings();
+  far0.forEach(function (o) { bwc = Math.max(bwc, Math.min(2.6, Math.max(PARB.l + PARB.w, o.x / 100 + 0.12)) - Math.max(-1.6, Math.min(PARB.l, o.x / 100 - 0.12))); });
+  var capH = Math.floor((COV.b - COV.t) * 1.506 * (v.clientWidth / (bwc * 1.08)) * 0.985);
+  if (v.style.maxHeight) { v.style.maxHeight = ''; if (v.getAttribute('data-cap')) { v.removeAttribute('data-cap'); v.style.removeProperty('height'); v.style.removeProperty('flex'); col.style.removeProperty('align-self'); } }      // measure the free height first
+  if (v.clientHeight > capH + 1) {
+    v.style.maxHeight = capH + 'px';
+    if (!window.matchMedia('(max-width:900px)').matches) { v.setAttribute('data-cap', '1'); v.style.setProperty('height', capH + 'px', 'important'); v.style.setProperty('flex', '0 0 auto', 'important'); col.style.setProperty('align-self', 'start', 'important'); }      // the card shrinks to fit, instead of leaving an empty space under the map
+  }
   if (!v.clientHeight) return;
   var W = v.clientWidth, H = v.clientHeight, swHome = Math.min(W, H * 1000 / 1506);
   // Fully zoomed out, the panel shows the whole Philippine Area of Responsibility (PAR) with a small margin.
@@ -3483,6 +3496,7 @@ function fit() {
   var bw = B.r - B.l, bh = B.b - B.t;
   var sw = Math.min(swHome, W / (bw * 1.08), H / (bh * 1.08 * 1.506)), sh = sw * 1506 / 1000;
   var OX = W / 2 - (B.l + bw / 2) * sw, OY = H / 2 - (B.t + bh / 2) * sh;
+  if (H - COV.b * sh <= -COV.t * sh) OY = Math.max(H - COV.b * sh, Math.min(-COV.t * sh, OY));      // keep the view inside the forecast area
   HOMEZ = swHome / sw; OFFX = OX / W * 100; OFFY = OY / H * 100; HOMEC = { x: OFFX + 50 * sw / W, y: OFFY + 50 * sh / H };
   var appEl = document.querySelector('.app'); if (appEl) { appEl.style.setProperty('--maptop', Math.round(v.getBoundingClientRect().top - appEl.getBoundingClientRect().top) + 'px'); appEl.style.setProperty('--mapw', Math.round(W) + 'px'); }   // lets floating items line up with the map
   [st, $('pins')].forEach(function (el) { el.style.width = sw + 'px'; el.style.height = sh + 'px'; el.style.left = OX + 'px'; el.style.top = OY + 'px'; });
@@ -3651,7 +3665,7 @@ $('rainSlider').addEventListener('input', function () { R.pos = +this.value; R.h
 $('rainShow').addEventListener('click', function () { R.show = !R.show; this.textContent = R.show ? 'Hide rain' : 'Show rain'; this.setAttribute('aria-pressed', R.show ? 'true' : 'false'); cv.style.display = (R.show && R.n >= 6) ? '' : 'none'; if (R.show) rainDraw(); });
 function loadRain() {
   fetch('rain.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
-    if (!RAIN || j.generated_ms !== RAIN.generated_ms) { RAIN = j; }
+    if (!RAIN || j.generated_ms !== RAIN.generated_ms) { RAIN = j; if (typeof fit === 'function') fit(); }
     rainSetup();
   }).catch(function () { rainSetup(); });
 }
