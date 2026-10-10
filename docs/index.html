@@ -1869,7 +1869,7 @@ body{background:var(--page);color:var(--ink)}
 
 /* a selected volcano */
 .glass #pins .vrange{position:absolute;transform:translate(-50%,-50%);border-radius:50%;border:1.5px dashed rgba(191,54,12,.75);background:rgba(191,54,12,.06);pointer-events:none;animation:g-fade .5s ease both}
-.glass #pins .vrange span{position:absolute;left:50%;top:0;transform:translate(-50%,-50%) scale(var(--inv,1));font-size:11px;font-weight:600;color:#BF360C;background:rgba(var(--g-surf),.9);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.glass #pins .vrangelab{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-50%) scale(var(--inv,1));font-size:11px;font-weight:600;color:#BF360C;background:rgba(var(--g-surf),.9);border-radius:999px;padding:1px 8px;white-space:nowrap}
 .glass .pin.v .vcard{position:absolute;left:22px;top:-21px;display:flex;align-items:center;gap:9px;background:rgba(var(--g-surf),.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:15px;padding:5px 14px 5px 5px;box-shadow:0 8px 20px rgba(40,60,110,.18);font-size:11.5px;line-height:1.25;color:var(--g-ink);white-space:nowrap;pointer-events:none;animation:g-label .22s cubic-bezier(.22,1,.36,1) both}
 .glass .pin.v .vcard .bd{width:32px;height:32px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:none;color:#FFFFFF;background:linear-gradient(160deg,#F2743F,#BF360C)}
 .glass .pin.v.quiet .vcard .bd{background:linear-gradient(160deg,#9FB1BF,#66798A)}
@@ -1894,7 +1894,16 @@ body{background:var(--page);color:var(--ink)}
   .glass .pin.v.vleft .vcard{right:18px;padding:4px 4px 4px 10px}
 }
 html[data-theme="dark"] .glass #pins .vrange{border-color:rgba(255,138,92,.8);background:rgba(255,138,92,.07)}
-html[data-theme="dark"] .glass #pins .vrange span{color:#FFAE8A}
+html[data-theme="dark"] .glass #pins .vrangelab{color:#FFAE8A;background:rgba(30,39,58,.92)}
+
+/* small name tags take one of six spots around the dot (set by declutterTags) */
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-r .lab{left:12px;right:auto;top:-9px}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-l .lab{left:auto;right:12px;top:-9px}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-tr .lab{left:0;right:auto;top:-27px}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-br .lab{left:0;right:auto;top:9px}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-tl .lab{left:auto;right:0;top:-27px}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-bl .lab{left:auto;right:0;top:9px}
+.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-hide .lab{display:none}
 
 /* =====================================================================================
    DAY AND NIGHT. The button in the header switches between Auto (follows the device),
@@ -2993,14 +3002,15 @@ function closeSoft(el, done) {                                      // help and 
 /* ---------- a selected volcano: name card and the 150 km ring, like a selected airport ---------- */
 function volcanoFocus() {
   var pins = $('pins'); if (!pins || !D) return;
-  var old = pins.querySelector('.vrange'), v = S.vk ? volcanoById(S.vk) : null, km = D.volcano_km || 150;
+  var old = pins.querySelector('.vrange'), rl = pins.querySelector('.vrangelab'), v = S.vk ? volcanoById(S.vk) : null, km = D.volcano_km || 150;
   Array.prototype.forEach.call(pins.querySelectorAll('.pin.v .vcard'), function (c) { if (!v || c.parentNode.getAttribute('data-v') !== v.id) c.parentNode.removeChild(c); });
-  if (!v || !v.onmap) { if (old) old.parentNode.removeChild(old); return; }
+  if (!v || !v.onmap) { if (old) old.parentNode.removeChild(old); if (rl) rl.parentNode.removeChild(rl); return; }
   // ring: the map draws 1 degree of latitude (about 111 km) as 5.91775 percent of its height
   var hPct = km / 111 * 5.91775 * 2, wPct = hPct * 1506 / 1000;
-  if (!old) { old = document.createElement('div'); old.className = 'vrange'; old.innerHTML = '<span></span>'; pins.insertBefore(old, pins.firstChild); }
+  if (!old) { old = document.createElement('div'); old.className = 'vrange'; pins.insertBefore(old, pins.firstChild); }
+  if (!rl) { rl = document.createElement('span'); rl.className = 'vrangelab'; pins.appendChild(rl); }
+  rl.style.left = v.x.toFixed(2) + '%'; rl.style.top = (v.y + hPct / 2).toFixed(2) + '%'; rl.textContent = km + ' km from the volcano';
   old.style.left = v.x.toFixed(2) + '%'; old.style.top = v.y.toFixed(2) + '%'; old.style.width = wPct.toFixed(2) + '%'; old.style.height = hPct.toFixed(2) + '%';
-  old.firstChild.textContent = km + ' km';
   var pin = pins.querySelector('.pin.v[data-v="' + v.id + '"]');
   if (pin && !pin.querySelector('.vcard')) {
     var c = document.createElement('span'); c.className = 'vcard';
@@ -3046,10 +3056,45 @@ function placeVolcanoCard() {
   pin.classList.toggle('vleft', left);
   if (w > roomR && w > roomL) { var sc = (c.getBoundingClientRect().width / (c.offsetWidth || 1)) || 1; c.style.maxWidth = Math.max(70, Math.floor(((left ? roomL : roomR) - 30) / sc)) + 'px'; }
 }
-function placeSoon() { placeLabels(); placeVolcanoCard(); clearTimeout(PLT); PLT = setTimeout(function () { placeLabels(); placeVolcanoCard(); }, 700); }
+/* small name tags ("All airport names"): each one takes the first free spot around its dot, and is left out if there is none */
+var TAG_SPOTS = ['p-r', 'p-l', 'p-tr', 'p-br', 'p-tl', 'p-bl'], TAG_RANK = { warning: 0, advisory: 1, normal: 2, nodata: 3 };
+function declutterTags() {
+  var st = $('pins'); if (!GLASS || !st) return;
+  var pinsA = Array.prototype.slice.call(st.querySelectorAll('.pin.a'));
+  pinsA.forEach(function (p) { TAG_SPOTS.concat(['p-hide']).forEach(function (c) { p.classList.remove(c); }); });
+  if (!st.classList.contains('all-labels')) return;
+  var vr = $('vp').getBoundingClientRect(), hard = [], dots = [];
+  var add = function (el, pad) { if (el && el.getClientRects().length) { var r = el.getBoundingClientRect(); hard.push({ left: r.left - pad, right: r.right + pad, top: r.top - pad, bottom: r.bottom + pad }); } };
+  Array.prototype.forEach.call(document.querySelectorAll('#vp .zoom, #vp .lyrbtn, #vp .tour, #vp .banner:not([hidden]), #alertBar .al, #alertBar .almore, #pins .ashtag, #pins .vrangelab, #pins .vcard, #pins .pin.v:not(.quiet) .vlab, #pins .pin.q .qlab'), function (el) { add(el, 2); });
+  var small = [];
+  pinsA.forEach(function (p) {
+    var lab = p.querySelector('.lab'), b = p.querySelector('button'); if (b && b.getClientRects().length) { var r = b.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; dots.push({ left: cx - 8, right: cx + 8, top: cy - 8, bottom: cy + 8, pin: p }); }
+    if (!lab || !lab.getClientRects().length) return;
+    if (p.classList.contains('lv-danger') || p.classList.contains('sel') || p.matches(':hover')) add(lab, 2); else small.push(p);
+  });
+  var hit = function (r, o) { return !(r.right <= o.left || r.left >= o.right || r.bottom <= o.top || r.top >= o.bottom); };
+  var rank = function (p) { var m = /lv-([a-z]+)/.exec(p.className); return TAG_RANK[m ? m[1] : 'normal'] == null ? 2 : TAG_RANK[m[1]]; };
+  small.sort(function (a, b) { return rank(a) - rank(b); });
+  small.forEach(function (p) {
+    var lab = p.querySelector('.lab'), done = false;
+    for (var pass = 0; pass < 2 && !done; pass++) {                   // first avoid other dots too; then other labels only
+      for (var i = 0; i < TAG_SPOTS.length && !done; i++) {
+        TAG_SPOTS.forEach(function (c) { p.classList.remove(c); }); p.classList.add(TAG_SPOTS[i]);
+        var r = lab.getBoundingClientRect();
+        if (r.left < vr.left + 4 || r.right > vr.right - 4 || r.top < vr.top + 4 || r.bottom > vr.bottom - 4) continue;
+        if (hard.some(function (o) { return hit(r, o); })) continue;
+        if (pass === 0 && dots.some(function (o) { return o.pin !== p && hit(r, o); })) continue;
+        hard.push({ left: r.left - 2, right: r.right + 2, top: r.top - 1, bottom: r.bottom + 1 }); done = true;
+      }
+    }
+    if (!done) { TAG_SPOTS.forEach(function (c) { p.classList.remove(c); }); p.classList.add('p-hide'); }
+  });
+}
+function placeSoon() { placeLabels(); placeVolcanoCard(); declutterTags(); clearTimeout(PLT); PLT = setTimeout(function () { placeLabels(); placeVolcanoCard(); declutterTags(); }, 850); }
 var applyViewBase = applyView;
 applyView = function () { applyViewBase(); placeSoon(); };
 $('pins').addEventListener('mouseover', function (e) { if (e.target.closest && e.target.closest('.pin.a')) requestAnimationFrame(placeLabels); });
+$('lyNames').addEventListener('change', function () { setTimeout(placeSoon, 30); });
 window.addEventListener('resize', placeSoon);
 /* pressing anywhere outside the details window closes it (the X and the Esc key still work) */
 document.addEventListener('click', function (e) {
