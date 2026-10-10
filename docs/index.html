@@ -112,6 +112,7 @@ h2{font-size:18px;font-weight:700;color:#005687}
 .srcbox .c{display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.35}
 .srcbox .c div{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
 .srcbox .c div>span:first-child{min-width:0;overflow-wrap:anywhere}
+.srcbox .c .role{color:#3F5563}
 .srcbox .u{overflow-wrap:anywhere}
 .tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;flex:none}
 .tag.used{background:#005687;color:#FFFFFF}.tag.standby{background:#FFFFFF;color:#0060A7;border:1px solid #0060A7}.tag.failed{background:#C62828;color:#FFFFFF}
@@ -996,7 +997,10 @@ header.top{padding:10px 16px;border-radius:10px}
 @media (prefers-reduced-motion:reduce){.pin.v.erupting .vring{animation:none;opacity:.6}}
 .ashlayer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .ashlayer polygon{fill:rgba(93,64,55,.34);stroke:#4E342E;stroke-width:1.2;stroke-dasharray:4 3;vector-effect:non-scaling-stroke}
-.ashtag{position:absolute;transform:translate(-50%,-115%) scale(var(--inv,1));transform-origin:50% 100%;background:#5D4037;color:#FFFFFF;font-size:11px;font-weight:600;letter-spacing:.04em;padding:2px 6px;border-radius:3px;white-space:nowrap;pointer-events:none}
+/* labels for an alert sit above the airport dots; a selected or hovered name card still comes on top */
+.pin.v:not(.quiet){z-index:4}
+.pin.q:not(.qs){z-index:3}
+.ashtag{z-index:6;position:absolute;transform:translate(-50%,-115%) scale(var(--inv,1));transform-origin:50% 100%;background:#5D4037;color:#FFFFFF;font-size:11px;font-weight:600;letter-spacing:.04em;padding:2px 6px;border-radius:3px;white-space:nowrap;pointer-events:none}
 .pill.volcano{background:#FBE9E2;color:#BF360C}
 .app .col.side .stabs button{padding:0 7px;font-size:12.5px}
 .app .col.side .stabs .flagdot{margin-left:4px;width:7px;height:7px}
@@ -1840,7 +1844,7 @@ body{background:var(--page);color:var(--ink)}
 @media (max-width:900px){
   .glass .app .brand .checked #checked,.glass .app .brand .checked .nextup{display:none}
   .glass .app .brand .checked .ckshort{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .glass .app .brand .checked .ckshort.late{color:#B26A00}
+  .glass .app .brand .checked .ckshort.late{color:#8A5200}
   .glass .app header.top{padding:7px 9px 7px 6px;border-radius:18px}
   .glass .app .filters{gap:6px}
   .glass .app .filters .stat{height:auto;min-height:0;padding:6px 2px 5px;border-radius:14px;gap:0}
@@ -1863,18 +1867,51 @@ body{background:var(--page);color:var(--ink)}
   .glass .app .brand .checked{font-size:11px}
 }
 
+/* a selected volcano */
+.glass #pins .vrange{position:absolute;transform:translate(-50%,-50%);border-radius:50%;border:1.5px dashed rgba(191,54,12,.75);background:rgba(191,54,12,.06);pointer-events:none;animation:g-fade .5s ease both}
+.glass #pins .vrange span{position:absolute;left:50%;top:0;transform:translate(-50%,-50%) scale(var(--inv,1));font-size:11px;font-weight:600;color:#BF360C;background:rgba(var(--g-surf),.9);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.glass .pin.v .vcard{position:absolute;left:22px;top:-21px;display:flex;align-items:center;gap:9px;background:rgba(var(--g-surf),.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:15px;padding:5px 14px 5px 5px;box-shadow:0 8px 20px rgba(40,60,110,.18);font-size:11.5px;line-height:1.25;color:var(--g-ink);white-space:nowrap;pointer-events:none;animation:g-label .22s cubic-bezier(.22,1,.36,1) both}
+.glass .pin.v .vcard .bd{width:32px;height:32px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:none;color:#FFFFFF;background:linear-gradient(160deg,#F2743F,#BF360C)}
+.glass .pin.v.quiet .vcard .bd{background:linear-gradient(160deg,#9FB1BF,#66798A)}
+.glass .pin.v .vcard .bd svg{width:17px;height:17px;display:block}
+.glass .pin.v .vcard b{display:block;font-weight:600;font-size:12px}
+.glass .pin.v .vcard em{display:block;font-style:normal;color:var(--g-muted);font-size:11px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glass .pin.v.sel{z-index:7}
+.glass .pin.v.vtight .vcard em{display:none}
+.glass .pin.v.vtight .vcard .bd{width:24px;height:24px;border-radius:8px}
+.glass .pin.v.vtight .vcard .bd svg{width:13px;height:13px}
+.glass .pin.v.vleft .vcard{left:auto;right:22px;flex-direction:row-reverse;padding:5px 5px 5px 14px;text-align:right}
+.glass .pin.v .vcard{box-sizing:border-box}
+.glass .pin.v .vcard>span{min-width:0;overflow:hidden}
+.glass .pin.v .vcard b{overflow:hidden;text-overflow:ellipsis}
+.glass .pin.v.sel .vlab{display:none}
+@media (max-width:900px){
+  .glass .pin.v .vcard{left:18px;top:-17px;gap:7px;padding:4px 10px 4px 4px;border-radius:12px}
+  .glass .pin.v .vcard .bd{width:26px;height:26px;border-radius:9px}
+  .glass .pin.v .vcard .bd svg{width:14px;height:14px}
+  .glass .pin.v .vcard b{font-size:11px}
+  .glass .pin.v .vcard em{max-width:120px}
+  .glass .pin.v.vleft .vcard{right:18px;padding:4px 4px 4px 10px}
+}
+html[data-theme="dark"] .glass #pins .vrange{border-color:rgba(255,138,92,.8);background:rgba(255,138,92,.07)}
+html[data-theme="dark"] .glass #pins .vrange span{color:#FFAE8A}
+
 /* =====================================================================================
    DAY AND NIGHT. The button in the header switches between Auto (follows the device),
    Day and Night. The choice is remembered on that device.
    ===================================================================================== */
-.glass{--g-surf:255,255,255;--g-solid:#FFFFFF;--g-ink:#1B2B45;--g-muted:#5F6E88;--g-accent:#4D5EE0;--g-accent-ink:#4D5EE0;--g-rule:#C9D3E3}
+.glass{--muted:#4F6373;--g-surf:255,255,255;--g-solid:#FFFFFF;--g-ink:#1B2B45;--g-muted:#56657F;--g-accent:#4D5EE0;--g-accent-ink:#4D5EE0;--g-rule:#C9D3E3}
 .themebtn{width:44px;height:44px;border:none;border-radius:50%;background:rgba(var(--g-surf),.85);color:var(--g-accent-ink);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
 .themebtn svg{width:18px;height:18px;display:block}
+.glass .hr .hw.dry,.glass .hr .hc.na{color:#5E7281}
+.glass .app .filters .stat.zero .n{color:#5F7386}
+.glass .al .names button{background:rgba(0,0,0,.2)}
+.glass .asofline,.glass .vline.quiet b,.glass .dtodo b,.glass .lyr .ks{color:#4F6373}
 @media (max-width:900px){.themebtn{width:40px;height:40px}}
 @media (max-width:480px){.glass .app .themebtn,.glass .app .sndbtn,.glass .app .helpbtn{width:34px;height:34px}.glass header.top .tools{gap:4px}.glass .app .brand h1{font-size:13px;letter-spacing:-.015em}.glass .app .brand img{height:26px;padding:0 0 0 4px}.glass .app .brand{gap:8px}}
 @media (max-width:350px){.glass .app .brand h1{font-size:12.5px}.glass .app .brand img{height:22px}}
 html[data-theme="dark"]{color-scheme:dark;--ink:#E8EDF6;--muted:#9AA8BF;--line:rgba(140,160,200,.20);--panel:#1B2335;--page:#0C111B;--brand:#A9BEFF;--action:#A9BEFF;--tint:#222B40}
-html[data-theme="dark"] .glass{--g-surf:30,39,58;--g-solid:#2A3550;--g-ink:#E8EDF6;--g-muted:#9AA8BF;--g-accent:#5B6BF0;--g-accent-ink:#AEB9FF;--g-rule:rgba(140,160,200,.28)}
+html[data-theme="dark"] .glass{--muted:#9AA8BF;--g-surf:30,39,58;--g-solid:#2A3550;--g-ink:#E8EDF6;--g-muted:#9AA8BF;--g-accent:#4F5FE4;--g-accent-ink:#AEB9FF;--g-rule:rgba(140,160,200,.28)}
 html[data-theme="dark"] body.glass{background:linear-gradient(160deg,#0B1019 0%,#0E1522 45%,#101726 100%) fixed;color:var(--g-ink)}
 /* the map: the same drawing, shown dark */
 html[data-theme="dark"] .glass .app .vp{background:#0F1A27}
@@ -1933,7 +1970,7 @@ html[data-theme="dark"] .glass .modal .src b{color:#E8EDF6}
 html[data-theme="dark"] .glass .modal h3{color:#A9BEFF}
 html[data-theme="dark"] .glass .modal .mh .btn, html[data-theme="dark"] .glass .modal .btn{background:#26314A;color:#C9D4FF;border-color:rgba(140,160,200,.28)}
 html[data-theme="dark"] .glass .seg{background:#26314A;color:#C9D4FF;border-color:rgba(140,160,200,.28)}
-html[data-theme="dark"] .glass .seg.on{background:#5B6BF0;color:#FFFFFF;border-color:#5B6BF0}
+html[data-theme="dark"] .glass .seg.on{background:#4F5FE4;color:#FFFFFF;border-color:#4F5FE4}
 html[data-theme="dark"] .glass .wxframe{background:#0F1A27;border-color:rgba(140,160,200,.2)}
 html[data-theme="dark"] .glass .app .alert:hover{background:rgba(255,255,255,.05)}
 html[data-theme="dark"] .glass .app .alert.on{background:rgba(124,139,255,.16)}
@@ -1945,6 +1982,29 @@ html[data-theme="dark"] .glass .app .filters .stat.danger .n{color:#FF7A7A}
 html[data-theme="dark"] .glass .app .filters select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.500-3.500' fill='none' stroke='%23E8EDF6' stroke-width='1.500' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
 html[data-theme="dark"] .glass .app .filters select option{background:#1F283B;color:#E8EDF6}
 html[data-theme="dark"] .glass .rainbar input[type=range]{accent-color:#7C8BFF}
+html[data-theme="dark"] .glass .qline b, html[data-theme="dark"] .glass .shocks b, html[data-theme="dark"] .glass .detail b[style], html[data-theme="dark"] .glass #detail .shocks b{color:#D2A6F2}
+html[data-theme="dark"] .glass .qline{border-bottom-color:rgba(140,160,200,.16)}
+html[data-theme="dark"] .glass .srcbox{background:#222B40;border-color:rgba(140,160,200,.24)}
+html[data-theme="dark"] .glass .srcbox.warn{border-color:#E0AE00}
+html[data-theme="dark"] .glass .srcbox.bad{border-color:#EF5350}
+html[data-theme="dark"] .glass .srcbox .w{color:#9AA8BF}
+html[data-theme="dark"] .glass .srcbox .u, html[data-theme="dark"] .glass .srcbox .c{color:#E8EDF6}
+html[data-theme="dark"] .glass .tag.standby{background:transparent;color:#A9BEFF;border-color:rgba(169,190,255,.5)}
+html[data-theme="dark"] .glass .tag.used{background:#3B4A8F;color:#FFFFFF}
+html[data-theme="dark"] .glass .modal details, html[data-theme="dark"] .glass #sources details{background:#222B40;border-color:rgba(140,160,200,.2);color:#C3CEE0}
+html[data-theme="dark"] .glass .modal details summary, html[data-theme="dark"] .glass #sources details summary{color:#E8EDF6}
+html[data-theme="dark"] .glass #modal .help-data-copy p, html[data-theme="dark"] .glass .modal .small, html[data-theme="dark"] .glass #modal .help-data > .small{color:#B3C0D6}
+html[data-theme="dark"] .glass #modal .help-data{background:transparent;border-color:rgba(140,160,200,.2)}
+html[data-theme="dark"] .glass .tour.off{color:#A7B4C9;border-color:rgba(140,160,200,.25)}
+html[data-theme="dark"] .glass #modal .box > .sec .lv, html[data-theme="dark"] .glass #modal .box > .sec .src{background:#222B40;border-color:rgba(140,160,200,.2)}
+html[data-theme="dark"] .glass .srcbox .c .role{color:#A7B4C9}
+html[data-theme="dark"] .glass .tag.failed{background:#C62828;color:#FFFFFF}
+html[data-theme="dark"] .glass .asofline, html[data-theme="dark"] .glass .vline.quiet b, html[data-theme="dark"] .glass .dtodo b, html[data-theme="dark"] .glass .lyr .ks{color:#A7B4C9}
+html[data-theme="dark"] .glass .app .filters .stat.zero .n{color:#9AA8BF}
+html[data-theme="dark"] .glass .tour{color:#E8EDF6}
+html[data-theme="dark"] .glass .tour button{color:#AEB9FF}
+html[data-theme="dark"] .glass .app .brand .checked .ckshort.late, html[data-theme="dark"] .glass .nextup.late{color:#F2B84B}
+html[data-theme="dark"] .glass .hr .hw.dry, html[data-theme="dark"] .glass .hr .hc.na{color:#8E9DB5}
 html[data-theme="dark"] .glass .app .rainbar .info .k{color:#9AA8BF}
 html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
 </style>
@@ -2111,7 +2171,7 @@ html[data-theme="dark"] .glass .app .rainbar .info .v{color:#E8EDF6}
         <li><strong>Level counts.</strong> The four large numbers (Danger, Warning, Advisory, Normal) show how many airports are at each level. Press one to show only that level on the map and in the list; press it again to go back. On a phone these are the five tiles under the alerts.</li>
         <li><strong>Today and Tomorrow.</strong> At the top. Switches the list between today's alerts and airports with bad weather forecast for tomorrow.</li>
         <li><strong>Region and Find an airport.</strong> Region narrows everything to Luzon, Visayas or Mindanao. Find an airport jumps straight to one airport; when a region is chosen it lists only the airports in that region.</li>
-        <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
+        <li><strong>Map.</strong> The map fills the left side of the screen. The rain timeline and the Auto-show switch are just under it. Each dot is an airport, coloured by its level. A flashing dot means a thunderstorm there now. A dashed outline means the reading is an Estimate. On wide screens the neighbouring countries are drawn around the Philippines so the rain forecast can be seen coming in; they are a picture only and cannot be selected. Triangles are volcanoes: filled means an eruption or a raised alert level, and a brown dashed area is an official ash cloud warning. Selecting a volcano zooms to it, shows its name and status, and draws a dashed ring 150 km around it so the airports inside the ring can be seen. Purple rings are earthquakes: larger means stronger, faded means more than 24 hours old. To keep the map clear, airport names show for Danger airports, for the airport you select, and when you zoom in; hover or tap any dot to see its name. The Layers button turns rain, earthquakes, all volcanoes and all airport names on or off, and remembers your choice on that device.</li>
         <li><strong>Moving around the map.</strong> Use the + and − buttons, the mouse wheel, pinch, or double-tap to zoom, and drag to move. The round arrow under them goes back to the whole map and clears the selection.</li>
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
         <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. Press one to show those airports in the list; press it again to go back. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
@@ -2325,6 +2385,7 @@ function renderGlass() {
     '<div class="sbar">' + seg.map(function (x) { return '<i style="width:' + (100 * c[x[0]] / tot) + '%;background:' + x[1] + '"></i>'; }).join('') + '</div>';
   $('paneDetails').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk));
   $('cols').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk) && S.tab === 'details');
+  volcanoFocus();
   setTimeout(placeSoon, 0);
   var key = S.sel || S.qk || S.vk || '';
   if (key !== LASTKEY) { LASTKEY = key; var dt = $('detail'); if (key && dt) { dt.classList.remove('fresh'); void dt.offsetWidth; dt.classList.add('fresh'); setTimeout(function () { dt.classList.remove('fresh'); }, 700); } }
@@ -2429,7 +2490,7 @@ function renderData() {
   var tagOf = function (c) { return (c.state === 'standby' && c.tested === 'failed') ? '<span class="tag failed">Test failed</span>' : '<span class="tag ' + esc(c.state) + '">' + (TAG[c.state] || '') + '</span>'; };
   (D.source_status || []).forEach(function (g) {
     sg += '<div class="srcbox' + (!g.ok ? ' bad' : (!g.first ? ' warn' : '')) + '"><span class="w">' + esc(g.what) + '</span><span class="u">' + esc(g.used) + '</span><div class="c">';
-    g.chain.forEach(function (c, i) { sg += '<div><span>' + (i + 1) + '. ' + esc(c.name) + '<br><span style="color:#3F5563">' + esc((c.state === 'standby' && c.tested) ? c.note : c.role) + (c.state === 'used' && c.note !== 'Used' ? '. ' + esc(c.note) : '') + '</span></span>' + tagOf(c) + '</div>'; });
+    g.chain.forEach(function (c, i) { sg += '<div><span>' + (i + 1) + '. ' + esc(c.name) + '<br><span class="role">' + esc((c.state === 'standby' && c.tested) ? c.note : c.role) + (c.state === 'used' && c.note !== 'Used' ? '. ' + esc(c.note) : '') + '</span></span>' + tagOf(c) + '</div>'; });
     sg += '</div></div>';
   });
   $('srcGrid').innerHTML = sg;
@@ -2929,6 +2990,24 @@ function closeSoft(el, done) {                                      // help and 
   if (!MOTION_OK || !el.classList.contains('open')) { done(); return; }
   el.classList.add('closing'); setTimeout(function () { el.classList.remove('closing'); done(); }, 190);
 }
+/* ---------- a selected volcano: name card and the 150 km ring, like a selected airport ---------- */
+function volcanoFocus() {
+  var pins = $('pins'); if (!pins || !D) return;
+  var old = pins.querySelector('.vrange'), v = S.vk ? volcanoById(S.vk) : null, km = D.volcano_km || 150;
+  Array.prototype.forEach.call(pins.querySelectorAll('.pin.v .vcard'), function (c) { if (!v || c.parentNode.getAttribute('data-v') !== v.id) c.parentNode.removeChild(c); });
+  if (!v || !v.onmap) { if (old) old.parentNode.removeChild(old); return; }
+  // ring: the map draws 1 degree of latitude (about 111 km) as 5.91775 percent of its height
+  var hPct = km / 111 * 5.91775 * 2, wPct = hPct * 1506 / 1000;
+  if (!old) { old = document.createElement('div'); old.className = 'vrange'; old.innerHTML = '<span></span>'; pins.insertBefore(old, pins.firstChild); }
+  old.style.left = v.x.toFixed(2) + '%'; old.style.top = v.y.toFixed(2) + '%'; old.style.width = wPct.toFixed(2) + '%'; old.style.height = hPct.toFixed(2) + '%';
+  old.firstChild.textContent = km + ' km';
+  var pin = pins.querySelector('.pin.v[data-v="' + v.id + '"]');
+  if (pin && !pin.querySelector('.vcard')) {
+    var c = document.createElement('span'); c.className = 'vcard';
+    c.innerHTML = '<i class="bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.500 9L3 20h18l-5.500-11zM10.500 5.500c0-1.200.800-1.200.800-2.500M13.500 5.500c0-1.200.800-1.200.800-2.500"/></svg></i><span><b data-full="' + esc(v.title || v.name) + '" data-short="' + esc(v.name) + '">' + esc(v.title || v.name) + '</b><em>' + esc(volcanoWord(v)) + '</em></span>';
+    pin.appendChild(c);
+  }
+}
 /* ---------- name cards always stay inside the map, and clear of the buttons ---------- */
 var PLT = 0;
 function placeLabels() {
@@ -2955,7 +3034,19 @@ function placeLabels() {
     }
   });
 }
-function placeSoon() { placeLabels(); clearTimeout(PLT); PLT = setTimeout(placeLabels, 700); }
+function placeVolcanoCard() {
+  var c = document.querySelector('#pins .pin.v .vcard'); if (!c) return;
+  var vr = $('vp').getBoundingClientRect(), pin = c.parentNode, pr = pin.getBoundingClientRect(), x = pr.left + pr.width / 2, nm = c.querySelector('b');
+  pin.classList.remove('vleft', 'vtight'); c.style.maxWidth = ''; nm.textContent = nm.getAttribute('data-full');
+  var need = function () { return c.getBoundingClientRect().width + 30; }, roomR = vr.right - 8 - x, roomL = x - vr.left - 8;
+  var z = document.querySelector('#vp .zoom'); if (z && z.getClientRects().length) { var zr = z.getBoundingClientRect(), cr = c.getBoundingClientRect(); if (!(zr.bottom < cr.top - 6 || zr.top > cr.bottom + 6)) { if (zr.left > x) roomR = Math.min(roomR, zr.left - 6 - x); else roomL = Math.min(roomL, x - zr.right - 6); } }
+  var w = need();
+  if (w > roomR && w > roomL) { pin.classList.add('vtight'); nm.textContent = nm.getAttribute('data-short'); w = need(); }      // tight spot: the short name only
+  var left = w > roomR && (w <= roomL || roomL > roomR);
+  pin.classList.toggle('vleft', left);
+  if (w > roomR && w > roomL) { var sc = (c.getBoundingClientRect().width / (c.offsetWidth || 1)) || 1; c.style.maxWidth = Math.max(70, Math.floor(((left ? roomL : roomR) - 30) / sc)) + 'px'; }
+}
+function placeSoon() { placeLabels(); placeVolcanoCard(); clearTimeout(PLT); PLT = setTimeout(function () { placeLabels(); placeVolcanoCard(); }, 700); }
 var applyViewBase = applyView;
 applyView = function () { applyViewBase(); placeSoon(); };
 $('pins').addEventListener('mouseover', function (e) { if (e.target.closest && e.target.closest('.pin.a')) requestAnimationFrame(placeLabels); });
