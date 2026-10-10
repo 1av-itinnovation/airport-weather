@@ -1208,6 +1208,54 @@ try:
     if len(_srcs) < 2: PROBLEMS.append(f"Typhoon watch: only one source could be reached ({_srcs[0] if _srcs else 'none'}), so cyclones cannot be cross-checked at this check.")
 except Exception as _e:
     CYCLONES = []; TY_ALERTS = []; print('TYPHOON STAGE ERROR', _e, file=sys.stderr)
+# =====================================================================================
+# LOW PRESSURE AREAS (information only)
+# A low pressure area is where a tropical cyclone can start. PAGASA names them in its bulletins, but does not
+# publish them as data. The nearest reliable data is the Joint Typhoon Warning Center (US Navy and Air Force)
+# "Significant Tropical Weather Advisory" for the western Pacific, which lists each area it is watching, where
+# it is, and how likely it is to become a tropical cyclone within 24 hours (low, medium or high).
+# These are shown on the map and listed under Typhoon. They are one source only and never raise an alert.
+# =====================================================================================
+LOW_HOURS = 30
+def load_lows():
+    """Returns a list of areas being watched, or None when the advisory could not be read. Prints lines starting with LPA:."""
+    txt = fetch('https://www.metoc.navy.mil/jtwc/products/abpwweb.txt', tries=2, text=True, timeout=25)
+    if not txt: print('LPA: JTWC advisory not reached.', file=sys.stderr); return None
+    flat = ' '.join(txt.split())
+    h = re.search(r'ABPW10 PGTW (\d{2})(\d{2})(\d{2})', flat)
+    if not h: print(f'LPA: JTWC advisory not understood (no header): {flat[:300]!r}', file=sys.stderr); return None
+    t = NOW.replace(day=1, hour=int(h.group(2)), minute=int(h.group(3)), second=0, microsecond=0) + dt.timedelta(days=int(h.group(1)) - 1)
+    if t > NOW + dt.timedelta(hours=2): t = (t.replace(day=1) - dt.timedelta(days=1)).replace(day=1) + dt.timedelta(days=int(h.group(1)) - 1)
+    if not (-2 <= (NOW - t).total_seconds() / 3600 <= LOW_HOURS): print(f"LPA: JTWC advisory is old ({t.strftime('%d %b %H:%MZ')}); not used.", file=sys.stderr); return None
+    west = flat.split('2. SOUTH PACIFIC AREA')[0]      # part 1 is the western and south-western North Pacific
+    out = []
+    for m in re.finditer(r'(?:AN|THE) AREA OF CONVECTION \(INVEST (\d{2}[A-Z])\)(.*?)(?=(?:AN|THE) AREA OF CONVECTION \(INVEST|\(\d\) |C\. SUBTROPICAL|2\. SOUTH PACIFIC|$)', west, re.S):
+        body = m.group(2); _all = list(re.finditer(r'NEAR (\d{1,2}\.\d)([NS]) (\d{1,3}\.\d)([EW])', body)); ps = _all[-1] if _all else None      # the last position given is the current one
+        if not ps: print(f'LPA: Invest {m.group(1)} skipped, no position: {body[:160]!r}', file=sys.stderr); continue
+        la = float(ps.group(1)) * (1 if ps.group(2) == 'N' else -1); lo = float(ps.group(3)) * (1 if ps.group(4) == 'E' else -1)
+        ch = re.findall(r'(?:IS|REMAINS|UPGRADED TO|DOWNGRADED TO)\s+(LOW|MEDIUM|HIGH)\b', body)
+        gone = bool(re.search(r'HAS DISSIPATED|IS NO LONGER SUSPECT', body))
+        print(f"LPA: Invest {m.group(1)} at {la:.1f}N {lo:.1f}E, chance {ch[-1] if ch else 'not stated'}{', no longer watched' if gone else ''}, advisory {t.strftime('%d %b %H:%MZ')}", file=sys.stderr)
+        if not gone: out.append(dict(code=m.group(1), la=la, lo=lo, chance=(ch[-1].lower() if ch else ''), issued=t))
+    if not out: print(f"LPA: JTWC advisory read ({t.strftime('%d %b %H:%MZ')}), no area being watched in the western Pacific. Start of text: {west[:260]!r}", file=sys.stderr)
+    return out
+LOWS = []; LOWS_OK = False
+try:
+    _lw = load_lows(); LOWS_OK = _lw is not None
+    for i, z in enumerate(_lw or []):
+        if any(hav(z['la'], z['lo'], c['lat'], c['lon']) <= 300 for c in CYCLONES): continue      # already a tropical cyclone
+        x_ = P['cx'][0] * z['lo'] + P['cx'][1]; y_ = P['cy'][0] * z['la'] + P['cy'][1]
+        nr = min(rows, key=lambda r: hav(z['la'], z['lo'], r['lat'], r['lon'])); d_ = hav(z['la'], z['lo'], nr['lat'], nr['lon'])
+        inpar = (5 <= z['la'] <= 25 and 115 <= z['lo'] <= 135 and not (z['lo'] < 120 and z['la'] > 15 + (z['lo'] - 115) * 1.2))
+        cw = {'low': 'a low chance', 'medium': 'a medium chance', 'high': 'a high chance'}.get(z['chance'])
+        LOWS.append(dict(id=f"l{z['code'].lower()}", name='Low pressure area ' + z['code'], lat=z['la'], lon=z['lo'], x=x_, y=y_, inpar=inpar, chance=z['chance'],
+                         onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100), show=(-150 <= x_ <= 250 and -18 <= y_ <= 116), dist=d_, ms=int(z['issued'].timestamp() * 1000),
+                         where=f"About {km(d_)} km {comp(brg(nr['lat'], nr['lon'], z['la'], z['lo']))} of {nr['name']}, {'inside' if inpar else 'outside'} the Philippine Area of Responsibility. " +
+                               (f"The Joint Typhoon Warning Center gives it {cw} of becoming a tropical cyclone within 24 hours." if cw else 'The Joint Typhoon Warning Center is watching it.') +
+                               ' One source only, for information: it raises no alert. PAGASA names low pressure areas in its own bulletins.'))
+    LOWS.sort(key=lambda z: z['dist'])
+except Exception as _e:
+    LOWS = []; print('LPA ERROR', _e, file=sys.stderr)
 T0=MIDNIGHT
 for r in rows: r.pop('_area',None)
 def common(ts): return Counter(ts).most_common(1)[0][0] if ts else None
@@ -1570,7 +1618,7 @@ data=dict(
     quake_asof=(f"{day(asof)}, {clock_plain(asof)}" if asof else ''),
     quake_count=(f"{len(quakes)} earthquake{'' if len(quakes)==1 else 's'} of magnitude 4.5+ in the past 7 days (purple rings, tap one for details). Small purple dots are aftershocks of a main earthquake." if asof else ''),
     ty_text=ty_main, ty_banner=ty_banner, ty_asof=((', '.join(k for k, ok in (('Aviation storm warnings', SIGMET is not None), ('RSMC Tokyo', JMATC is not None), ('GDACS', GDACS is not None)) if ok) + f", {day(NOW)}, {clock_plain(NOW)}") if tyok else ''),
-    cyclones=CYCLONES, ty_alerts=TY_ALERTS, ty_near_km=TY_NEAR_KM,
+    cyclones=CYCLONES, ty_alerts=TY_ALERTS, ty_near_km=TY_NEAR_KM, lows=LOWS, lows_ok=LOWS_OK,
     quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],ms=a['ms'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), week_ms=WEEK_MS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
     volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], ash=ASH_AREAS, volcano_ok=vol_ok, volcano_flag=vol_flag,
@@ -1600,7 +1648,8 @@ RAIN_HOURS = 30               # how many hours ahead to store
 # very wide screens (the neighbouring countries are shown there as a picture). The middle part, over
 # the Philippines, is read at every point. The outer parts are read at every second point and the
 # points in between are filled in from their neighbours, which keeps the number of requests low.
-GRID = dict(lat0=22.5, lon0=79.25, step=0.75, rows=26, cols=114)    # top-left point, spacing in degrees
+# North to south it runs from 25.5N to 1.5N, which covers the whole Philippine Area of Responsibility (5N to 25N) and the map's lower edge.
+GRID = dict(lat0=25.5, lon0=79.25, step=0.75, rows=33, cols=114)    # top-left point, spacing in degrees
 GRID_FULL = (40, 73)          # first and last column read at every point (longitude 109.25 to 134)
 
 def build_rain():

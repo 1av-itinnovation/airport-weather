@@ -58,6 +58,16 @@ why, and how reliable each reading is.
   shows how far its strong winds reach, where it is forecast to be in 24 hours, and only the
   airports within reach. A cyclone that only one source has reported is drawn grey and dashed and
   marked "not yet confirmed".
+- **Philippine Area of Responsibility.** Zooming all the way out shows the whole PAR (115 to 135 degrees
+  East, 5 to 25 degrees North) as a dashed outline, with the neighbouring countries drawn for
+  reference only. The usual view stays on the Philippines; the map opens zoomed out by itself when a
+  cyclone is inside the PAR but still far out at sea. A cyclone or low pressure area just outside the
+  PAR (roughly 1,000 km east or west of it) is drawn too, and the zoom-out stretches to include it.
+- **Low pressure areas.** A red circle with an L marks each area the Joint Typhoon Warning Center is
+  watching, with its chance (low, medium or high) of becoming a tropical cyclone within 24 hours.
+  Information only: one source, no alert.
+- **Rain and thunderstorm forecast** covers the whole map, from 25.5 to 1.5 degrees North and well
+  beyond the PAR to the east and west.
 - **Focus on what is affected.** Selecting a volcano, an earthquake or a cyclone hides every airport
   except the ones it can affect (150 km ring for a volcano, 100 km ring for an earthquake, the
   strong-wind area for a cyclone). Closing the selection brings all airports back.
@@ -129,6 +139,7 @@ Earthquake and volcano alerts are treated as critical.
 | Chance of rain and the 7-day outlook | Open-Meteo | none; the items are left out |
 | Tropical cyclones (typhoons) | Three sources read at every check: aviation storm warnings (aviationweather.gov) for position, movement and warning areas; RSMC Tokyo (Japan Meteorological Agency) for strength, wind reach and the 24-hour forecast; GDACS as an independent third | Each stands in for the others. A cyclone is confirmed only when at least two report it |
 | Thunderstorm area warnings | Aviation storm warnings (aviationweather.gov) | none |
+| Low pressure areas (information only) | Joint Typhoon Warning Center tropical weather advisory | none; the marks are left out |
 | Earthquakes | PHIVOLCS | USGS, then EMSC. Every earthquake of magnitude 5.0 or stronger is also cross-checked against USGS or EMSC |
 | Volcanic ash and eruptions | Aviation ash warnings (SIGMET), aviationweather.gov. Gives the ash area | Second source: Tokyo VAAC advisories (Japan Meteorological Agency). Confirms the warning, and stands in when it is missing or cannot be reached |
 | Volcano alert levels | PHIVOLCS volcano bulletins | Levels entered by hand in `volcano_levels.json` |
@@ -218,8 +229,8 @@ cross-checked says so in plain words; it is never shown as confirmed.
 - PAGASA's public typhoon bulletins and wind signals are not published as data, so they are not read
   directly. The typhoon alert is based on measured wind reach, not on the wind signal. Confirm
   typhoon decisions against PAGASA and CAAP advisories.
-- Low pressure areas are not shown: no reliable public data source was found, so a cyclone first
-  appears when it becomes a Tropical Depression.
+- Low pressure areas come from one source only (the Joint Typhoon Warning Center) and may differ from
+  the ones PAGASA names. They are shown for awareness and never raise an alert.
 
 ## Data credits
 
