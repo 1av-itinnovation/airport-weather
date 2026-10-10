@@ -1648,8 +1648,11 @@ RAIN_HOURS = 30               # how many hours ahead to store
 # very wide screens (the neighbouring countries are shown there as a picture). The middle part, over
 # the Philippines, is read at every point. The outer parts are read at every second point and the
 # points in between are filled in from their neighbours, which keeps the number of requests low.
-# North to south it runs from 25.5N to 1.5N, which covers the whole Philippine Area of Responsibility (5N to 25N) and the map's lower edge.
-GRID = dict(lat0=25.5, lon0=79.25, step=0.75, rows=33, cols=114)    # top-left point, spacing in degrees
+# North to south it runs from 40.5N to 12S, so the rain reaches the edge of the map panel on tall screens too.
+# Rows between 25.5N and 1.5N (the Philippine Area of Responsibility and a little more) are the detailed band; the rows
+# above and below it are read at every second point only.
+GRID = dict(lat0=40.5, lon0=79.25, step=0.75, rows=71, cols=114)    # top-left point, spacing in degrees
+GRID_BAND = (20, 52)          # first and last row of the detailed band (latitude 25.5N to 1.5N)
 GRID_FULL = (40, 73)          # first and last column read at every point (longitude 109.25 to 134)
 
 def build_rain():
@@ -1663,7 +1666,7 @@ def build_rain():
         print(f'Rain animation: still fresh ({age:.1f} hours old), not rebuilt.'); return
     from concurrent.futures import ThreadPoolExecutor
     allpts = [(r, c) for r in range(GRID['rows']) for c in range(GRID['cols'])]
-    direct = lambda r, c: GRID_FULL[0] <= c <= GRID_FULL[1] or (r % 2 == 0 and c % 2 == 0)
+    direct = lambda r, c: (GRID_BAND[0] <= r <= GRID_BAND[1] and GRID_FULL[0] <= c <= GRID_FULL[1]) or (r % 2 == 0 and c % 2 == 0)
     pts = [p for p in allpts if direct(*p)]
     h0 = NOW.replace(minute=0, second=0, microsecond=0)
     hours = [h0 + dt.timedelta(hours=i) for i in range(RAIN_HOURS)]

@@ -66,8 +66,10 @@ why, and how reliable each reading is.
 - **Low pressure areas.** A red circle with an L marks each area the Joint Typhoon Warning Center is
   watching, with its chance (low, medium or high) of becoming a tropical cyclone within 24 hours.
   Press one for its details. Information only: one source, no alert.
-- **Rain and thunderstorm forecast** covers the whole map, from 25.5 to 1.5 degrees North and well
-  beyond the PAR to the east and west.
+- **Rain and thunderstorm forecast** covers the whole map panel: from 40.5 degrees North to 12
+  degrees South, and well beyond the PAR to the east and west. The band over the PAR is read in
+  full detail and the areas above and below it at every second point. On tall screens the map
+  panel is kept no taller than this area, so nothing is shown without a forecast.
 - **Focus on what is affected.** Selecting a volcano, an earthquake or a cyclone hides every airport
   except the ones it can affect (150 km ring for a volcano, 100 km ring for an earthquake, the
   strong-wind area for a cyclone). Closing the selection brings all airports back.
