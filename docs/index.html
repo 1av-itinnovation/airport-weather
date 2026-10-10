@@ -1771,12 +1771,12 @@ body{background:var(--page);color:var(--ink)}
 .glass .pin.a .lab>span{min-width:0;overflow:hidden}
 .glass .pin.a .lab{box-sizing:border-box}
 .glass .pin.a .lab em{display:block;font-style:normal;color:var(--g-muted);font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab{top:-9px;left:12px;padding:1px 7px;border-radius:7px;box-shadow:0 2px 6px rgba(40,60,110,.14);font-size:11px}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab .bd,.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab em{display:none}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover) .lab b{font-weight:500;font-size:11px}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover) .lab{top:-9px;left:12px;padding:1px 7px;border-radius:7px;box-shadow:0 2px 6px rgba(40,60,110,.14);font-size:11px}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover) .lab .bd,.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover) .lab em{display:none}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover) .lab b{font-weight:500;font-size:11px}
 /* airports on the eastern side open their name card to the left, so it stays inside the map */
 .glass .layer .pin.a.east .lab{left:auto;right:16px;flex-direction:row-reverse;padding:5px 5px 5px 14px;text-align:right}
-.glass .layer .stage.all-labels .pin.a.east:not(.lv-danger):not(.sel):not(:hover) .lab{left:auto;right:12px;padding:1px 7px}
+.glass .layer .stage.all-labels .pin.a.east:not(.bigcard):not(.sel):not(:hover) .lab{left:auto;right:12px;padding:1px 7px}
 .glass .app .alert .a1{flex-wrap:nowrap;white-space:nowrap;min-width:0;overflow:hidden}
 @media (min-width:901px){.glass .app .alert{grid-template-columns:minmax(0,1.35fr) minmax(0,1.5fr) auto}}
 @media (max-width:900px){
@@ -1925,13 +1925,13 @@ html[data-theme="dark"] .glass #pins .vrange{border-color:rgba(255,138,92,.8);ba
 html[data-theme="dark"] .glass #pins .vrangelab{color:#FFAE8A;background:rgba(30,39,58,.92)}
 
 /* small name tags take one of six spots around the dot (set by declutterTags) */
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-r .lab{left:12px;right:auto;top:-9px}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-l .lab{left:auto;right:12px;top:-9px}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-tr .lab{left:0;right:auto;top:-27px}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-br .lab{left:0;right:auto;top:9px}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-tl .lab{left:auto;right:0;top:-27px}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-bl .lab{left:auto;right:0;top:9px}
-.glass .layer .stage.all-labels .pin.a:not(.lv-danger):not(.sel):not(:hover).p-hide .lab{display:none}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover).p-r .lab{left:12px;right:auto;top:-9px}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover).p-l .lab{left:auto;right:12px;top:-9px}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover).p-tr .lab{left:0;right:auto;top:-27px}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover).p-br .lab{left:0;right:auto;top:9px}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover).p-tl .lab{left:auto;right:0;top:-27px}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover).p-bl .lab{left:auto;right:0;top:9px}
+.glass .layer .stage.all-labels .pin.a:not(.bigcard):not(.sel):not(:hover).p-hide .lab{display:none}
 
 /* alert cards: the label, time and Details on the first line, the full message on the second, so nothing is cut short */
 .glass #alertBar .al{flex-wrap:wrap;row-gap:3px}
@@ -3258,6 +3258,8 @@ function volcanoFocus() {
   ['v', 'q', 't'].forEach(function (k) { pins.classList.toggle('f-' + k, !!(F && F.k === k)); });
   pins.classList.toggle('all-labels', focus || LAYERS.names);
   Array.prototype.forEach.call(pins.querySelectorAll('.pin.a'), function (p) { var a = focus ? byId(p.getAttribute('data-a')) : null; p.classList.toggle('v-out', !!(focus && a && !names[a.name])); });
+  // a Danger airport normally carries a large name card; while something else is selected it drops to a small tag so the two cards never overlap
+  Array.prototype.forEach.call(pins.querySelectorAll('.pin.a'), function (p) { p.classList.toggle('bigcard', p.classList.contains('lv-danger') && !focus); });
   if (!F) { if (old) old.parentNode.removeChild(old); if (rl) rl.parentNode.removeChild(rl); return; }
   // ring: the map draws 1 degree of latitude (about 111 km) as 5.91775 percent of its height
   var hPct = F.km / 111 * 5.91775 * 2, wPct = hPct * 1506 / 1000 / Math.max(.5, Math.cos((o.lat || 12) * Math.PI / 180)) * Math.cos(12 * Math.PI / 180);
@@ -3331,7 +3333,7 @@ function declutterTags() {
   pinsA.forEach(function (p) {
     var lab = p.querySelector('.lab'), b = p.querySelector('button'); if (b && b.getClientRects().length) { var r = b.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; dots.push({ left: cx - 8, right: cx + 8, top: cy - 8, bottom: cy + 8, pin: p }); }
     if (!lab || !lab.getClientRects().length) return;
-    if (p.classList.contains('lv-danger') || p.classList.contains('sel') || p.matches(':hover')) add(lab, 2); else small.push(p);
+    if (p.classList.contains('bigcard') || p.classList.contains('sel') || p.matches(':hover')) add(lab, 2); else small.push(p);
   });
   var hit = function (r, o) { return !(r.right <= o.left || r.left >= o.right || r.bottom <= o.top || r.top >= o.bottom); };
   var rank = function (p) { var m = /lv-([a-z]+)/.exec(p.className); return TAG_RANK[m ? m[1] : 'normal'] == null ? 2 : TAG_RANK[m[1]]; };
