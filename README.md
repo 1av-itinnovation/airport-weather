@@ -1,8 +1,24 @@
 # 1AV Airport Weather Monitoring
 
-A view-only dashboard that watches the weather at the 36 Philippine airports served by Cebu Pacific
-and Cebgo, together with nearby earthquakes, volcanoes and typhoons. It shows which airports need attention,
-why, and how reliable each reading is.
+A view-only dashboard for the 36 Philippine airports served by Cebu Pacific and Cebgo. It watches the
+weather at each airport, and the earthquakes, volcanoes and typhoons that can affect them. It shows
+which airports need attention, why, and what to do.
+
+Every figure names its source. Critical readings are checked against a second source before they are
+called confirmed. The Help button (?) on the dashboard explains the same things for viewers.
+
+## Contents
+
+1. [Alert levels](#alert-levels)
+2. [What the dashboard shows](#what-the-dashboard-shows)
+3. [How it works](#how-it-works)
+4. [Where the data comes from](#where-the-data-comes-from)
+5. [How readings are checked](#how-readings-are-checked)
+6. [The rules](#the-rules)
+7. [Alerts by Teams and email](#alerts-by-teams-and-email)
+8. [Files in this repository](#files-in-this-repository)
+9. [Settings](#settings)
+10. [What it cannot do](#what-it-cannot-do)
 
 ## Alert levels
 
@@ -10,290 +26,261 @@ why, and how reliable each reading is.
 |---|---|---|
 | Normal | No bad weather expected today | No action needed |
 | Advisory | Bad weather expected later today | Plan ramp work around it |
-| Warning | Bad weather within 1 hour, or already happening | As a precaution, be ready to pause ramp work. Stay alert and work carefully |
-| Danger | A thunderstorm is at the airport now | Work at the ramp with extra care. Safety is the priority at all times |
+| Warning | Bad weather within 1 hour, or already happening | Be ready to pause ramp work |
+| Danger | A thunderstorm is at the airport now | Work at the ramp with extra care. Safety comes first |
 
-## Features
+Levels describe the weather only. Earthquakes, volcanoes and typhoons raise their own alerts and do
+not change an airport's level.
+
+## What the dashboard shows
 
 **The screen**
 
-- **One screen.** Map on the left, airport list in the middle, details on the right. On a phone
-  these become three tabs.
-- **Level tiles.** Show the count at each level and filter the map and list when tapped.
-- **Today and Tomorrow.** Switches the list between today's alerts and tomorrow's forecast.
-- **Region and Find an airport.** Narrow to Luzon, Visayas or Mindanao, or jump to one airport.
-- **Airport banner.** Selecting an airport shows a small line drawing at the top of its details. It is
-  the same drawing for every airport; only the sky colour and a light effect change with the main
-  condition: clear, night, low cloud, rain, heavy rain, poor visibility, strong wind, thunderstorm,
-  volcanic ash, earthquake nearby, typhoon expected, typhoon winds, or grey when there is no report.
-  The most serious condition wins. Movement is slight and stops when the device asks for reduced motion.
-- **Airport figures.** Wind, gusts, visibility and lowest cloud layer from the official report, then
-  wind direction, temperature and report time. Estimates show wind, rain, cloud cover and temperature.
+| Part | What it does |
+|---|---|
+| Map | Airports as dots coloured by level. Flashing dot: thunderstorm now. Dashed outline: Estimate |
+| Airport list | Airports at the chosen level, with what to expect and when |
+| Tiles | Counts at each level and key figures. Pressing one filters the map and the list |
+| Today and Tomorrow | Switches between today's alerts and tomorrow's forecast |
+| Region and Find an airport | Narrows to Luzon, Visayas or Mindanao, or jumps to one airport |
+| Layers | Turns rain, earthquakes, all volcanoes and all airport names on or off |
+| Hazards | Full lists of earthquakes, volcanoes, typhoons and low pressure areas |
+| Alert button | Shows active alerts with a count. New alerts appear briefly, then tuck away |
+| Colours, sound, help | Auto, Day or Night colours; an optional soft chime; the Help guide |
+| Phone layout | Map, list and details become three tabs |
+
+**The map**
+
+- **Usual view:** the Philippine Area of Responsibility (PAR), drawn as a dashed outline. Viewers can
+  zoom out and drag further. Neighbouring countries are drawn for reference only.
+- **Rain timeline:** plays the forecast rain for the next 24 hours, with pause and a slider.
+  Lightning marks come only from official thunderstorm warnings and airport forecasts.
+- **Marks:** purple rings for earthquakes, small purple dots for weaker ones, triangles for volcanoes,
+  a brown area for an official ash cloud, a swirl for a tropical cyclone, a red L for a low pressure area.
+- **Returns to where you were:** closing a selection restores the previous zoom.
+- **Auto-show:** with nobody using the screen, the map visits each alert in turn.
+- **Windy map:** an optional, more detailed rain map from Windy.com.
+
+**Selecting something**
+
+| Selected | On the map | In the details |
+|---|---|---|
+| Airport | Close-up box: runway at its true direction, wind arrow, 5 km and 10 km rings | Banner, what to do, wind, gusts, visibility, lowest cloud, crosswind and headwind, forecast for later today, rain for the next 12 hours, tomorrow and the week ahead, source |
+| Earthquake | Rings at 25, 50 and 100 km. Airports inside 100 km with their distances | Magnitude, exact time, depth, nearest airport, tsunami note, aftershocks, cross-check |
+| Volcano | 150 km ring, ash cloud, direction arrow, forecast ash outlines with times, airport distances | Eruption time, ash warning, where the ash is heading, Alert Level, airports nearby |
+| Typhoon | Strong-wind ring, storm-force ring, forecast track and cone for up to 5 days. Airports marked "now" or "within 24 h" | Class, winds, position, airports within reach, cross-check |
+| Low pressure area | Its position | Chance of becoming a cyclone. Information only |
+
+Notes on the airport view:
+
+- **Banner.** One line drawing used for every airport. Only the sky colour and a light effect change
+  with the main condition. When several apply, the most serious is shown. Movement stops when the
+  device asks for reduced motion.
 - **Crosswind and headwind.** Worked out from the reported wind direction and the stronger of wind or
-  gusts, for the runway end facing the wind. A guide for ground staff only, not for flight operations.
-  Not shown when the wind is calm or variable, or for an Estimate.
-- **Airport close-up on the map.** A small box on the map shows the selected airport's runway at its
-  true direction, a wind arrow, and 5 km and 10 km rings.
-- **Hazard close-up.** Selecting an earthquake adds 25 km and 50 km rings and the distance to each
-  airport shown. A volcano shows each airport's distance. A typhoon shows the storm-force wind ring
-  (when reported) and marks airports "now" or "within 24 h".
-- **Where volcanic ash is heading.** Selecting a volcano with an ash warning shows an arrow for the
-  direction the ash is moving (from the aviation ash warning, or the Tokyo VAAC advisory). When Tokyo
-  VAAC publishes a forecast, dashed outlines show the expected ash area about 6, 12 and 18 hours
-  later, and the details name any airport inside them with the time. For planning only: it raises no
-  alert. Each run log prints a line starting `VAAC:` with the direction and forecast areas it read.
-- **Map.** Airports as dots coloured by level; a flashing dot for a thunderstorm now; a dashed
-  outline for an Estimate; purple rings for earthquakes. Zoom with the buttons, mouse wheel, pinch
-  or double-tap.
-- **Help.** The ? at the top explains everything in plain language and shows which source supplied
-  the data at the latest check.
-
-**An airport's details**
-
-- **Right now** (the latest official report) and **Forecast for later today** (the airport forecast). When weather arrives that the forecast did not expect, the forecast line says so.
-- **Rain in the next 12 hours:** chance of rain, how heavy (Dry, Light, Moderate, Heavy) and the
-  amount, hour by hour, with a lightning mark where the official forecast has a thunderstorm.
-- **Tomorrow.**
-- **Next 7 days:** chance of rain, a day and a night picture including thunderstorms, and the high
-  and low temperature.
-- **What to do**, **Confidence**, **Updated** and **Source**.
-
-**Rain on the map**
-
-- The map plays the forecast rain for the next 24 hours by itself, with Stop, Play and a slider.
-- Lightning marks and dashed areas come only from official thunderstorm warnings and airport
-  forecasts.
-- A more detailed rain map from Windy.com can be opened from the details panel.
-
-**Alerts and automatic behaviour**
-
-- **Alerts as notifications.** Danger airports, strong earthquakes, possible tsunami, volcano alerts
-  and typhoon alerts pop in under the title bar as slim coloured chips when the page opens and
-  whenever a new alert arrives. After about 9 seconds they tuck away into the alert button in the
-  title bar (a warning triangle with a red count), so nothing covers the map. Pressing the button
-  brings them back; pressing a chip zooms to the place and opens its details. There is also a
-  warning sign in the browser tab and an optional soft two-note chime.
-- **Typhoons.** A swirl on the map for each tropical cyclone, labelled with its class (Tropical
-  Depression, Tropical Storm, Severe Tropical Storm, Typhoon, Super Typhoon) and name. Selecting one
-  shows how far its strong winds reach, where it is forecast to be in 24 hours, and only the
-  airports within reach. A cyclone that only one source has reported is drawn grey and dashed and
-  marked "not yet confirmed".
-- **Philippine Area of Responsibility.** The usual view shows the whole PAR (115 to 135 degrees East,
-  5 to 25 degrees North) as a dashed outline. The viewer can zoom out further and drag in any
-  direction to see the wider region; the neighbouring countries are drawn for reference only.
-  Cyclones and low pressure areas outside the PAR are drawn as far east as about 160 degrees East,
-  and the usual view widens to include any that are within roughly 1,000 km of the PAR.
-- **Low pressure areas.** A red circle with an L marks each area the Joint Typhoon Warning Center is
-  watching, with its chance (low, medium or high) of becoming a tropical cyclone within 24 hours.
-  Press one for its details. Information only: one source, no alert.
-- **Rain and thunderstorm forecast** covers the whole map panel: from 40.5 degrees North to 12
-  degrees South, and well beyond the PAR to the east and west. The band over the PAR is read in
-  full detail and the areas above and below it at every second point. On tall screens the map
-  panel is kept no taller than this area, so nothing is shown without a forecast.
-- **Typhoon forecast track.** Selecting a cyclone draws its forecast positions for up to the next 5 days
-  (RSMC Tokyo gives 24, 48, 72, 96 and 120 hours), each with its day and time and a circle for where
-  the centre is most likely to be, plus the path it has taken since the dashboard first saw it.
-  No official source publishes a 7-day track.
-- **Returns to where you were.** Closing a selection puts the map back as it was just before you
-  selected: your own zoom if you had zoomed in, or the usual view. The round arrow always resets.
-- **Focus on what is affected.** Selecting a volcano, an earthquake or a cyclone hides every airport
-  except the ones it can affect (150 km ring for a volcano, 100 km ring for an earthquake, the
-  strong-wind area for a cyclone). Closing the selection brings all airports back.
-- **Auto-show alerts.** With nobody using the screen, the map zooms to each earthquake alert, then
-  each Danger airport, then returns to the whole map and repeats.
-- **Fast earthquake watch.** Every 5 minutes a light check reads only the earthquake sources. A new
-  strong earthquake triggers a full refresh and the alert at once, without waiting for the next
-  scheduled refresh.
-- **Volcanoes.** Triangles on the map for the monitored volcanoes, a brown dashed area for an official
-  ash cloud warning, and a Volcano tab. Volcano alerts appear in the alert bar and the auto-show, and
-  are sent by Teams and email.
-- **Notifications by Teams and email** for the most critical events only: an airport at Danger, an
-  earthquake alert, a possible tsunami, volcanic ash or an eruption, and a confirmed tropical storm
-  or typhoon whose strong winds can reach an airport. Each is sent once; a typhoon alert is sent
-  again when the cyclone moves up a class, and as an update (at most every 6 hours) when more
-  airports come within reach.
-- **Early earthquake notice.** Between updates, an open page asks USGS once a minute and shows a
-  qualifying earthquake at once, until the next update confirms it.
-- **Next update time.** Worked out from the average gap between recent updates.
-- **Yellow notice** when a backup source is in use or the data is more than 60 minutes old.
+  gusts, for the runway end facing the wind. A guide for ground staff only. Not shown when the wind is
+  calm or variable, or for an Estimate.
+- **Estimates.** Airports with no official report show wind, rain, cloud cover and temperature from a
+  computer forecast, and are marked Estimate.
 
 ## How it works
 
-1. **Collect.** On a schedule, reads the latest public data from the sources below. The
-   schedule asks for every 10 minutes; in practice the hosting service runs it about every 20 to 25
-   minutes.
-2. **Choose the best source.** For each kind of data it uses the first-choice source. If that cannot
-   be reached, it switches to a backup by itself.
-3. **Apply the rules.** It works out each airport's alert level, the outlooks, the earthquake and
-   tsunami alerts and the typhoon watch, and writes the result.
-4. **Show.** The page reads that file and looks for newer data by itself: every
-   5 minutes while an update is not due, every minute once it is. Viewers never need to reload.
-5. **Flag problems.** A yellow notice appears when a backup is in use or the data is old.
+The dashboard is a static website on GitHub Pages. GitHub Actions refreshes its data on a schedule.
+There is no server and no database.
 
-The moving rain layer is built separately every 3 hours and saved.
-
-## Volcano sources
-
-| Role | Source | What it gives |
+| Step | What happens | Where |
 |---|---|---|
-| Primary | Aviation volcanic ash warnings (SIGMET), aviationweather.gov | Eruption, and the area the ash covers |
-| Second source | Tokyo Volcanic Ash Advisory Centre (Japan Meteorological Agency) | Eruption time, whether ash is seen, and an ash area when one is given |
-| Alert levels, first choice | PHIVOLCS volcano bulletins | Alert Level 0 to 5 |
-| Alert levels, backup | `volcano_levels.json`, entered by hand | Alert Level 0 to 5 |
+| 1. Collect | Reads the latest public data from each source | `build.py` |
+| 2. Choose | Uses the first-choice source; switches to a backup if it cannot be reached | `build.py` |
+| 3. Apply the rules | Works out levels, forecasts, hazard alerts and cross-checks | `build.py` |
+| 4. Save | Writes the result for the page to read | `docs/data.json` |
+| 5. Publish | The website is updated first, so alert pictures are online | GitHub Pages |
+| 6. Alert | Sends new critical alerts to Teams and email, once each | `notify.py`, `alert_map.py` |
+| 7. Show | The page reads the data and checks for newer data by itself | `docs/index.html` |
 
-When both ash sources report the same volcano, the aviation warning is used and the dashboard notes that Tokyo VAAC confirms it. When only Tokyo VAAC reports it, the alert is raised from the advisory and a notice says the second source is in use. If neither can be reached, the dashboard says volcano warnings are not available. The run log prints lines starting with `VAAC:` and `VOLCANO:` showing what each reader found.
+**How often**
 
-## Map picture in alerts
+| Job | Schedule | Purpose |
+|---|---|---|
+| Refresh (`refresh.yml`) | Asked every 10 minutes; GitHub runs it about every 20 to 25 | Full update of all data |
+| Earthquake watch (`quake-watch.yml`) | Every 5 minutes | Light check for earthquakes and ash warnings. A new one triggers a full refresh at once |
+| Rain layer | Every 3 hours, inside the refresh | Rebuilds the moving rain forecast |
+| Backup tests | Every 6 hours, inside the refresh | Confirms idle backups still work |
+| Open page | By itself | Asks USGS for new earthquakes every minute and loads newer data when it is published. No reload needed |
 
-Each Teams and email alert shows a small zoomed map of what it is about: the Danger airport, the volcano with its 150 km ring and the airports named in the warning, the earthquake with its nearest airport, or the cyclone with its strong-wind area, its 24-hour forecast position and the airports within reach. `alert_map.py` draws the picture when the alert is found, saves it under `docs/alertmaps/`, and the dashboard is published before the alert is sent so the picture is online. Pictures older than 7 days are removed. If the picture library (Pillow) cannot be installed, alerts are sent without a map. Set `SEND_MAPS = False` in `notify.py` to switch this off.
+**How the forecasts are made**
 
-**Alerts carry the same close-up as the dashboard.** The picture and the rows in Teams and email match what the page shows
-when the same thing is selected:
-
-- **Thunderstorm at an airport:** the airport close-up (runway, wind arrow, 5 km and 10 km rings) in the corner of the map,
-  and rows for wind, visibility, lowest cloud and crosswind.
-- **Earthquake:** 25 km, 50 km and 100 km rings, each airport shown with its distance, and a row listing every airport
-  within 100 km.
-- **Volcano:** the direction arrow, the ash tag with height and direction, the Tokyo VAAC forecast outlines with their
-  times, distances to the airports, and a row "Where the ash is heading".
-- **Typhoon:** the inner storm-force ring when reported, and airports marked "now" or "within 24 h".
-
-Runway data for the close-up and the crosswind is read from `runways.json` in the repository (OurAirports, public domain).
-If that file is missing, alerts are still sent, without the crosswind row and the close-up.
-
-In Teams, the kind of alert (Danger, Volcanic ash, Typhoon and so on) is written as plain coloured text, not a picture, and
-each map has a caption naming what it should show. Before sending, `notify.py` confirms the website is serving the exact
-picture just drawn; if it is not, the alert goes without a picture. The refresh is never cancelled half-way, so an alert
-cannot be sent twice.
-
-**Times for the record.** An earthquake alert gives the time it happened to the second when the agency publishes seconds,
-with the UTC time beside it. A volcano alert gives the time the eruption started as stated in the Tokyo VAAC advisory; when
-no official source has published it, the alert says so and gives the time the first ash warning was issued instead.
-
-## How fast alerts arrive
-
-Earthquake and volcano alerts are treated as critical.
-
-- **Live Alert Watch (optional, not installed by default)** (`live_watch.py`, `.github/workflows/live-watch.yml`) looks once a minute at PHIVOLCS and USGS for earthquakes and at the official aviation volcanic ash warnings. When something new appears it refreshes the data, publishes the dashboard and sends the Teams and email alert, normally within about 3 minutes of the source publishing it.
-- One run watches for about five and a half hours and then starts the next one. A 15-minute safety net restarts it if it ever stops.
-- **Fallbacks:** the 5-minute Earthquake Watch (`quake_watch.py`) stands down while the live watch is running and takes over if it is not. The regular refresh also raises any alert it finds.
-- **The dashboard page** asks USGS directly every minute for new earthquakes and checks for new data every 30 seconds.
-- An alert can never be faster than its source. Volcano alerts come from the official aviation ash warning and the Tokyo VAAC advisory, which are issued some minutes after an eruption (11 minutes for Kanlaon on 10 October 2026).
-- The live watch keeps one GitHub runner busy around the clock, so it is left out unless it is added on purpose. Without it, the 5-minute Earthquake Watch raises these alerts, typically 5 to 15 minutes after the source.
+- **Today.** The official airport report says what is happening now. The official airport forecast
+  says what is expected in the hours ahead. The level comes from these two.
+- **No official report.** A computer forecast for the airport's location stands in, marked Estimate.
+- **Rain by the hour and the week ahead.** A computer forecast, for planning only. It never changes a level.
+- **Rain on the map.** A forecast sampled on a grid across the region and played as a timeline.
+- **Typhoon track.** RSMC Tokyo's forecast positions at 24, 48, 72, 96 and 120 hours.
+- **Ash forecast.** Tokyo VAAC's expected ash areas at about 6, 12 and 18 hours.
 
 ## Where the data comes from
 
 | Data | First choice | Backup |
 |---|---|---|
-| Airport reports and forecasts (issued by PAGASA) | aviationweather.gov | NOAA data server (same reports) |
-| Estimates (airports with no official report) | MET Norway | Open-Meteo |
-| Chance of rain and the 7-day outlook | Open-Meteo | none; the items are left out |
-| Tropical cyclones (typhoons) | Three sources read at every check: aviation storm warnings (aviationweather.gov) for position, movement and warning areas; RSMC Tokyo (Japan Meteorological Agency) for strength, wind reach and the 24-hour forecast; GDACS as an independent third | Each stands in for the others. A cyclone is confirmed only when at least two report it |
-| Thunderstorm area warnings | Aviation storm warnings (aviationweather.gov) | none |
-| Low pressure areas (information only) | Joint Typhoon Warning Center tropical weather advisory | none; the marks are left out |
-| Earthquakes | PHIVOLCS | USGS, then EMSC. Every earthquake of magnitude 4.5 or stronger is also cross-checked against USGS or EMSC |
-| Volcanic ash and eruptions | Aviation ash warnings (SIGMET), aviationweather.gov. Gives the ash area | Second source: Tokyo VAAC advisories (Japan Meteorological Agency). Confirms the warning, and stands in when it is missing or cannot be reached |
-| Volcano alert levels | PHIVOLCS volcano bulletins | Levels entered by hand in `volcano_levels.json` |
-| Rain on the map | MET Norway forecast grid | none |
-| Detailed rain map (optional) | Windy.com embedded map | none |
+| Airport reports and forecasts (issued by PAGASA) | aviationweather.gov | NOAA data server |
+| Estimates | MET Norway | Open-Meteo |
+| Rain chance and the week ahead | Open-Meteo | None; the items are left out |
+| Typhoons | Aviation storm warnings, RSMC Tokyo (Japan Meteorological Agency) and GDACS, all three at every check | Each stands in for the others |
+| Thunderstorm area warnings | Aviation storm warnings | None |
+| Low pressure areas | Joint Typhoon Warning Center | None; the marks are left out |
+| Earthquakes | PHIVOLCS | USGS, then EMSC |
+| Volcanic ash and eruptions | Aviation ash warnings (SIGMET) | Tokyo Volcanic Ash Advisory Centre (VAAC) |
+| Volcano Alert Levels | PHIVOLCS bulletins | `volcano_levels.json`, entered by hand |
+| Rain on the map | MET Norway | None |
+| Runways | OurAirports, stored in `runways.json` | None |
 
-Accuracy ranking, highest first: official airport report, official airport forecast, official
-aviation area warning, computer forecast estimate. When sources differ, the higher-ranked one is
-used. Idle backups are tested every 6 hours and the result is shown in Help.
+When sources differ, the more reliable one is used, in this order: official airport report, official
+airport forecast, official area warning, Estimate.
 
-## How readings are checked before they are shown or sent
-
-The dashboard is read by station staff, management and CAAP, so every reading says where it came
-from and whether a second source agrees.
+## How readings are checked
 
 | Kind | What is compared | Rule |
 |---|---|---|
-| Airport weather | One official report exists per airport, so it is checked for age. It can be read from two servers | Danger is raised only from the official report, never from an Estimate. A report older than 90 minutes lowers the Confidence |
-| Earthquakes | PHIVOLCS against USGS and EMSC | Shown and sent as soon as the first agency reports, because minutes matter. Each one of magnitude 4.5 or stronger carries a Cross-check line: confirmed by a second agency, not yet confirmed, or could not be cross-checked |
-| Volcanic ash and eruptions | Aviation ash warning against the Tokyo VAAC advisory | Sent as soon as either official source reports. The details say whether Tokyo VAAC has confirmed it |
-| Tropical cyclones | Aviation storm warnings, RSMC Tokyo and GDACS | An alert is raised only after two of the three agree. Until then the cyclone is listed as "not yet confirmed" |
+| Airport weather | One official report per airport, checked for age | Danger only from the official report. Older than 90 minutes lowers the confidence shown |
+| Earthquakes | PHIVOLCS against USGS and EMSC | Shown at once. A Cross-check line says whether a second agency agrees |
+| Volcanoes | Aviation ash warning against Tokyo VAAC | Shown as soon as either reports. The details say whether the second confirms it |
+| Typhoons | Three sources | An alert needs two of the three to agree. Otherwise "Not yet confirmed" |
 
-If a source is down its backup is used and a yellow notice says so. A reading that could not be
-cross-checked says so in plain words; it is never shown as confirmed.
+If a source is down, its backup is used and a yellow notice says so. A reading that could not be
+cross-checked says so. It is never shown as confirmed.
 
-## The rules it follows
+## The rules
 
-- **Danger** is given only when an official airport report says a thunderstorm is at the airport now.
-  An Estimate can never be Danger.
-- **Bad weather** in an official report or forecast means a thunderstorm, rain or rain showers, or
-  strong winds.
-- **"Possible at times"** means the official forecast says the weather may come and go during a
-  period. "Expected" means the forecast is firm.
-- **Bad weather in an Estimate** means 2.5 mm or more of rain in an hour, or winds of 39 km/h or more.
-- **How heavy.** Light is under 2.5 mm of rain in an hour, Moderate is 2.5 mm or more, Heavy is
-  7.6 mm or more.
-- **Area warnings.** An airport inside an official thunderstorm or tropical cyclone area warning is
-  raised to Warning.
-- **Earthquakes shown** are magnitude 4.5 or stronger in the Philippine area over the past 7 days.
-  Weaker ones, magnitude 3.0 to 4.4 from the past 3 days, are small dots for awareness only and never
-  raise an alert (`SMALL_MAG`, `SMALL_DAYS` and `ALERT_MAG` in `build.py`).
-- **Earthquake alerts** cover the last 24 hours: magnitude 4.5 or stronger within 100 km of an
-  airport, or magnitude 6.0 or stronger anywhere in the Philippine area.
-- **Aftershocks** (below magnitude 4.5, within 100 km of a main earthquake of 5.0 or stronger, in
-  the 72 hours after it) are grouped with the main earthquake: small dots on the map, one list in
-  its details.
-- **Two agencies.** For strong earthquakes the USGS figure is shown beside the PHIVOLCS figure, and
-  the more cautious of the two positions decides whether an airport is within 100 km.
-- **Typhoon classes** follow PAGASA, using winds averaged over 10 minutes: Tropical Depression up to
-  61 km/h, Tropical Storm 62 to 88, Severe Tropical Storm 89 to 117, Typhoon 118 to 184, Super
-  Typhoon 185 or more. GDACS measures over 1 minute, which reads higher, so its figure is shown for
-  comparison only.
-- **A confirmed cyclone** is reported by at least two of the three sources: the same name within
-  1,000 km, or positions within 300 km of each other.
-- **Typhoon alert:** a confirmed Tropical Storm or stronger whose strong winds (about 55 km/h or
-  more, the RSMC Tokyo 30-knot wind radius) can reach an airport now, or will at its forecast
-  position 24 hours ahead. When the wind reach is not reported, 300 km from the centre is used
-  (`TY_NEAR_KM` in `build.py`). A Tropical Depression is shown but raises no alert.
-- **Why that rule.** PAGASA raises Wind Signal No. 1 when winds of 39 to 61 km/h are expected within
-  36 hours and No. 2 (62 to 88 km/h) within 24 hours, and CAAP Memorandum Circular 013-2023 restricts
-  flights by aircraft of 5,700 kg and below in areas under Signal No. 1. Wind signals are not
-  published as data, so the measured reach of strong winds and the 24-hour forecast are used as the
-  nearest equivalent. The Safety office should confirm this rule; PAGASA's signal remains the
-  official one.
-- **Volcanoes** raise their own alerts, like earthquakes, and never change an airport's weather level.
-  A volcano counts as near an airport within 150 km (no official standard exists; this covers about
-  half of past airport disruptions in a US Geological Survey study).
-- **Volcanic ash alert:** an official ash area covers an airport, at any distance. The area comes from
-  the aviation ash warning, or from the Tokyo VAAC advisory when there is no warning.
-- **Eruption alert:** an aviation ash warning or a Tokyo VAAC advisory reports an eruption within
-  150 km of an airport. A Tokyo VAAC advisory counts for 6 hours after it is issued (`VAAC_HOURS`).
-- **Volcano Alert Level** (PHIVOLCS, 0 to 5): Level 3 or higher within 150 km of an airport raises an
-  alert on the dashboard.
-- **Possible tsunami** is shown for an earthquake of magnitude 6.5 or stronger no deeper than 70 km,
-  or one that USGS has flagged for tsunami information. It is a prompt to check PHIVOLCS bulletins,
-  not an official tsunami warning.
+**Weather**
+
+| Rule | Value |
+|---|---|
+| Danger | An official airport report says a thunderstorm is at the airport now. Never from an Estimate |
+| Bad weather | Thunderstorm, rain or rain showers, or strong winds |
+| Bad weather in an Estimate | 2.5 mm or more of rain in an hour, or winds of 39 km/h or more |
+| Rain | Light under 2.5 mm an hour. Moderate 2.5 mm or more. Heavy 7.6 mm or more |
+| Area warnings | An airport inside an official thunderstorm or cyclone warning area is raised to Warning |
+| "Possible at times" | The weather may come and go. "Expected" means the forecast is firm |
+
+**Earthquakes**
+
+| Rule | Value |
+|---|---|
+| Shown as rings | Magnitude 4.5 or stronger, past 7 days |
+| Shown as dots | Magnitude 3.0 to 4.4, past 3 days. No alert |
+| Alert | 4.5 or stronger within 100 km of an airport, or 6.0 or stronger anywhere in the Philippine area, in the last 24 hours |
+| Possible tsunami | 6.5 or stronger and no deeper than 70 km, or flagged by USGS. A prompt to check PHIVOLCS, not an official warning |
+| Aftershocks | Below 4.5, within 100 km and 72 hours of a main earthquake of 5.0 or stronger. Grouped with it |
+| Two agencies | For strong earthquakes, the more cautious of the two positions decides the 100 km test |
+
+**Typhoons**
+
+| Rule | Value |
+|---|---|
+| Classes (PAGASA, km/h) | Tropical Depression up to 61. Tropical Storm 62 to 88. Severe Tropical Storm 89 to 117. Typhoon 118 to 184. Super Typhoon 185 or more |
+| Confirmed | Two of three sources: the same name within 1,000 km, or positions within 300 km |
+| Alert | A confirmed Tropical Storm or stronger whose strong winds (about 55 km/h or more) can reach an airport now, or at its forecast position 24 hours ahead |
+| Wind reach not reported | 300 km from the centre is used |
+| Basis | PAGASA wind signals and CAAP Memorandum Circular 013-2023. Wind signals are not published as data, so measured wind reach is the nearest equivalent. PAGASA's signal remains the official one |
+
+**Volcanoes**
+
+| Rule | Value |
+|---|---|
+| Near an airport | Within 150 km. No official standard exists; this covers about half of past airport disruptions (US Geological Survey study) |
+| Ash alert | An official ash area covers an airport, at any distance |
+| Eruption alert | An eruption is reported within 150 km of an airport. A Tokyo VAAC advisory counts for 6 hours |
+| Alert Level | PHIVOLCS scale, 0 to 5. Level 3 or higher within 150 km is flagged on the dashboard |
+| Ash forecast | For planning only. It raises no alert |
+
+The Safety office should confirm the typhoon rule and the 100 km and 150 km distances.
+
+## Alerts by Teams and email
+
+Only the most critical events are sent:
+
+| Alert | Sent when | Sent again |
+|---|---|---|
+| Thunderstorm | An airport reaches Danger | If it leaves Danger and returns after 3 hours |
+| Earthquake or possible tsunami | It meets the earthquake alert rule | No |
+| Volcanic ash or eruption | It meets the volcano alert rules | Not within 12 hours for the same alert |
+| Typhoon | It meets the typhoon alert rule | When it moves up a class; as an update when more airports come within reach, at most every 6 hours |
+
+Each alert carries what the dashboard shows when the same thing is selected:
+
+- **Thunderstorm:** the airport close-up, and rows for wind, visibility, lowest cloud and crosswind.
+- **Earthquake:** the 25, 50 and 100 km rings, and every airport within 100 km with its distance.
+- **Volcano:** the direction arrow, forecast ash outlines, airport distances, and where the ash is heading.
+- **Typhoon:** the strong-wind and storm-force rings, and airports marked "now" or "within 24 h".
+
+How it is sent:
+
+- `notify.py` posts to a Power Automate flow, which sends the Teams card and the email. The flow
+  address is kept as the repository secret `ALERT_WEBHOOK_URL`. It is never written in a file.
+- `alert_map.py` draws the map picture and saves it under `docs/alertmaps/`. Pictures older than
+  7 days are removed.
+- Before sending, `notify.py` confirms the website is serving the exact picture just drawn. If not,
+  the alert goes without a picture.
+- `notify_state.json` records what has been sent, so nothing is sent twice.
+- Earthquake alerts give the time to the second, with UTC beside it. Volcano alerts give the eruption
+  time from the Tokyo VAAC advisory, or say that no official source has published it.
+
+## Files in this repository
+
+| File | Purpose |
+|---|---|
+| `build.py` | Collects the data, applies the rules, writes `docs/data.json` and `docs/rain.json` |
+| `notify.py` | Finds new alerts and sends them to Teams and email |
+| `alert_map.py` | Draws the map picture for each alert |
+| `quake_watch.py` | The 5-minute check for earthquakes and ash warnings |
+| `runways.json` | Runway positions and directions for the 36 airports |
+| `volcano_levels.json` | Volcano Alert Levels entered by hand, used when PHIVOLCS cannot be read |
+| `notify_state.json` | Record of alerts already sent. Do not delete it |
+| `docs/index.html` | The dashboard page |
+| `docs/data.json`, `docs/rain.json` | The data the page reads. Written by the refresh |
+| `docs/assets/` | Map drawings, logo and pictures used by the page and the Teams card |
+| `docs/alertmaps/` | Map pictures for alerts |
+| `.github/workflows/` | The schedules: `refresh.yml` and `quake-watch.yml` |
+
+The run log of each refresh shows what every reader found. Lines start with a label such as
+`TYPHOON:`, `VAAC:` or `VOLCANO:`.
+
+## Settings
+
+The main values can be changed at the top of the files.
+
+| Setting | File | Default | Meaning |
+|---|---|---|---|
+| `ALERT_MAG` | `build.py` | 4.5 | Smallest earthquake that can raise an alert |
+| `SMALL_MAG`, `SMALL_DAYS` | `build.py` | 3.0, 3 | Weaker earthquakes shown as dots, and for how long |
+| `TY_NEAR_KM` | `build.py` | 300 | Distance used when a typhoon's wind reach is not reported |
+| `VOLC_KM` | `build.py` | 150 | How near a volcano counts as near an airport |
+| `VAAC_HOURS` | `build.py` | 6 | How long a Tokyo VAAC advisory counts |
+| `SEND_MAPS` | `notify.py` | On | Map pictures in alerts |
+| `SEND_VOLCANO`, `SEND_TYPHOON` | `notify.py` | On | Volcano and typhoon alerts |
+| `SEND_VOLCANO_LEVEL` | `notify.py` | Off | Alerts for Alert Level 3 or higher |
+| `SEND_HEADSUP`, `SEND_BRIEFING` | `notify.py` | Off | Advance notices and twice-daily briefings |
+| `WATCH_MAG` | `quake_watch.py` | 4.5 | Smallest earthquake the 5-minute check reacts to |
 
 ## What it cannot do
 
 - It supports decisions. It does not replace official bulletins, official tsunami warnings, or the
   judgement of staff at the airport.
-- It does not detect lightning.
-- Estimates show rain and wind only and cannot confirm thunderstorms.
-- Earthquakes cannot be predicted; only past ones are shown.
-- Forecasts for tomorrow and the days ahead are less certain than today.
-- Agencies report different magnitudes for the same earthquake, and first figures are often
-  revised. The dashboard shows the PHIVOLCS figure and follows its revisions.
-- No earthquake source is instant: agencies usually publish 5 to 20 minutes after the event.
-- PAGASA's public typhoon bulletins and wind signals are not published as data, so they are not read
-  directly. The typhoon alert is based on measured wind reach, not on the wind signal. Confirm
-  typhoon decisions against PAGASA and CAAP advisories.
-- Low pressure areas come from one source only (the Joint Typhoon Warning Center) and may differ from
-  the ones PAGASA names. The list is not complete: PAGASA also tracks weaker areas, including some
-  inside the PAR, that this source does not report. The dashboard says so beside every low pressure
-  area and in the Hazards list. They are shown for awareness and never raise an alert.
+- It does not detect lightning. Thunderstorm information comes from official reports, forecasts and warnings.
+- An Estimate shows rain and wind only. It cannot confirm a thunderstorm.
+- Earthquakes cannot be predicted, and no source is instant. Agencies usually publish 5 to 20 minutes
+  after the event, and first magnitudes are often revised.
+- An alert cannot be faster than its source and the schedule. Expect 5 to 15 minutes after the source publishes.
+- Forecasts for tomorrow and beyond are less certain than today.
+- PAGASA typhoon bulletins and wind signals are not published as data, so they are not read directly.
+  Confirm typhoon decisions against PAGASA and CAAP advisories.
+- Low pressure areas come from one source and the list is not complete. PAGASA's outlook is the official one.
+- Crosswind figures are a guide for ground staff. Flight crews and the tower use their own.
 
 ## Data credits
 
-Weather and earthquake data belong to their publishers: PAGASA, the US Aviation Weather Center and
-NOAA, the Norwegian Meteorological Institute (MET Norway), Open-Meteo, GDACS, PHIVOLCS, USGS and
-EMSC. The optional detailed rain map is provided by Windy.com.
-Runway positions and directions are from OurAirports (ourairports.com), a public-domain database;
-they are stored inside the page, so nothing is downloaded from it while the dashboard runs.
+Data belongs to its publishers: PAGASA, the US Aviation Weather Center and NOAA, MET Norway,
+Open-Meteo, the Japan Meteorological Agency (RSMC Tokyo and Tokyo VAAC), GDACS, the Joint Typhoon
+Warning Center, PHIVOLCS, USGS, EMSC and OurAirports. The optional detailed rain map is by Windy.com.
 
 ## Copyright
 
