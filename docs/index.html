@@ -2355,7 +2355,7 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
         <li><strong>Airport list.</strong> On the right, under the key figures. Lists the airports at the chosen level with what to expect and when. Press Details, or anywhere on a row, to open that airport.</li>
         <li><strong>Key figures.</strong> The tiles at the top right: airports needing attention, thunderstorms at an airport now, airports with an official weather report, and bad weather forecast for tomorrow. Press one to show those airports in the list. To go back, press it again or press "Clear filter" beside the list title. The smaller tiles show earthquake alerts, volcano alerts and typhoon, and Live is a running clock in Philippine time (24-hour); one turns red when it has an alert, and pressing it opens that list.</li>
         <li><strong>Status panel.</strong> Beside or under the airport list. Details shows the level counts, and Hazards holds the full lists for earthquakes, volcanoes and typhoon; a section opens by itself when it has an alert. Windy map opens a more detailed rain map from Windy.com.</li>
-        <li><strong>Details window.</strong> Selecting an airport, earthquake, volcano or typhoon opens its details in a window on the right. Press the X to close it and go back to the usual view. Pressing any empty part of the map also closes it, but leaves the map zoomed where it is.</li>
+        <li><strong>Details window.</strong> Selecting an airport, earthquake, volcano or typhoon opens its details in a window on the right. Press the X, the Esc key or any empty part of the map to close it. The map then returns to how you had it just before you selected: if you had zoomed in, it goes back to that zoom, and if you were on the usual view, it goes back to the usual view. The round arrow always returns to the usual view.</li>
         <li><strong>Bell and question mark.</strong> At the top right. The bell turns the alert chime on or off, and the question mark opens this guide. The first button changes the colours: Auto follows the device, then Day, then Night; the choice is remembered on that device.</li>
         <li><strong>On a phone.</strong> The map, the airport list and the details become three tabs.</li>
       </ul>
@@ -3258,12 +3258,15 @@ $('tourBtn').addEventListener('click', function () {
   if (!TOUR.on && TOUR.active) { TOUR.active = false; clearSel(); }
   TOUR.idx = -1; TOUR.lastUser = 0; tourLabel(); clearTimeout(TOUR.timer); if (TOUR.on) TOUR.timer = setTimeout(tourStep, 1500);
 });
-function selectAirport(id) { WX.follow = true; S.sel = id; S.qk = ''; S.vk = ''; S.tk = ''; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
-function selectVolcano(id) { S.sel = ''; S.qk = ''; S.tk = ''; S.vk = id; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
-function selectCyclone(id) { S.sel = ''; S.qk = ''; S.vk = ''; S.tk = id; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
-function selectQuake(id) { S.sel = ''; S.vk = ''; S.tk = ''; S.qk = id; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
-var KEEP_VIEW = null;      // set just before clearSel() to let go of the selection without moving the map
-function clearSel() { if (WIDE.matches && !GLASS && S.tab === 'details') S.tab = 'airports'; S.sel = ''; S.qk = ''; S.vk = ''; S.tk = ''; S.view = KEEP_VIEW; KEEP_VIEW = null; S.drag = false; applyState(); }
+function selectAirport(id) { rememberView(); WX.follow = true; S.sel = id; S.qk = ''; S.vk = ''; S.tk = ''; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
+function selectVolcano(id) { rememberView(); S.sel = ''; S.qk = ''; S.tk = ''; S.vk = id; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
+function selectCyclone(id) { rememberView(); S.sel = ''; S.qk = ''; S.vk = ''; S.tk = id; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
+function selectQuake(id) { rememberView(); S.sel = ''; S.vk = ''; S.tk = ''; S.qk = id; S.view = null; S.drag = false; S.tab = 'details'; applyState(); }
+// PREV_VIEW is how the map was zoomed and placed just before something was selected. Closing the selection goes back to it:
+// a viewer who had zoomed in returns to that zoom, and one who was on the usual view returns to the usual view.
+var PREV_VIEW = null;
+function rememberView() { if (!(S.sel || S.qk || S.vk || S.tk)) PREV_VIEW = S.view ? { z: S.view.z, cx: S.view.cx, cy: S.view.cy } : null; }
+function clearSel() { if (WIDE.matches && !GLASS && S.tab === 'details') S.tab = 'airports'; S.sel = ''; S.qk = ''; S.vk = ''; S.tk = ''; S.view = PREV_VIEW; PREV_VIEW = null; S.drag = false; applyState(); }
 
 /* ---------- events ---------- */
 /* changing any filter lets go of the selected airport, earthquake or volcano, so the filter always takes effect */
@@ -3476,7 +3479,6 @@ document.addEventListener('click', function (e) {
   var t = e.target; if (!t || !t.closest || !document.contains(t)) return;
   if (!WIDE.matches && !t.closest('#vp')) return;      // on a phone, only a tap on an empty part of the map lets go of the selection
   if (t.closest('.col.side, .pin button, .alert, #alertBar, #alertBtn, #kpis, header.top, .zoom, .lyrbtn, .lyr, .tour, .mapfoot, .modal, .notice, [data-q], [data-v], [data-a], [data-t], select, a')) return;
-  if (t.closest('#vp')) { var kv = viewNow(); KEEP_VIEW = { z: kv.z, cx: kv.cx, cy: kv.cy }; }      // pressing the map lets go of the selection but leaves the map where it is
   clearSel();
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && GLASS && (S.sel || S.qk || S.vk || S.tk) && !modal.classList.contains('open') && !WX.open) clearSel(); });
@@ -3516,7 +3518,7 @@ $('zOut').addEventListener('click', function () { var v = viewNow(); var DZ = VI
   if (nz < DZ * 1.1 && nz > DZ) nz = DZ;
   if (nz < 1.12) nz = 1;
   setView(nz, v.cx, v.cy, false); });
-$('zAll').addEventListener('click', clearSel);
+$('zAll').addEventListener('click', function () { PREV_VIEW = null; S.view = null; S.drag = false; clearSel(); });      // the round arrow always goes to the usual view
 var modal = $('modal');
 $('helpBtn').addEventListener('click', function () { modal.classList.add('open'); $('modalClose').focus(); });
 function closeHelp() { var f = function () { modal.classList.remove('open'); $('helpBtn').focus(); }; if (typeof closeSoft === 'function') closeSoft(modal, f); else f(); }
