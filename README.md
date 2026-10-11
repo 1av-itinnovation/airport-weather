@@ -22,6 +22,26 @@ why, and how reliable each reading is.
 - **Level tiles.** Show the count at each level and filter the map and list when tapped.
 - **Today and Tomorrow.** Switches the list between today's alerts and tomorrow's forecast.
 - **Region and Find an airport.** Narrow to Luzon, Visayas or Mindanao, or jump to one airport.
+- **Airport banner.** Selecting an airport shows a small line drawing at the top of its details. It is
+  the same drawing for every airport; only the sky colour and a light effect change with the main
+  condition: clear, night, low cloud, rain, heavy rain, poor visibility, strong wind, thunderstorm,
+  volcanic ash, earthquake nearby, typhoon expected, typhoon winds, or grey when there is no report.
+  The most serious condition wins. Movement is slight and stops when the device asks for reduced motion.
+- **Airport figures.** Wind, gusts, visibility and lowest cloud layer from the official report, then
+  wind direction, temperature and report time. Estimates show wind, rain, cloud cover and temperature.
+- **Crosswind and headwind.** Worked out from the reported wind direction and the stronger of wind or
+  gusts, for the runway end facing the wind. A guide for ground staff only, not for flight operations.
+  Not shown when the wind is calm or variable, or for an Estimate.
+- **Airport close-up on the map.** A small box on the map shows the selected airport's runway at its
+  true direction, a wind arrow, and 5 km and 10 km rings.
+- **Hazard close-up.** Selecting an earthquake adds 25 km and 50 km rings and the distance to each
+  airport shown. A volcano shows each airport's distance. A typhoon shows the storm-force wind ring
+  (when reported) and marks airports "now" or "within 24 h".
+- **Where volcanic ash is heading.** Selecting a volcano with an ash warning shows an arrow for the
+  direction the ash is moving (from the aviation ash warning, or the Tokyo VAAC advisory). When Tokyo
+  VAAC publishes a forecast, dashed outlines show the expected ash area about 6, 12 and 18 hours
+  later, and the details name any airport inside them with the time. For planning only: it raises no
+  alert. Each run log prints a line starting `VAAC:` with the direction and forecast areas it read.
 - **Map.** Airports as dots coloured by level; a flashing dot for a thunderstorm now; a dashed
   outline for an Estimate; purple rings for earthquakes. Zoom with the buttons, mouse wheel, pinch
   or double-tap.
@@ -74,6 +94,8 @@ why, and how reliable each reading is.
   (RSMC Tokyo gives 24, 48, 72, 96 and 120 hours), each with its day and time and a circle for where
   the centre is most likely to be, plus the path it has taken since the dashboard first saw it.
   No official source publishes a 7-day track.
+- **Returns to where you were.** Closing a selection puts the map back as it was just before you
+  selected: your own zoom if you had zoomed in, or the usual view. The round arrow always resets.
 - **Focus on what is affected.** Selecting a volcano, an earthquake or a cyclone hides every airport
   except the ones it can affect (150 km ring for a volcano, 100 km ring for an earthquake, the
   strong-wind area for a cyclone). Closing the selection brings all airports back.
@@ -124,6 +146,20 @@ When both ash sources report the same volcano, the aviation warning is used and 
 ## Map picture in alerts
 
 Each Teams and email alert shows a small zoomed map of what it is about: the Danger airport, the volcano with its 150 km ring and the airports named in the warning, the earthquake with its nearest airport, or the cyclone with its strong-wind area, its 24-hour forecast position and the airports within reach. `alert_map.py` draws the picture when the alert is found, saves it under `docs/alertmaps/`, and the dashboard is published before the alert is sent so the picture is online. Pictures older than 7 days are removed. If the picture library (Pillow) cannot be installed, alerts are sent without a map. Set `SEND_MAPS = False` in `notify.py` to switch this off.
+
+**Alerts carry the same close-up as the dashboard.** The picture and the rows in Teams and email match what the page shows
+when the same thing is selected:
+
+- **Thunderstorm at an airport:** the airport close-up (runway, wind arrow, 5 km and 10 km rings) in the corner of the map,
+  and rows for wind, visibility, lowest cloud and crosswind.
+- **Earthquake:** 25 km, 50 km and 100 km rings, each airport shown with its distance, and a row listing every airport
+  within 100 km.
+- **Volcano:** the direction arrow, the ash tag with height and direction, the Tokyo VAAC forecast outlines with their
+  times, distances to the airports, and a row "Where the ash is heading".
+- **Typhoon:** the inner storm-force ring when reported, and airports marked "now" or "within 24 h".
+
+Runway data for the close-up and the crosswind is read from `runways.json` in the repository (OurAirports, public domain).
+If that file is missing, alerts are still sent, without the crosswind row and the close-up.
 
 In Teams, the kind of alert (Danger, Volcanic ash, Typhoon and so on) is written as plain coloured text, not a picture, and
 each map has a caption naming what it should show. Before sending, `notify.py` confirms the website is serving the exact
@@ -256,6 +292,8 @@ cross-checked says so in plain words; it is never shown as confirmed.
 Weather and earthquake data belong to their publishers: PAGASA, the US Aviation Weather Center and
 NOAA, the Norwegian Meteorological Institute (MET Norway), Open-Meteo, GDACS, PHIVOLCS, USGS and
 EMSC. The optional detailed rain map is provided by Windy.com.
+Runway positions and directions are from OurAirports (ourairports.com), a public-domain database;
+they are stored inside the page, so nothing is downloaded from it while the dashboard runs.
 
 ## Copyright
 

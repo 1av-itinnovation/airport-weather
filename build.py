@@ -711,7 +711,7 @@ def est_row(m):
         nxt='Estimate: no moderate or heavy rain expected for the rest of today. '+('Light showers possible.' if m['later']>=0.5 else 'Mostly dry.')
         level='normal'; what=when=''; sort=0
     u=m['upd']; upd=f"Estimate updated {clock_plain(u)}." if ph(u).date()==ph(NOW).date() else f"Estimate updated {day(u)}, {clock_plain(u)}."
-    r=dict(level=level,now=now,next=nxt,todo=TODO[level],upd=upd,src=SRC_EST,est=True,what=what,when=when,sort=sort,tmr=est_tmr(m,'Estimate: '),days=days_text(m))
+    r=dict(obs=dict(est=True,w=k,g=0,wd=None,vis=None,cb=None,cloud=round(cl),rain=round(p,1),wx=('heavy' if p>=7.6 else 'rain' if p>=0.1 else ''),temp=round(c['temp'])),level=level,now=now,next=nxt,todo=TODO[level],upd=upd,src=SRC_EST,est=True,what=what,when=when,sort=sort,tmr=est_tmr(m,'Estimate: '),days=days_text(m))
     age=(NOW-m['upd']).total_seconds()/3600
     r['conf']=('Lower' if age<=3 else 'Low')+f": there is no official airport report here, so this is a computer forecast (MET Norway) for the location, updated {clock_plain(m['upd'])}. It shows rain and wind only and cannot confirm thunderstorms."
     r.update(pick_tmr(est_cands(m))); return r
@@ -748,6 +748,43 @@ def kindtext(tok):
     if re.search(r'RA|DZ',tok): 
         t={'heavy ':'Heavy rain','light ':'Light rain','':'Rain'}[inten]; return (t,2,t)
     return (None,0,None)
+def obs_of(raw, temp=None):
+    """The figures behind the airport banner and close-up, read from the official report: wind direction (degrees it blows
+    from, None when variable or calm), wind and gusts in km/h, visibility in metres, and the lowest cloud ceiling in feet."""
+    body=raw.split(' RMK')[0]
+    w=re.search(r'\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b',body)
+    k=round(int(w.group(2))*1.852) if w else 0; g=round(int(w.group(3))*1.852) if (w and w.group(3)) else 0
+    wd=int(w.group(1)) if (w and w.group(1)!='VRB' and k>0) else None
+    vis=None
+    if re.search(r'\bCAVOK\b',body): vis=9999
+    else:
+        v=re.search(r'KT(?: \d{3}V\d{3})? (\d{4})(?:NDV)?\b',body)
+        if v: vis=int(v.group(1))
+        else:
+            v=re.search(r'\b(\d{1,2})SM\b',body)
+            if v: vis=min(9999,round(int(v.group(1))*1609))
+    cb=[int(x)*100 for x in re.findall(r'\b(?:BKN|OVC)(\d{3})',body)]
+    toks=[t for t in wx_tokens(raw) if not t.startswith(('VC','RE'))]
+    pr=[t for t in toks if re.search(r'RA|DZ|SH|GR',t)]
+    wx='ts' if any('TS' in t for t in toks) else 'heavy' if any(t.startswith('+') for t in pr) else 'rain' if pr else 'fog' if (any('FG' in t for t in toks) or re.search(r'\b(BR|HZ|FU)\b',body)) else ''
+    return dict(wd=wd,w=k,g=g,vis=vis,cb=(min(cb) if cb else None),wx=wx,temp=(round(temp) if temp is not None else None))
+try: RUNWAYS=json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'runways.json'),encoding='utf-8'))
+except Exception as _e: RUNWAYS={}; print('RUNWAYS: runways.json could not be read, so crosswind is left out of alerts:',_e,file=sys.stderr)
+COMPASS16=['north','north-northeast','northeast','east-northeast','east','east-southeast','southeast','south-southeast','south','south-southwest','southwest','west-southwest','west','west-northwest','northwest','north-northwest']
+def obs_lines(o,aid):
+    """The same figures in plain words, for the alert messages (the page works them out itself from the numbers)."""
+    if not o or o.get('est'): return
+    sp=max(o['w'],o['g'])
+    o['windline']=('Calm, no wind.' if not sp else f"{o['w']} km/h"+(f" from the {COMPASS16[round(o['wd']/22.5)%16]}" if o['wd'] is not None else ', direction varies')+(f", gusts {o['g']} km/h" if o['g'] else '')+'.')
+    v=o['vis']; o['visline']=('' if v is None else '10 km or more.' if v>=9999 else f"{round(v/1000)} km." if v>=5000 else (f"{v/1000:.1f}".rstrip('0').rstrip('.')+' km.') if v>=1000 else f"{v} m.")
+    o['cloudline']=(f"{o['cb']:,} ft above the airport." if o['cb'] is not None else 'No low cloud layer reported.')
+    best=None
+    if sp and o['wd'] is not None:
+        for rw in RUNWAYS.get(aid,[]):
+            for end,hd in ((rw[0],rw[2]),(rw[1],(rw[2]+180)%360)):
+                d=math.radians(o['wd']-hd); hw=sp*math.cos(d); cw=abs(sp*math.sin(d))
+                if best is None or hw>best[1]: best=(end,hw,cw)
+    o['xline']=(f"{round(best[2])} km/h across runway {best[0]}, with a {'headwind' if best[1]>=0 else 'tailwind'} of {round(abs(best[1]))} km/h"+(', worked out from the gust speed' if o['g']>o['w'] else '')+'. A guide for ground staff only.') if best else ''
 def off_row(mt,tf,m):
     raw=mt['rawOb']; toks=wx_tokens(raw)
     here=[t for t in toks if not t.startswith(('VC','RE'))]; vc=[t for t in toks if t.startswith('VC')]; rec=[t for t in toks if t.startswith('RE')]
@@ -850,7 +887,9 @@ def off_row(mt,tf,m):
     if agem>90: conf+=' The report is more than 90 minutes old.'
     if m: conf+=(' The MET Norway estimate agrees.' if offbad==estbad else (' The MET Norway estimate shows less rain than the airport forecast; the airport forecast is used.' if offbad else ' The MET Norway estimate shows more rain than the airport forecast; it is noted under Rest of today.'))
     upd=f"Airport report {clock_plain(obs)}."+(f" Airport forecast issued {clock_plain(dt.datetime.fromisoformat(tf['issueTime'].replace('Z','+00:00')))}." if tf else '')
-    return dict(level=level,now=now,next=' '.join(nx),todo=TODO[level],upd=upd,src=SRC_OFF,est=False,what=what,when=when,sort=sort,tmr=tm,days=days_text(m),conf=conf,**tmr_pick,_obs=obs,_taf=(dt.datetime.fromisoformat(tf['issueTime'].replace('Z','+00:00')) if tf else None))
+    try: _obs=obs_of(raw,mt.get('temp'))
+    except Exception: _obs=None
+    return dict(obs=_obs,level=level,now=now,next=' '.join(nx),todo=TODO[level],upd=upd,src=SRC_OFF,est=False,what=what,when=when,sort=sort,tmr=tm,days=days_text(m),conf=conf,**tmr_pick,_obs=obs,_taf=(dt.datetime.fromisoformat(tf['issueTime'].replace('Z','+00:00')) if tf else None))
 
 rows=[]; obs_times=[]; taf_times=[]; est_times=[]; TS_AIRPORTS=[]; TS_AREAS=[]
 for i,ic,nm_,rg_,la,lo,x_,y_ in APTS:
@@ -864,6 +903,9 @@ for i,ic,nm_,rg_,la,lo,x_,y_ in APTS:
     if r is not None: pass
     else: r=dict(level='nodata',now='No weather data could be reached for this airport.',next='No data.',todo='Check local conditions directly.',upd='No update available.',src='No source reachable.',est=False,what='',when='',sort=0,tmr='No data.',days='No data.',conf='None: no source could be reached for this airport.',t=0,twhat='',twhen='',tsort=0,test=False)
     rename_est(r,m)
+    r.setdefault('obs',None)
+    try: obs_lines(r['obs'],i)
+    except Exception as _e: print('OBS LINES ERROR',ic,_e,file=sys.stderr)
     r['week']=WEEK.get(ic,[])
     if not r['est'] and r['level']!='nodata':
         if r['level']=='danger': TS_AIRPORTS.append(dict(id=i,a=int(NOW.timestamp()*1000),b=int((NOW+dt.timedelta(hours=1)).timestamp()*1000)))
@@ -1217,7 +1259,7 @@ try:
         cid = 't' + re.sub(r'[^a-z0-9]', '', c['name'].lower() or 'x') + str(len(CYCLONES))
         CYCLONES.append(dict(id=cid, name=c['name'], title=title, stage=code, word=word, confirmed=confirmed, inpar=c['inpar'], lat=c['la'], lon=c['lo'], x=x_, y=y_, show=(-139 <= x_ <= 380 and -80 <= y_ <= 116), near=(-150 <= x_ <= 250 and -18 <= y_ <= 116), onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100),
             wind=wind, gale=(gale if strong else None), reach=(reach if strong else None), fx=(P['cx'][0] * fc[1] + P['cx'][1] if fc else None), fy=(P['cy'][0] * fc[0] + P['cy'][1] if fc else None),
-            now=now_ap, soon=exp_ap, dist=c['dist'], chg=c['chg'], trend=c['trend'],
+            storm=((j or {}).get('storm') if strong else None), now=now_ap, soon=exp_ap, dist=c['dist'], chg=c['chg'], trend=c['trend'],
             where=f"{title} is {pos}" + (f", {move}" if move else '') + (f" and {c['chg']}" if c['chg'] else '') + '.' + (f" It is {c['trend']}." if c['trend'] else ''),
             windline=windline, reachline=reachline, fcline=fcline, cross=cross, todo=todo,
             src='Position and warning areas: aviation storm warnings (aviationweather.gov). Strength, wind reach and forecast: RSMC Tokyo, Japan Meteorological Agency. Cross-check: GDACS.',
@@ -1494,8 +1536,25 @@ def _tokyo_vaac():
         seen_cloud = bool(cloud) and not re.search(r'NOT IDENTIFIABLE|NOT OBSERVED|NO VA|\bNIL\b', cloud)
         poly = [(conv(a, b), conv(c, e)) for a, b, c, e in re.findall(r'([NS])(\d{4})\s*([EW])(\d{5})', cloud)] if seen_cloud else []
         top = re.search(r'FL(\d{3})', cloud) if seen_cloud else None
-        print(f"VAAC: {name} advisory {nr}, issued {dtg.strftime('%d %b %H:%MZ')}, eruption: {erupt[:60]!r}, cloud seen: {seen_cloud}, area points: {len(poly)}", file=sys.stderr)
-        out.append(dict(name=name, pos=pos, dtg=dtg, when=when, nr=nr, erupt=erupt, cloud_seen=seen_cloud, poly=(poly if len(poly) >= 3 else []), top=(int(top.group(1)) if top else None)))
+        mvv = re.search(r'\bMOV\s+([NSEW]{1,3})\s+(\d+)\s*KT', cloud) if seen_cloud else None
+        # where the centre expects the ash to be 6, 12 and 18 hours after the observation (one area for each height layer)
+        fc = []
+        for hh in (6, 12, 18):
+            ft = field(r'FCST VA CLD \+%d ?HR' % hh)
+            if not ft or re.search(r'NO VA EXP|NOT AVBL|NOT PROVIDED|NOT AVAILABLE|\bNIL\b', ft): continue
+            layers = []
+            for seg in re.split(r'(?:SFC|FL\d{3})/FL\d{3}', ft):
+                pp = [(conv(a, b), conv(c, e)) for a, b, c, e in re.findall(r'([NS])(\d{4})\s*([EW])(\d{5})', seg)]
+                if len(pp) >= 3: layers.append(pp)
+            ftm = re.search(r'\b(\d{2})/(\d{2})(\d{2})Z', ft); t_ = dtg + dt.timedelta(hours=hh)
+            if ftm:
+                try:
+                    c_ = dtg.replace(day=int(ftm.group(1)), hour=int(ftm.group(2)), minute=int(ftm.group(3)))
+                    if abs((c_ - t_).total_seconds()) <= 3 * 3600: t_ = c_
+                except ValueError: pass
+            if layers: fc.append(dict(h=hh, t=t_, polys=layers))
+        print(f"VAAC: {name} advisory {nr}, issued {dtg.strftime('%d %b %H:%MZ')}, eruption: {erupt[:60]!r}, cloud seen: {seen_cloud}, area points: {len(poly)}, moving: {mvv.group(0) if mvv else 'not stated'}, forecast areas: {[(f['h'], [len(p) for p in f['polys']]) for f in fc] or 'none'}", file=sys.stderr)
+        out.append(dict(name=name, pos=pos, dtg=dtg, when=when, nr=nr, erupt=erupt, cloud_seen=seen_cloud, poly=(poly if len(poly) >= 3 else []), top=(int(top.group(1)) if top else None), mv=((mvv.group(1), round(int(mvv.group(2)) * 1.852)) if mvv else None), fc=fc))
     out.sort(key=lambda a: a['dtg'], reverse=True)
     return out
 
@@ -1512,7 +1571,7 @@ def _manual_volcano_levels():
     except Exception as e: print('VOLCANO: volcano_levels.json could not be read:', e, file=sys.stderr)
     return out
 
-volcanoes = []; ASH_AREAS = []; VOL_ALERTS = []; vol_ok = True; vol_level_src = ''; VAAC = None
+volcanoes = []; ASH_AREAS = []; ASH_FC = []; VOL_ALERTS = []; vol_ok = True; vol_level_src = ''; VAAC = None
 try:
     _auto = {}
     try: _auto = _phiv_volcano_levels()
@@ -1562,7 +1621,7 @@ try:
         desc = ('Ash cloud' + (f" up to about {int(round(float(top) * 0.3048 / 100) * 100):,} m high" if top else '') + (f", moving {mv}" + (f" at {sp} km/h" if sp else '') if mv else '') + '.')
         # when two warnings overlap for one volcano (the old one has not expired yet), describe the cloud from the newer one only
         _t0 = int(x.get('validTimeFrom', 0))
-        if _t0 >= v.get('_ashms', -1): v['ash'] = [desc]; v['_ashms'] = _t0
+        if _t0 >= v.get('_ashms', -1): v['ash'] = [desc]; v['_ashms'] = _t0; v['_mv'] = ((x.get('dir'), sp) if mv else None)
         for pp in polys:
             if any(0 <= la <= 25 and 110 <= lo <= 135 for la, lo in pp):
                 ASH_AREAS.append(dict(v=vid, name=v['name'], b=int(x['validTimeTo']) * 1000, p=[[round(P['cx'][0] * lo + P['cx'][1], 1), round(P['cy'][0] * la + P['cy'][1], 1)] for la, lo in pp]))
@@ -1601,6 +1660,34 @@ try:
         x_ = P['cx'][0] * v['lon'] + P['cx'][1]; y_ = P['cy'][0] * v['lat'] + P['cy'][1]
         names = [n_ for _d, n_ in close]; alert = False
         byv = v.get('by') == 'vaac'; adv = v.get('vaac')
+        # Which way the ash is moving, and where Tokyo VAAC expects it in the coming hours. Shown on the map and in the
+        # details for planning; it raises no alert of its own (an alert still needs an official ash area over an airport now).
+        mvout = None; fcline = ''; fchits = {}
+        if v['erupt']:
+            _mv = v.get('_mv') or ((adv or {}).get('mv'))
+            _fc = (adv or {}).get('fc') or []
+            for f in _fc:
+                for pp in f['polys']:
+                    if not any(0 <= la <= 25 and 110 <= lo <= 135 for la, lo in pp): continue
+                    ASH_FC.append(dict(v=v['id'], h=f['h'], ms=int(f['t'].timestamp() * 1000), p=[[round(P['cx'][0] * lo + P['cx'][1], 1), round(P['cy'][0] * la + P['cy'][1], 1)] for la, lo in pp]))
+                    for r in rows:
+                        if r['name'] not in v['hits'] and r['name'] not in fchits and _in_area(r['lat'], r['lon'], pp): fchits[r['name']] = f['h']
+            _CODES = list(DIRW)
+            if _mv and _mv[0] in DIRW: mvout = dict(deg=_CODES.index(_mv[0]) * 22.5, word=DIRW[_mv[0]], sp=(_mv[1] or None))
+            elif _fc:      # no direction stated: take it from the volcano to the middle of the first forecast area
+                pp = _fc[0]['polys'][0]; cla = sum(q[0] for q in pp) / len(pp); clo = sum(q[1] for q in pp) / len(pp)
+                if hav(v['lat'], v['lon'], cla, clo) >= 15:
+                    _b = (math.degrees(math.atan2((clo - v['lon']) * math.cos(math.radians(v['lat'])), cla - v['lat'])) + 360) % 360
+                    _c = _CODES[int((_b + 11.25) // 22.5) % 16]; mvout = dict(deg=_CODES.index(_c) * 22.5, word=DIRW[_c], sp=None)
+            if adv:
+                if _fc:
+                    _tm = {f['h']: clock_plain(f['t']) + ('' if ph(f['t']).date() == ph(NOW).date() else ' on ' + day(f['t'])) for f in _fc}; _ts = list(_tm.values())
+                    _by = {}
+                    for n_, h_ in fchits.items(): _by.setdefault(h_, []).append(n_)
+                    fcline = (f"Tokyo VAAC advisory {adv['nr']} gives the expected ash area for {', '.join(_ts[:-1]) + (' and ' if len(_ts) > 1 else '') + _ts[-1]}. The dashed outlines on the map show them when this volcano is selected. " +
+                              (' '.join(f"Ash may reach {', '.join(sorted(_by[h_]))} by about {_tm[h_]}." for h_ in sorted(_by)) if _by else 'None of these areas covers another airport.') +
+                              ' This is a forecast and can change with the next advisory.')
+                else: fcline = f"Tokyo VAAC advisory {adv['nr']} gives no forecast ash area."
         force = (f"Tokyo VAAC advisory issued {clock(adv['dtg'])}, watched until {until}" if byv else f"official ash warning in force until {until}")
         if v['hits']:
             alert = True
@@ -1618,7 +1705,7 @@ try:
         elif v['erupt'] and close: todo = 'Eruption reported. Stations at ' + ', '.join(names) + ' should watch for ashfall, keep equipment covered where possible, and be ready for flight changes.'
         elif lvl is not None and lvl >= LEVEL_ALERT and close: todo = 'Raised alert level. Stations at ' + ', '.join(names) + ' should review their ashfall plans and watch PHIVOLCS bulletins.'
         else: todo = 'No action needed.'
-        volcanoes.append(dict(id=v['id'], name=v['name'], lat=v['lat'], lon=v['lon'], x=x_, y=y_, onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100), show=bool(v['main'] or v['erupt'] or (lvl or 0) >= 1),
+        volcanoes.append(dict(mv=mvout, fcline=fcline, fchits=fchits, hits=list(v['hits']), id=v['id'], name=v['name'], lat=v['lat'], lon=v['lon'], x=x_, y=y_, onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100), show=bool(v['main'] or v['erupt'] or (lvl or 0) >= 1),
             level=lvl, status=status, alert=alert, ms=v['ms'], title=v['name'] + ' Volcano',
             levelline=(f"Alert Level {lvl}. {LEVEL_WORDS[lvl]} ({v['level_asof']}.)" if lvl is not None else 'Alert level not available at this check. See the PHIVOLCS volcano bulletin for the current level.'),
             ashline=((' '.join(v['ash']) + ' ' + force[0].upper() + force[1:] + '.' + (f" The ash area covers {', '.join(v['hits'])}." if v['hits'] else ' No ash area covers an airport at this check.') +
@@ -1633,7 +1720,7 @@ try:
     volcanoes.sort(key=lambda v: (0 if v['alert'] else 1, _rank[v['status']], 0 if v['show'] else 1, v['name']))
     VOL_ALERTS.sort(key=lambda a: ({'ash': 0, 'eruption': 1, 'level': 2}[a['kind']], -a['ms']))
 except Exception as _e:
-    vol_ok = False; volcanoes = []; ASH_AREAS = []; VOL_ALERTS = []; print('VOLCANO ERROR', _e, file=sys.stderr)
+    vol_ok = False; volcanoes = []; ASH_AREAS = []; ASH_FC = []; VOL_ALERTS = []; print('VOLCANO ERROR', _e, file=sys.stderr)
 # The two volcano sources, for the "data on screen now" boxes in the Help Centre.
 try:
     _va_ok = SIGMET is not None
@@ -1654,7 +1741,7 @@ elif _nerupt: vol_flag = f"{_nerupt} volcano{'' if _nerupt == 1 else 'es'} with 
 else: vol_flag = 'No volcanic ash warning in the Philippine area, and no volcano alert for any airport.'
 src.append(f"Volcanoes: ash clouds and eruptions are from official aviation ash warnings (SIGMET) on aviationweather.gov, checked {clock_plain(NOW)}. " + (f"Volcano alert levels are from {vol_level_src}." if vol_level_src else "Volcano alert levels could not be read automatically at this check; see PHIVOLCS volcano bulletins.") if vol_ok else "Volcanoes: the ash warning source could not be reached at this check.")
 
-KEEP=('id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc','week')
+KEEP=('obs','id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc','week')
 QKEEP=('check','hits','ms','lat','lon','magnote','shocks','slist','nshock','id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
 data=dict(
     generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000), recent=RECENT,
@@ -1668,7 +1755,7 @@ data=dict(
     quakes_small=QUAKES_SMALL, cyclones=CYCLONES, ty_alerts=TY_ALERTS, ty_near_km=TY_NEAR_KM, lows=LOWS, lows_ok=LOWS_OK,
     quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],ms=a['ms'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), week_ms=WEEK_MS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
-    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], ash=ASH_AREAS, volcano_ok=vol_ok, volcano_flag=vol_flag,
+    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], ash=ASH_AREAS, ash_fc=ASH_FC, volcano_ok=vol_ok, volcano_flag=vol_flag,
     volcano_asof=((' and '.join(([] if SIGMET is None else ['Aviation ash warnings']) + ([] if VAAC is None else ['Tokyo VAAC'])) + f", {day(NOW)}, {clock_plain(NOW)}") if vol_ok else ''), volcano_km=VOLC_KM,
     sources=' '.join(src),
 )

@@ -12,7 +12,7 @@ without a picture.
 
 Developed by the 1AV IT Department. (c) 2026 1Aviation Groundhandling Services, Corp.
 """
-import math, os, re, time
+import datetime as _dt, json, math, os, re, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, 'docs', 'alertmaps')
@@ -30,6 +30,15 @@ KM_Y = PROJ['cy'][0] * -15.06 / 111.0            # map units per km, north-south
 KM_X = lambda lat: PROJ['cx'][0] * 10.0 / (111.0 * max(0.2, math.cos(math.radians(lat))))
 
 _MAP = None
+def _runways():
+    try: return json.load(open(os.path.join(HERE, 'runways.json'), encoding='utf-8'))
+    except Exception: return {}
+def _km_between(ax, ay, bx, by, lat):
+    """Distance in km between two points given in map units."""
+    return math.hypot((ax - bx) / KM_X(lat), (ay - by) / KM_Y)
+def _km_text(d): return f"{int(round(d / 5.0) * 5) if d >= 10 else int(round(d))} km"
+def _ph_time(ms):
+    t = _dt.datetime.fromtimestamp(ms / 1000, _dt.timezone(_dt.timedelta(hours=8))); return t.strftime('%I:%M %p').lstrip('0')
 def _load_map():
     """The coastlines from docs/assets/map.svg: [(fill, outline, [polygons])]."""
     global _MAP
@@ -127,6 +136,28 @@ class Canvas:
             self.d.line([(cx - s(17), cy), (cx - s(9), cy), (cx - s(4), cy - s(14)), (cx + s(3), cy + s(14)), (cx + s(8), cy), (cx + s(17), cy)], fill=(255, 255, 255), width=s(3), joint='curve')
         self.d.text((left + s(74), top + (s(11) if sub else s(21))), title, font=fb, fill=INK)
         if sub: self.d.text((left + s(74), top + s(42)), sub, font=fr, fill=MUTED)
+    def dashed(self, pts, colour, width=2, on=12, off=8):
+        """A dashed outline through points already in picture units."""
+        s = self.s; pts = list(pts) + [pts[0]]
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+            L = math.hypot(x1 - x0, y1 - y0); n = max(1, int(L / s(on + off))); 
+            for i in range(n + 1):
+                a = i * s(on + off) / L if L else 0; b = min(1, a + s(on) / L) if L else 0
+                if a >= 1: break
+                self.d.line([(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a), (x0 + (x1 - x0) * b, y0 + (y1 - y0) * b)], fill=colour, width=s(width))
+    def arrow(self, a, b, colour, width=5):
+        """An arrow between two points in picture units, with a white edge so it shows on any background."""
+        s = self.s; ang = math.atan2(b[1] - a[1], b[0] - a[0]); hx, hy = math.cos(ang), math.sin(ang)
+        base = (b[0] - hx * s(20), b[1] - hy * s(20)); head = [b, (base[0] - hy * s(11), base[1] + hx * s(11)), (base[0] + hy * s(11), base[1] - hx * s(11))]
+        self.d.line([a, base], fill=(255, 255, 255, 255), width=s(width + 4)); self.d.polygon(head, fill=colour, outline=(255, 255, 255, 255))
+        self.d.line([a, base], fill=colour, width=s(width)); self.d.polygon(head, fill=colour)
+    def note(self, x, y, text, colour=INK, size=15, bold=True):
+        """A tag centred on a point given in picture units (not moved to avoid others)."""
+        f = _font(self.s(size), bold); s = self.s; tw = self.d.textlength(text, font=f)
+        left = min(max(x - tw / 2 - s(9), s(6)), W * SS - tw - s(24)); top = min(max(y - s(14), s(6)), H * SS - s(34))
+        box = (left, top, left + tw + s(18), top + s(28)); self.__dict__.setdefault('taken', []).append(box)
+        self.d.rounded_rectangle(list(box), radius=s(9), fill=(255, 255, 255, 240), outline=colour + (150,), width=s(1))
+        self.d.text((left + s(9), top + s(4)), text, font=f, fill=colour)
     def save(self, name):
         os.makedirs(OUT_DIR, exist_ok=True)
         out = self.im.resize((W, H), self.Image.LANCZOS)
@@ -137,7 +168,46 @@ def airport_map(a):
     c = Canvas(ux(a['x']), uy(a['y']), 330)
     c.dot(ux(a['x']), uy(a['y']), LEVEL.get(a.get('level'), LEVEL['normal']), selected=True)
     c.card(ux(a['x']), uy(a['y']), a['name'], a.get('what') or '', LEVEL.get(a.get('level'), LEVEL['normal']), 'bolt')
+    try: _airport_inset(c, a)
+    except Exception as e: print('Alert map: the airport close-up could not be drawn:', type(e).__name__, e)
     return c.save(name_for('danger', a))
+
+def _airport_inset(c, a):
+    """The same close-up the dashboard shows: the runway at its true direction, the wind arrow, and rings at 5 km and 10 km."""
+    R = _runways().get(a.get('id')) or []; o = a.get('obs') or {}
+    if not R: return
+    s = c.s; d = c.d; bw, bh = s(330), s(300); left, top = s(16), H * SS - bh - s(16)
+    d.rounded_rectangle([left + s(2), top + s(4), left + bw + s(2), top + bh + s(4)], radius=s(18), fill=(40, 60, 110, 40))
+    d.rounded_rectangle([left, top, left + bw, top + bh], radius=s(18), fill=(255, 255, 255, 248))
+    d.text((left + s(16), top + s(10)), 'Airport close-up', font=_font(s(17), True), fill=INK)
+    px0, py0, px1, py1 = left + s(12), top + s(40), left + bw - s(12), top + bh - s(66)
+    d.rounded_rectangle([px0, py0, px1, py1], radius=s(10), fill=(237, 243, 247, 255))
+    cx, cy = (px0 + px1) / 2, (py0 + py1) / 2; K = s(13.5)                    # picture units for one km
+    clip = c.Image.new('L', c.im.size, 0); cd = c.ImageDraw.Draw(clip); cd.rounded_rectangle([px0, py0, px1, py1], radius=s(10), fill=255)
+    lay = c.Image.new('RGBA', c.im.size, (0, 0, 0, 0)); ld = c.ImageDraw.Draw(lay)
+    ld.ellipse([cx - 5 * K, cy - 5 * K, cx + 5 * K, cy + 5 * K], fill=(198, 40, 40, 16))
+    for km, alpha in ((5, 255), (10, 150)):
+        n = 60
+        for i in range(0, n, 2): ld.arc([cx - km * K, cy - km * K, cx + km * K, cy + km * K], 360.0 * i / n, 360.0 * (i + 1) / n, fill=(198, 40, 40, alpha), width=s(2))
+    f = _font(s(13), True)
+    for rw in R:
+        ax, ay, bx, by = cx + rw[3] * K, cy - rw[4] * K, cx + rw[5] * K, cy - rw[6] * K
+        ld.line([(ax, ay), (bx, by)], fill=(42, 52, 69, 255), width=s(6))
+        L = math.hypot(bx - ax, by - ay) or 1; uxx, uyy = (bx - ax) / L, (by - ay) / L
+        for (tx, ty), nm in (((ax - uxx * s(15), ay - uyy * s(15)), rw[0]), ((bx + uxx * s(15), by + uyy * s(15)), rw[1])):
+            tw = ld.textlength(nm, font=f); ld.text((tx - tw / 2, ty - s(9)), nm, font=f, fill=INK + (255,))
+    c.im.paste(c.Image.alpha_composite(c.im.convert('RGBA'), lay).convert('RGB'), (0, 0), clip); c.d = d = c.ImageDraw.Draw(c.im, 'RGBA')
+    d.text((cx - d.textlength('5 km', font=_font(s(12), True)) / 2, cy - 5 * K - s(17)), '5 km', font=_font(s(12), True), fill=MUTED)
+    d.text((px1 - s(44), py1 - s(20)), '10 km', font=_font(s(12), True), fill=MUTED)
+    d.polygon([(px1 - s(18), py0 + s(8)), (px1 - s(13), py0 + s(22)), (px1 - s(23), py0 + s(22))], fill=MUTED); d.text((px1 - s(23), py0 + s(23)), 'N', font=_font(s(12), True), fill=MUTED)
+    if not o.get('est') and o.get('wd') is not None and o.get('w'):
+        wx, wy = math.sin(math.radians(o['wd'])), -math.cos(math.radians(o['wd']))
+        c.arrow((cx + wx * s(96), cy + wy * s(96)), (cx + wx * s(48), cy + wy * s(48)), (0, 119, 200), width=4)
+    xl = str(o.get('xline') or ''); m = re.match(r'(\d+) km/h across runway (\S+), with a (headwind|tailwind) of (\d+) km/h', xl)
+    wind = ('Calm, no wind' if not (o.get('w') or o.get('g')) else f"Wind {o.get('w')} km/h" + (f", gusts {o['g']}" if o.get('g') else '')) if (o and not o.get('est')) else 'No official wind report'
+    if m: big, small = f"Crosswind {m.group(1)} km/h", f"runway {m.group(2)}, {m.group(3)} {m.group(4)} km/h. {wind}"
+    else: big, small = 'Runway ' + ' and '.join(r_[0] + '/' + r_[1] for r_ in R), wind
+    d.text((left + s(16), top + bh - s(58)), big, font=_font(s(18), True), fill=INK); d.text((left + s(16), top + bh - s(32)), small, font=_font(s(13)), fill=MUTED)
 
 def volcano_map(v, alert, data):
     km = data.get('volcano_km') or 150
@@ -154,7 +224,26 @@ def volcano_map(v, alert, data):
     if not named and v.get('near'): named = [re.sub(r'\s*\(about.*$', '', str(v['near']).split('), ')[0]).strip()]
     shown = [ap for ap in data.get('airports', []) if ap['name'] in named]
     for ap in shown: c.dot(ux(ap['x']), uy(ap['y']), LEVEL.get(ap.get('level'), LEVEL['normal']))
-    for ap in shown: c.tag(ux(ap['x']), uy(ap['y']), ap['name'], dx=-18 if ap['x'] < v['x'] else 18)
+    BROWN = (78, 52, 46)
+    for fc in data.get('ash_fc') or []:      # where Tokyo VAAC expects the ash in the coming hours
+        if fc.get('v') == v.get('id') and len(fc.get('p') or []) >= 3:
+            q = [c.pt(ux(p[0]), uy(p[1])) for p in fc['p']]
+            c.d.polygon(q, fill=(93, 64, 55, 22)); c.dashed(q, BROWN + (255,), width=2)
+            far = max(q, key=lambda t: math.hypot(t[0] - c.pt(x, y)[0], t[1] - c.pt(x, y)[1]))
+            if fc.get('ms'): c.note(far[0], far[1], 'By ' + _ph_time(fc['ms']), colour=BROWN, size=13)
+    mv = v.get('mv') or {}
+    if mv.get('deg') is not None:            # which way the ash is moving: from the volcano through the ash cloud
+        dxm, dym = math.sin(math.radians(mv['deg'])), -math.cos(math.radians(mv['deg'])); L = 0
+        for ash in data.get('ash') or []:
+            if ash.get('v') == v.get('id'):
+                for p in ash.get('p') or []: L = max(L, (ux(p[0]) - x) * dxm + (uy(p[1]) - y) * dym)
+        L = max(L + 14, 46); c.arrow(c.pt(x, y), c.pt(x + dxm * L, y + dym * L), (62, 39, 35))
+    for ap in shown: c.tag(ux(ap['x']), uy(ap['y']), ap['name'] + ', ' + _km_text(_km_between(ux(ap['x']), uy(ap['y']), x, y, v.get('lat', 12))), dx=-18 if ap['x'] < v['x'] else 18)
+    hm = re.search(r'up to about ([\d,]+ m)', str(v.get('ashline') or ''))
+    if mv.get('word') or hm:
+        tops = [uy(p[1]) for ash in data.get('ash') or [] if ash.get('v') == v.get('id') for p in ash.get('p') or []]
+        nx, ny = c.pt(x, min(tops) if tops else y - km * KM_Y * 0.5)
+        c.note(nx, ny - c.s(20), 'Ash cloud' + (', up to ' + hm.group(1) if hm else '') + (', moving ' + mv['word'] if mv.get('word') else ''), colour=BROWN, size=14)
     px, py = c.pt(x, y); s = c.s
     c.d.ellipse([px - s(22), py - s(22), px + s(22), py + s(22)], outline=VOLC + (255,), width=s(4), fill=(191, 54, 12, 40))
     c.d.polygon([(px, py - s(11)), (px - s(11), py + s(8)), (px + s(11), py + s(8))], fill=VOLC, outline=(255, 255, 255))
@@ -167,15 +256,21 @@ def quake_map(q, data):
     near = None; nm = re.sub(r',.*$', '', str(q.get('near') or '')).strip()
     for ap in data.get('airports', []):
         if ap['name'] == nm: near = ap
-    span = 420
+    lat = q.get('lat', 12); span = max(420, 2 * 100 * KM_Y * 1.16 * W / H)      # wide enough for the whole 100 km ring
     if near: span = max(span, 2.6 * abs(ux(near['x']) - x) + 260, (2.6 * abs(uy(near['y']) - y) + 200) * W / H)
     c = Canvas(x, y, min(span, 900))
+    for km_, a_ in ((100, 200), (50, 150), (25, 150)):      # the same distance rings as the dashboard
+        c.ring(x, y, km_ * KM_X(lat), km_ * KM_Y, PURPLE + (a_,))
+        ex, ey = c.pt(x, y + km_ * KM_Y); c.note(ex, ey, f'{km_} km', colour=PURPLE, size=12)
+    within = [ap for ap in data.get('airports', []) if _km_between(ux(ap['x']), uy(ap['y']), x, y, lat) <= 100 and ap is not near]
     r = max(18, (q.get('size') or 30)) * 1.1 / c.k * SS
     c.ring(x, y, r, r, PURPLE + (255,), dash=False, fill=(106, 27, 154, 46))
     px, py = c.pt(x, y); c.d.ellipse([px - c.s(5), py - c.s(5), px + c.s(5), py + c.s(5)], fill=PURPLE)
     if near:
         c.dot(ux(near['x']), uy(near['y']), LEVEL.get(near.get('level'), LEVEL['normal']))
-        c.tag(ux(near['x']), uy(near['y']), near['name'], dx=-18 if near['x'] < q['x'] else 18)
+    for ap in within: c.dot(ux(ap['x']), uy(ap['y']), LEVEL.get(ap.get('level'), LEVEL['normal']))
+    for ap in ([near] if near else []) + within[:8]:
+        c.tag(ux(ap['x']), uy(ap['y']), ap['name'] + ', ' + _km_text(_km_between(ux(ap['x']), uy(ap['y']), x, y, lat)), dx=-18 if ap['x'] < q['x'] else 18)
     c.card(x, y, f"Magnitude {q['mag']:.1f} earthquake", re.sub(r'\s*\(.*$', '', str(q.get('place') or ''))[:44], PURPLE, 'quake')
     return c.save(name_for('quake', q))
 
@@ -191,6 +286,8 @@ def typhoon_map(t, alert, data):
     span = max((x1 - x0) + 420, ((y1 - y0) + 260) * W / H, 700)
     c = Canvas((x0 + x1) / 2, (y0 + y1) / 2, min(span, 2600))
     c.ring(x, y, km * KM_X(t.get('lat', 12)), km * KM_Y, TEAL + (230,), fill=(11, 110, 138, 18))
+    if t.get('storm') and t['storm'] < km:      # the inner ring of storm-force winds, when RSMC Tokyo reports it
+        c.ring(x, y, t['storm'] * KM_X(t.get('lat', 12)), t['storm'] * KM_Y, (198, 40, 40, 235), dash=False, fill=(198, 40, 40, 22))
     if t.get('fx') is not None and t.get('fy') is not None:
         fx, fy = ux(t['fx']), uy(t['fy']); a = c.pt(x, y); b = c.pt(fx, fy); n = 14
         for i in range(0, n, 2):
@@ -201,8 +298,10 @@ def typhoon_map(t, alert, data):
     px, py = c.pt(x, y); s = c.s
     c.__dict__.setdefault('taken', []).append((px - s(26), py - s(26), px + s(26), py + s(26)))
     c.__dict__['taken'].append((0, 0, 0, 0))
-    for ap in shown[:10]: c.tag(ux(ap['x']), uy(ap['y']), ap['name'], dx=-18 if ap['x'] < t['x'] else 18, size=15)
+    for ap in shown[:10]: c.tag(ux(ap['x']), uy(ap['y']), ap['name'] + (', now' if ap['name'] in (t.get('now') or []) else ', within 24 h' if ap['name'] in (t.get('soon') or []) else ''), dx=-18 if ap['x'] < t['x'] else 18, size=15)
     if t.get('fx') is not None and t.get('fy') is not None: c.tag(ux(t['fx']), uy(t['fy']), 'In 24 hours', dx=16, dy=-30, colour=TEAL, size=14)
+    if t.get('storm') and t['storm'] < km:
+        sx_, sy_ = c.pt(x, y - t['storm'] * KM_Y); c.note(sx_, sy_ - c.s(4), f"Storm-force winds, {int(round(t['storm'] / 10.0) * 10)} km", colour=(183, 28, 28), size=13)
     c.d.ellipse([px - s(22), py - s(22), px + s(22), py + s(22)], outline=TEAL + (255,), width=s(4), fill=(255, 255, 255, 235))
     c.d.ellipse([px - s(8), py - s(8), px + s(8), py + s(8)], fill=TEAL)
     c.d.arc([px - s(5), py - s(19), px + s(27), py + s(11)], 205, 285, fill=TEAL, width=s(3)); c.d.arc([px - s(27), py - s(11), px + s(5), py + s(19)], 25, 105, fill=TEAL, width=s(3))

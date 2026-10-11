@@ -182,7 +182,7 @@ def _volcano_parts(a, v):
     name = (v or {}).get('title') or 'Volcano'
     title = {'ash': 'Volcanic ash warning: ' + name, 'eruption': 'Eruption: ' + name, 'level': name + (f": Alert Level {v['level']}" if v and v.get('level') is not None else '')}[a['kind']]
     if not v: return title, [('Details', a.get('text'))], ''
-    pairs = [('Eruption started', v.get('eruptline')), ('Volcanic ash', v.get('ashline')), ('Ash warning issued', (clock(v['ms']) + ' (Philippine time)') if v.get('ms') else ''), ('Alert level', v.get('levelline')),
+    pairs = [('Eruption started', v.get('eruptline')), ('Volcanic ash', v.get('ashline')), ('Where the ash is heading', _ash_heading(v)), ('Ash warning issued', (clock(v['ms']) + ' (Philippine time)') if v.get('ms') else ''), ('Alert level', v.get('levelline')),
              ('Airports within 150 km', v.get('near')), ('Source', v.get('src'))]
     return title, pairs, v.get('todo')
 
@@ -226,6 +226,29 @@ def card(colour, tag, title, rows, action, pic=''):
             + (f'<div style="margin-top:12px;background:#F3F8FA;border-radius:5px;padding:10px 12px;{FONT};font-size:13.5px;line-height:1.5;color:{INK}"><strong>What to do.</strong> {esc(action)}</div>' if action else '')
             + '</td></tr></table>')
 
+def _danger_pairs(a):
+    """Rows for a thunderstorm alert: what the airport reports now, the figures behind it, and the forecast."""
+    o = a.get('obs') or {}
+    return [('Right now', a.get('now')), ('Wind', o.get('windline')), ('Visibility', o.get('visline')), ('Lowest cloud', o.get('cloudline')), ('Crosswind', o.get('xline')),
+            ('Forecast for later today', a.get('next')), ('Updated', a.get('upd')), ('Source', a.get('src'))]
+
+def _quake_airports(d, q, km=100):
+    """Every airport within 100 km of the earthquake with its distance, nearest first (the same distances the map shows)."""
+    try:
+        import math
+        out = []
+        for ap in d.get('airports', []):
+            p1, p2 = math.radians(q['lat']), math.radians(ap['lat']); dl = math.radians(ap['lon'] - q['lon'])
+            h = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+            dist = 2 * 6371 * math.asin(min(1, math.sqrt(h)))
+            if dist <= km: out.append((dist, ap['name']))
+        return ', '.join(f"{n} {int(round(x / 5.0) * 5) if x >= 10 else int(round(x))} km" for x, n in sorted(out)) + ('.' if out else '')
+    except Exception: return ''
+
+def _ash_heading(v):
+    mv = v.get('mv') or {}
+    return ' '.join(x for x in [(f"Moving {mv['word']}" + (f" at about {mv['sp']} km/h" if mv.get('sp') else '') + '.') if mv.get('word') else '', v.get('fcline') or ''] if x)
+
 def build_email(d, new_q, new_d):
     url = dashboard_url(); cards = []; text = []; subj = []; stamp = d.get('generated_ms', '')
     for a, q in new_q:
@@ -234,7 +257,7 @@ def build_email(d, new_q, new_d):
             title = f"Magnitude {q['mag']:.1f} earthquake"
             when = exact(q['ms']) if q.get('ms') else q.get('when')
             rows = [row('Time it happened', when), row('Where', q.get('where')), row('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), row('Depth', q.get('depth')),
-                    row('Nearest airport', q.get('near')), row('Cross-check', q.get('check')), row('Tsunami', q.get('tsu')), row('Aftershocks', q.get('after')), row('Source', q.get('src'))]
+                    row('Nearest airport', q.get('near')), row('Airports within 100 km', _quake_airports(d, q)), row('Cross-check', q.get('check')), row('Tsunami', q.get('tsu')), row('Aftershocks', q.get('after')), row('Source', q.get('src'))]
             action = q.get('todo'); place = q.get('place', '')
             nearname = (q.get('near') or '').split(',')[0].strip()
             subj.append(('Possible tsunami, ' if tsu else 'Earthquake ') + f"M{q['mag']:.1f}" + (f" near {nearname}" if nearname else ''))
@@ -244,9 +267,9 @@ def build_email(d, new_q, new_d):
             subj.append(title); text.append(a['text'] + '\n')
         cards.append(card(DARKRED if tsu else PURPLE, 'Possible tsunami' if tsu else 'Earthquake', title, rows, action, map_url('quake', q, stamp)))
     for a in new_d:
-        rows = [row('Right now', a.get('now')), row('Forecast for later today', a.get('next')), row('Updated', a.get('upd')), row('Source', a.get('src'))]
+        rows = [row(k, val) for k, val in _danger_pairs(a)]
         cards.append(card(RED, 'Danger: thunderstorm', 'Thunderstorm at the airport: ' + a['name'], rows, a.get('todo'), map_url('danger', a, stamp)))
-        text.append(f"DANGER, THUNDERSTORM AT THE AIRPORT: {a['name']}\nRight now: {a.get('now')}\nForecast for later today: {a.get('next')}\nWhat to do: {a.get('todo')}\nUpdated: {a.get('upd')}\n")
+        text.append(f"DANGER, THUNDERSTORM AT THE AIRPORT: {a['name']}\n" + '\n'.join(f'{k}: {val}' for k, val in _danger_pairs(a) if val and k != 'Source') + f"\nWhat to do: {a.get('todo')}\n")
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         cards.append(card(VOLC, VOLC_TAG[a['kind']], title, [row(k, val) for k, val in pairs], action, map_url('volcano', v, stamp)))
@@ -359,12 +382,12 @@ def teams_card(d, new_q, new_d, test=False):
         if q:
             when = exact(q['ms']) if q.get('ms') else q.get('when')
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, f"Magnitude {q['mag']:.1f} earthquake",
-                [('Time it happened', when), ('Where', q.get('where')), ('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), ('Depth', q.get('depth')), ('Nearest airport', q.get('near')),
+                [('Time it happened', when), ('Where', q.get('where')), ('Magnitude', q.get('magnote') or f"{q['mag']:.1f}"), ('Depth', q.get('depth')), ('Nearest airport', q.get('near')), ('Airports within 100 km', _quake_airports(d, q)),
                  ('Cross-check', q.get('check')), ('Tsunami', q.get('tsu')), ('Aftershocks', q.get('after')), ('Source', q.get('src'))], q.get('todo'), map_url('quake', q, stamp)))
         else:
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, 'Earthquake alert', [('Details', a.get('text'))], ''))
     for a in new_d:
-        body.append(block('red', 'Attention', 'Danger: thunderstorm', 'Thunderstorm at the airport: ' + a['name'], [('Right now', a.get('now')), ('Forecast for later today', a.get('next')), ('Updated', a.get('upd')), ('Source', a.get('src'))], a.get('todo'), map_url('danger', a, stamp)))
+        body.append(block('red', 'Attention', 'Danger: thunderstorm', 'Thunderstorm at the airport: ' + a['name'], _danger_pairs(a), a.get('todo'), map_url('danger', a, stamp)))
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action, map_url('volcano', v, stamp), (v or {}).get('title', '')))
