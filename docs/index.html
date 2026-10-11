@@ -2183,6 +2183,89 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
 }
 @media (prefers-reduced-motion:reduce){.glass.glass #alertBar{transition:opacity .2s ease;transform:none!important}}
 @media (max-width:480px){.glass.has-alerts .app .brand h1{white-space:normal;line-height:1.15;font-size:12.5px;overflow:visible;text-overflow:clip}}
+/* airport banner and close-up */
+.scn{position:relative;height:172px;border-radius:14px;overflow:hidden;border:1px solid #D7E0EA;color:#12263F;flex:none}
+.scn.dk{color:#fff;border-color:rgba(255,255,255,.14)}
+.scn .scn-art{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scn .scn-tx{position:absolute;left:16px;top:14px;right:16px}.scn .scn-pl,.scn h3{padding-right:88px}
+.scn .scn-pl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.scn h3{margin:8px 0 0;font-size:18px;line-height:1.2;font-weight:700;color:inherit}
+.scn p{margin:2px 0 0;font-size:13px;line-height:1.35;color:#3F5068}
+.scn.dk p{color:rgba(255,255,255,.88)}
+.scn .scn-ic{position:absolute;right:54px;top:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 1px #C9D6E2;display:flex;align-items:center;justify-content:center}
+.scn.dk .scn-ic{background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+.scn .scn-ic svg{width:26px;height:26px;display:block}
+.scn .btn.xbtn,.app .detail .scn .btn.xbtn{position:absolute;right:12px;top:12px;min-height:34px;height:34px;width:34px;padding:0;border:none;border-radius:50%;background:rgba(255,255,255,.85);color:#3F5068;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px #C9D6E2}
+.scn.dk .btn.xbtn,.app .detail .scn.dk .btn.xbtn{background:rgba(255,255,255,.12);color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+.scn .btn.xbtn svg{width:16px;height:16px}
+.sc-rain{animation:scRain 1.1s linear infinite}
+.sc-ash{animation:scAsh 9s linear infinite}
+.sc-cloud{animation:scDrift 26s ease-in-out infinite alternate}
+.sc-cloud.fast{animation-duration:11s}
+.sc-streak{animation:scStreak 3.6s ease-in-out infinite}
+.sc-fog{animation:scDrift 18s ease-in-out infinite alternate}
+@keyframes scRain{to{transform:translate(-6.3px,25.2px)}}
+[data-scene="typhoon"] .sc-rain{animation-name:scRainHard;animation-duration:.7s}
+@keyframes scRainHard{to{transform:translate(-16px,20.5px)}}
+@keyframes scAsh{to{transform:translateY(40px)}}
+@keyframes scDrift{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+@keyframes scStreak{0%{transform:translateX(-26px);opacity:0}30%{opacity:.5}100%{transform:translateX(30px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sc-rain,.sc-ash,.sc-cloud,.sc-streak,.sc-fog{animation:none}}
+.dfacts.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.dfacts.four b{white-space:normal;overflow:visible;font-size:14px;line-height:1.25}
+.drows{display:flex;flex-direction:column}
+.drows>div{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:8px 2px;border-top:1px solid var(--line,#E6ECF2);font-size:13px}
+.drows>div:first-child{border-top:none}
+.drows span{color:var(--muted,#56657F)}
+.drows b{font-weight:600;text-align:right}
+@media (max-width:420px){.dfacts.four{grid-template-columns:repeat(2,minmax(0,1fr))}.scn h3{font-size:16.5px}}
+.apinset{position:absolute;left:12px;bottom:12px;z-index:7;width:clamp(190px,34%,250px);background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:14px;box-shadow:0 8px 22px rgba(30,60,110,.2);padding:9px 10px 9px;color:#12263F;pointer-events:none}
+.apinset[hidden]{display:none}
+.apinset .aph{display:flex;flex-direction:column;line-height:1.25;margin:0 2px 4px}
+.apinset .aph b{font-size:12px;font-weight:700}
+.apinset .aph span{font-size:11px;color:#56657F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.apinset svg{display:block;width:100%;height:auto;border-radius:9px;background:#EDF3F7}
+.apinset .r1{fill:rgba(198,40,40,.06);stroke:#C62828;stroke-width:1.2;stroke-dasharray:5 4}
+.apinset .r2{fill:none;stroke:#C62828;stroke-width:.9;stroke-dasharray:5 5;opacity:.55}
+.apinset .rt{font-size:12px;font-weight:600;fill:#56657F}
+.apinset .rw{stroke:#2A3445;stroke-width:5;stroke-linecap:butt}
+.apinset .rn{font-size:13.5px;font-weight:700;fill:#12263F}
+.apinset .wl{stroke:#0077C8;stroke-width:3;stroke-linecap:round}
+.apinset .wa{fill:#0077C8}
+.apinset .nn{fill:#56657F}
+.apinset .apf{margin:6px 2px 0;line-height:1.3}
+.apinset .apf b{display:block;font-size:13px}
+.apinset .apf span,.apinset .apw{font-size:11px;color:#56657F}
+.apinset .apw{margin:1px 2px 0}
+html[data-theme="dark"] .apinset{background:rgba(30,39,58,.94);color:#E6ECF5}
+html[data-theme="dark"] .apinset svg{background:#232E44}
+html[data-theme="dark"] .apinset .rw{stroke:#DCE5F2}
+html[data-theme="dark"] .apinset .rn{fill:#E6ECF5}
+html[data-theme="dark"] .apinset .rt,html[data-theme="dark"] .apinset .nn{fill:#A9B6CB}
+html[data-theme="dark"] .apinset .aph span,html[data-theme="dark"] .apinset .apf span,html[data-theme="dark"] .apinset .apw{color:#A9B6CB}
+html[data-theme="dark"] .apinset .wl{stroke:#52CAF5}html[data-theme="dark"] .apinset .wa{fill:#52CAF5}
+html[data-theme="dark"] .scn{border-color:rgba(255,255,255,.12)}
+@media (max-width:560px){.apinset{width:158px;left:8px;bottom:8px;padding:7px}.apinset .apw{display:none}}
+.glass #pins .vrange.cu.in{background:none;border-width:1px}
+.glass #pins .vrange.cu.storm{border-style:solid;border-color:rgba(198,40,40,.75);background:rgba(198,40,40,.08)}
+.glass #pins .vrangelab.cu.inner{font-size:10px;font-weight:500;padding:0 6px}
+.glass #pins .vrangelab.cu.inner.k-t{color:#B71C1C}
+.stage.vfocus .pin.a .lab b[data-km]::after{content:attr(data-km);font-weight:400}
+.ashlayer polygon{vector-effect:non-scaling-stroke;stroke-width:calc(1.4px * var(--inv,1));stroke-dasharray:calc(4px * var(--inv,1)) calc(3px * var(--inv,1))}
+.ashlayer.fc polygon{fill:rgba(93,64,55,.10);stroke:#4E342E;stroke-width:calc(1.6px * var(--inv,1));stroke-dasharray:calc(7px * var(--inv,1)) calc(5px * var(--inv,1))}
+#pins.ashmove .pin.v.sel .vcard{display:none}
+#pins .ashtag.fc{background:rgba(255,255,255,.94);color:#4E342E;letter-spacing:0;font-weight:600;font-size:10.5px;padding:1px 6px;transform:translate(-50%,-50%) scale(var(--inv,1));transform-origin:50% 50%;box-shadow:0 0 0 1px rgba(78,52,46,.35)}
+#pins .ashtag.mv{white-space:normal;width:max-content;max-width:190px;text-align:center;line-height:1.3;background:rgba(255,255,255,.94);color:#4E342E;letter-spacing:0;font-weight:600;font-size:10.5px;padding:1px 6px;transform:translate(-50%,-115%) scale(var(--inv,1));transform-origin:50% 100%;box-shadow:0 0 0 1px rgba(78,52,46,.35)}
+.asharrow{position:absolute;z-index:6;width:0;height:0;pointer-events:none;transform:scale(var(--inv,1))}
+.asharrow svg{position:absolute;left:-20px;top:-20px;width:40px;height:40px;overflow:visible}
+.asharrow path{fill:#3E2723;stroke:#fff;stroke-width:2;stroke-linejoin:round}
+.ashline{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:5}
+.ashline line{stroke:#3E2723;stroke-width:calc(4px * var(--inv,1));stroke-linecap:round;vector-effect:non-scaling-stroke}
+.ashline line.h{stroke:#fff;stroke-width:calc(7px * var(--inv,1))}
+#pins.ashmove .ashtag:not(.cu){display:none}
+#pins .ashtag.vname{background:rgba(255,255,255,.95);color:#BF360C;letter-spacing:0;font-weight:700;font-size:11.5px;padding:2px 8px;border-radius:999px;box-shadow:0 0 0 1px rgba(191,54,12,.4);transform:scale(var(--inv,1)) translate(-50%,26px);transform-origin:0 0}
+#pins .ashtag.vname.lft{transform:scale(var(--inv,1)) translate(-50%,calc(-100% - 26px));transform-origin:0 0}
+html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,181,.07)}
 </style>
 </head>
 <body class="glass">
@@ -2422,6 +2505,13 @@ html[data-theme="dark"] .alertbtn b{box-shadow:0 0 0 2px #16202F}
         <li><strong>How heavy.</strong> Light is under 2.5 mm of rain in an hour, Moderate is 2.5 mm or more, Heavy is 7.6 mm or more.</li>
         <li><strong>Area warnings.</strong> An airport inside an official thunderstorm or tropical cyclone area warning is raised to Warning.</li>
         <li><strong>Earthquakes shown.</strong> Purple rings are magnitude 4.5 or stronger in the Philippine area over the past 7 days; select one for details. Small purple dots are weaker earthquakes, magnitude 3.0 to 4.4 from the past 3 days, shown for awareness only: tap or hover one for a small label with its size, place and time. They never raise an alert and do not open a details window.</li>
+        <li><strong>Airport banner.</strong> When you select an airport, a small picture at the top of its details shows the main condition there at a glance. It is one simple line drawing used for every airport, not a picture of the real airport. Only the sky colour and a light effect change: clear, night, low cloud, rain, heavy rain, poor visibility, strong wind, thunderstorm, volcanic ash, earthquake nearby, typhoon expected, typhoon winds, or grey when no report could be reached. When more than one applies, the most serious is shown and the rest stay listed in the text. The movement is slight and stops if your device is set to reduce motion.</li>
+        <li><strong>Airport figures.</strong> Under the banner are the wind, gusts, visibility and height of the lowest cloud layer from the official airport report, then where the wind is coming from, the temperature and the time of the report. For an Estimate, which has no airport report, they show wind, rain, cloud cover and temperature from the computer forecast instead.</li>
+        <li><strong>Crosswind and headwind.</strong> Crosswind is the part of the wind blowing across the runway; headwind is the part blowing along it, towards a landing aircraft. They are worked out from the reported wind direction and the stronger of the wind or gust speed, for the runway end that faces the wind. They are a guide for ground staff only. Flight crews and the tower use their own figures. They are not shown when the wind is calm, when its direction varies, or for an Estimate.</li>
+        <li><strong>Airport close-up on the map.</strong> While an airport is selected, a small box in the corner of the map shows its runway drawn at its true direction, an arrow for where the wind is blowing from, and rings at 5 km and 10 km from the airport. Runway positions are from the OurAirports public database; for a few airports only the runway number is published, so the direction is taken from that number.</li>
+        <li><strong>Close-up for earthquakes, volcanoes and typhoons.</strong> When you select an earthquake, extra rings mark 25 km and 50 km inside the 100 km ring, and each airport shown carries its distance from the earthquake. For a volcano, each airport inside the ring carries its distance from the volcano. For a typhoon, an inner ring marks the storm-force winds when RSMC Tokyo reports it, and each airport is marked "now" if strong winds can already reach it or "within 24 h" if they may arrive within a day. Distances are rounded to the nearest 5 km.</li>
+        <li><strong>Where volcanic ash is heading.</strong> When you select a volcano that has an ash warning, the map zooms in on its 150 km ring, an arrow runs from the volcano through the ash cloud to show which way the ash is moving, a tag above the ash gives its height and direction, and the volcano's name and alert level sit in a tag beside it. If the Tokyo Volcanic Ash Advisory Centre has published a forecast, dashed outlines show where it expects the ash about 6, 12 and 18 hours later, each marked with its time, and the map widens to fit them. The details name any airport inside those outlines and the time the ash may reach it. This is a forecast for planning: it can change with each new advisory, and it does not raise an alert. An alert is still sent only when an official ash area covers an airport now.</li>
+        <li><strong>The same close-up in Teams and email.</strong> An alert carries what you would see here on selecting the same thing. A thunderstorm alert shows the airport close-up on its map and adds wind, visibility, lowest cloud and crosswind. An earthquake alert shows the 25, 50 and 100 km rings and lists every airport within 100 km with its distance. A volcano alert shows the direction arrow and the forecast ash outlines, and says where the ash is heading. A typhoon alert shows the storm-force ring and marks airports "now" or "within 24 h". What triggers an alert has not changed.</li>
         <li><strong>Aftershocks.</strong> Smaller earthquakes (below magnitude 4.5) within 100 km of a main earthquake of magnitude 5.0 or stronger, in the 72 hours after it, are grouped with it. Each is a small purple dot on the map, and the main earthquake's details list them together.</li>
         <li><strong>Why magnitudes differ.</strong> Each agency measures with its own instruments and method, so PHIVOLCS, USGS and phone alerts can show different figures for the same earthquake, and first figures are often revised. The dashboard shows the PHIVOLCS figure, shows the USGS figure beside it for strong earthquakes, and uses the more cautious of the two positions when deciding whether an airport is within 100 km.</li>
         <li><strong>Early notice.</strong> The data is collected about every 20 minutes, and a separate quick check for earthquakes and ash warnings runs every few minutes. In between, an open page asks USGS once a minute. An earthquake that meets the alert rules is shown at once as an early notice, then replaced by the confirmed figures at the next update. USGS usually publishes within about 10 to 20 minutes of an earthquake, so no source is instant.</li>
@@ -2783,6 +2873,12 @@ function viewNow() {
     var wpc = Math.max(1, (bx1 - bx0) * FITX), hpc = Math.max(1, (by1 - by0) * FITY), tz = Math.max(1, Math.min(HOMEZ * 1.45, 78 / wpc, 70 / hpc));
     return { z: tz, cx: clampC(OFFX + (bx0 + bx1) / 2 * FITX, tz, PANX), cy: clampC(OFFY + (by0 + by1) / 2 * FITY, tz, PANY) };
   }
+  if (p && S.vk && !S.sel && !S.qk && !v) {      // a volcano: its ring fills the panel, widened to take in its ash cloud and every area the ash is expected to reach
+    var vr = (D.volcano_km || 150) / 111 * 5.92, vx0 = p.x - vr * 1.55, vx1 = p.x + vr * 1.55, vy0 = p.y - vr, vy1 = p.y + vr;
+    (D.ash_fc || []).concat(D.ash || []).forEach(function (a) { if ((a.v || a.name) === p.id) a.p.forEach(function (q) { vx0 = Math.min(vx0, q[0] - 2); vx1 = Math.max(vx1, q[0] + 2); vy0 = Math.min(vy0, q[1] - 2); vy1 = Math.max(vy1, q[1] + 2); }); });
+    var vw = Math.max(1, (vx1 - vx0) * FITX), vh2 = Math.max(1, (vy1 - vy0) * FITY), vz = Math.max(1, Math.min(5 * HOMEZ, 84 / vw, 80 / vh2));
+    return { z: vz, cx: clampC(OFFX + (vx0 + vx1) / 2 * FITX, vz, PANX), cy: clampC(OFFY + (vy0 + vy1) / 2 * FITY, vz, PANY) };
+  }
   if (p && S.tk && !S.sel && !p.onmap && !v) { var fz = VIEWN.z, qx = p.fx != null ? (p.x + p.fx) / 2 : p.x, qy = p.fy != null ? (p.y + p.fy) / 2 : p.y; return { z: fz, cx: clampC(OFFX + qx * FITX, fz, PANX), cy: clampC(OFFY + qy * FITY, fz, PANY) }; }      // far out at sea: the map moves to it, at the same scale as the usual view
   if (p && S.tk && !S.sel) {      // a cyclone: frame it together with where it is heading, a little wider than an airport
     var tx = p.fx != null ? p.fx : null, ty = p.fy != null ? p.fy : null;
@@ -2938,8 +3034,8 @@ function applyState() {
 
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
   if (a) {
-    d.innerHTML = '<div class="detail"><div class="hd"><div class="ttl"><h3>' + esc(a.name) + '</h3>' + pill(a.level) + (a.est ? EST : '') + '</div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      todoBox(a.level, a.todo) + nowBlock(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
+    d.innerHTML = '<div class="detail ap">' + sceneBanner(a) +
+      todoBox(a.level, a.todo) + nowFacts(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
       fold('out', 'Tomorrow and the week ahead', '', field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days))) +
       fold('about', 'About this reading', a.est ? 'Estimate' : 'Official report', field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src)) + '</div>';
   } else if (q) {
@@ -2953,7 +3049,7 @@ function applyState() {
       fold('about', 'About this reading', q.check ? (/^Confirmed/.test(q.check) ? 'Cross-checked' : 'One source so far') : '', field('Source', q.src)) + '</div>';
   } else if (vo) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(vo.title) + '</h3><span class="pill volcano">' + (vo.status === 'erupting' ? 'Eruption' : 'Volcano') + '</span></div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      todoBox(vo.status === 'quiet' || vo.status === 'unknown' ? '' : 'volcano', vo.todo) + (vo.eruptline ? field('Eruption started', vo.eruptline) : '') + field('Volcanic ash', vo.ashline) + field('Alert level', vo.levelline) +
+      todoBox(vo.status === 'quiet' || vo.status === 'unknown' ? '' : 'volcano', vo.todo) + (vo.eruptline ? field('Eruption started', vo.eruptline) : '') + field('Volcanic ash', vo.ashline) + ((vo.mv || vo.fcline) ? field('Where the ash is heading', [vo.mv ? 'Moving ' + vo.mv.word + (vo.mv.sp ? ' at about ' + vo.mv.sp + ' km/h' : '') + ', shown by the arrow on the map.' : '', vo.fcline || ''].filter(Boolean).join(' ')) : '') + field('Alert level', vo.levelline) +
       field('Airports within ' + (D.volcano_km || 150) + ' km', vo.near) +
       fold('about', 'About this reading', '', (vo.ms ? field('Ash warning issued', phDay(vo.ms) + ', ' + phTime(vo.ms) + ' Philippine time (' + agoText(vo.ms) + ').') : '') + field('Source', vo.src)) + '</div>';
   } else if (cy && cy.low) {
@@ -3397,6 +3493,195 @@ function volcanoFocus() {
 }
 /* ---------- name cards always stay inside the map, and clear of the buttons ---------- */
 var PLT = 0;
+/* ---------- airport banner and close-up ---------- */
+// Runways of the 36 airports (OurAirports public database): [name of each end, direction of the first end in degrees, both ends in km east and north of the airport centre]
+var RWY = {"bacolod":[["03","21",30,-0.5,-0.87,0.5,0.87]],"boholpanglao":[["03","21",30,-0.62,-1.08,0.62,1.08]],"busuangacoron":[["08","26",85,-0.54,-0.05,0.54,0.05]],"butuan":[["12","30",117,-0.88,0.44,0.88,-0.44]],"cagayandeoro":[["09","27",86,-1.04,-0.08,1.04,0.08]],"calbayog":[["17","35",163,-0.22,0.72,0.22,-0.72]],"camiguin":[["07","25",70,-0.55,-0.2,0.55,0.2]],"caticlanboracay":[["06","24",64,-0.44,-0.22,0.44,0.22]],"cauayan":[["12","30",125,-0.85,0.6,0.85,-0.6]],"cebumactan":[["04L","22R",45,-0.88,-0.74,0.93,1.09],["04R","22L",45,-1.19,-1.36,1.14,1.0]],"clark":[["02R","20L",21,-0.59,-1.5,0.59,1.5]],"davao":[["05","23",50,-1.16,-0.98,1.16,0.98]],"dipolog":[["02","20",17,-0.27,-0.92,0.27,0.92]],"dumaguete":[["09","27",93,-0.72,0.04,0.72,-0.04]],"elnido":[["15","33",150,-0.25,0.43,0.25,-0.43]],"generalsantos":[["17","35",172,-0.22,1.61,0.22,-1.61]],"iloilo":[["02","20",20,-0.43,-1.18,0.43,1.18]],"kalibo":[["05","23",48,-0.82,-0.73,0.82,0.73]],"laoag":[["01","19",4,-0.11,-1.39,0.11,1.39]],"legazpibicol":[["05","23",50,-0.96,-0.8,0.96,0.8]],"manilanaia":[["06","24",60,-1.37,-1.53,1.86,0.33],["13","31",135,-1.05,1.4,0.57,-0.2]],"masbate":[["04","22",39,-0.38,-0.48,0.38,0.48]],"naga":[["04","22",44,-0.49,-0.5,0.49,0.5]],"ozamiz":[["03","21",34,-0.5,-0.74,0.5,0.74]],"pagadian":[["02","20",15,-0.22,-0.83,0.22,0.83]],"puertoprincesa":[["09","27",92,-1.32,0.06,1.32,-0.06]],"roxas":[["14","32",145,-0.54,0.78,0.54,-0.78]],"sanjosemindoro":[["10","28",105,-0.92,0.24,0.92,-0.24]],"sanvicente":[["04","22",40,-0.58,-0.69,0.58,0.69]],"siargao":[["01","19",10,-0.11,-0.63,0.11,0.63]],"surigao":[["18","36",173,-0.11,0.85,0.11,-0.85]],"tacloban":[["18","36",183,0.05,1.07,-0.05,-1.07]],"tawitawi":[["02","20",17,-0.22,-0.74,0.22,0.74]],"tuguegarao":[["17","35",174,-0.11,0.98,0.11,-0.98]],"virac":[["06","24",61,-0.7,-0.39,0.7,0.39]],"zamboanga":[["09","27",94,-1.27,0.09,1.27,-0.09]]};
+var SC = {      // one quiet line drawing; only the sky tone, the line colour and a faint layer change
+  day:     { sky: ['#F2F9FC', '#CAE2E7'], ln: '#0077C8', ic: 'sun' },
+  night:   { sky: ['#04314F', '#005687'], ln: '#52CAF5', ic: 'moon', dk: 1 },
+  cloud:   { sky: ['#EEF2F5', '#D5DEE5'], ln: '#0060A7', ic: 'cloud' },
+  rain:    { sky: ['#E3EBF1', '#C9D6E0'], ln: '#0060A7', ic: 'rain' },
+  heavy:   { sky: ['#DDE5EB', '#C3CFD9'], ln: '#0060A7', ic: 'rain', fade: .45 },
+  fog:     { sky: ['#F1F3F5', '#E2E7EB'], ln: '#0060A7', ic: 'fog', fade: .3 },
+  wind:    { sky: ['#F2F9FC', '#CAE2E7'], ln: '#0077C8', ic: 'wind' },
+  thunder: { sky: ['#12283F', '#2C4A66'], ln: '#52CAF5', ic: 'bolt', dk: 1 },
+  ash:     { sky: ['#E4DED6', '#C9BFB3'], ln: '#5B4E42', ic: 'ash' },
+  quake:   { sky: ['#F2F9FC', '#CAE2E7'], ln: '#0077C8', ic: 'quake' },
+  tywatch: { sky: ['#D8E0E7', '#B9C6D1'], ln: '#005687', ic: 'cyc' },
+  typhoon: { sky: ['#0E2236', '#27425C'], ln: '#52CAF5', ic: 'cyc', dk: 1 },
+  none:    { sky: ['#F0F1F3', '#E1E4E8'], ln: '#8B94A1', ic: 'none' }
+};
+var SC_IC = {
+  sun: '<circle cx="0" cy="0" r="5"/><path d="M0 -10v-3M0 10v3M-10 0h-3M10 0h3M-7 -7l-2-2M7 7l2 2M-7 7l-2 2M7 -7l2-2"/>',
+  moon: '<path d="M5 -9a10 10 0 1 0 5 15a8 8 0 0 1 -5 -15z"/>',
+  cloud: '<path d="M-9 6h17a5 5 0 0 0 0-10a7 7 0 0 0-13-2a6 6 0 0 0-4 12z"/>',
+  rain: '<path d="M-9 2h17a5 5 0 0 0 0-10a7 7 0 0 0-13-2a6 6 0 0 0-4 12z"/><path d="M-6 6l-2 5M0 6l-2 5M6 6l-2 5"/>',
+  fog: '<path d="M-11 -6h22M-8 0h19M-11 6h16"/>',
+  wind: '<path d="M-11 -4h14a4 4 0 1 0-4-4M-11 2h20a4 4 0 1 1-4 4M-11 8h8"/>',
+  bolt: '<path d="M-9 0h17a5 5 0 0 0 0-10a7 7 0 0 0-13-2a6 6 0 0 0-4 12z"/><path d="M1 3l-4 6h5l-3 5"/>',
+  ash: '<path d="M-9 0h17a5 5 0 0 0 0-10a7 7 0 0 0-13-2a6 6 0 0 0-4 12z"/><path d="M-6 6h.1M0 6h.1M6 6h.1M-3 11h.1M3 11h.1" stroke-width="2.400"/>',
+  quake: '<path d="M-13 0h5l3-9 5 18 4-13 3 7 2-3h4"/>',
+  cyc: '<circle cx="0" cy="0" r="3"/><path d="M0 -3c0-6 6-9 11-7M0 3c0 6-6 9-11 7"/>',
+  none: '<circle cx="0" cy="0" r="10"/><path d="M-5 0h10"/>'
+};
+var SC_WORD = { day: 'Clear', night: 'Night', cloud: 'Low cloud', rain: 'Rain', heavy: 'Heavy rain', fog: 'Poor visibility', wind: 'Strong wind', thunder: 'Thunderstorm', ash: 'Volcanic ash', quake: 'Earthquake nearby', tywatch: 'Typhoon expected', typhoon: 'Typhoon winds', none: 'No current report' };
+function phHour() { try { return +new Date().toLocaleString('en-GB', { timeZone: 'Asia/Manila', hour: '2-digit', hour12: false }).slice(0, 2); } catch (e) { return 12; } }
+// Which picture an airport gets. The most serious thing wins; everything else is still listed in the text below it.
+function sceneInfo(a) {
+  var o = a.obs, nm = a.name, has = function (L) { return (L || []).indexOf(nm) >= 0; }, hit;
+  if (a.level === 'nodata' || !o) return ['none', 'No weather report could be reached.'];
+  var cy = cyclonesShown().filter(function (c) { return c.confirmed; });
+  hit = cy.filter(function (c) { return has(c.now); })[0]; if (hit) return ['typhoon', 'Strong winds from ' + hit.title + ' can reach this airport now.'];
+  hit = ((D && D.volcanoes) || []).filter(function (v) { return has(v.hits); })[0]; if (hit) return ['ash', 'Volcanic ash warning from ' + hit.name + ' Volcano covers this airport.'];
+  if (o.wx === 'ts') return ['thunder', ''];
+  hit = ((D && D.eq_alerts) || []).map(function (e) { return e.q && quakeById(e.q); }).filter(function (q) { return q && has(q.hits); })[0]; if (hit) return ['quake', 'Magnitude ' + hit.mag.toFixed(1) + ' earthquake nearby' + (hit.ms ? ', ' + phTime(hit.ms) + ' (' + agoText(hit.ms) + ')' : '') + '.'];
+  hit = cy.filter(function (c) { return has(c.soon); })[0]; if (hit) return ['tywatch', 'Strong winds from ' + hit.title + ' may reach this airport within 24 hours.'];
+  var rainy = o.wx === 'rain' || o.wx === 'heavy', low = o.vis != null && o.vis < 5000;
+  if (o.wx === 'heavy' || (rainy && low)) return ['heavy', ''];
+  if (o.wx === 'fog' || low) return ['fog', o.vis != null && o.vis < 9999 ? 'Visibility is down to ' + visText(o.vis) + '.' : ''];
+  if (Math.max(o.w || 0, o.g || 0) >= 39) return ['wind', 'Strong wind, up to ' + Math.max(o.w || 0, o.g || 0) + ' km/h.'];
+  if (rainy) return ['rain', ''];
+  if (o.cb != null && o.cb < 1500) return ['cloud', 'Low cloud, ' + o.cb.toLocaleString('en-US') + ' ft above the airport.'];
+  if (o.est && o.cloud >= 88) return ['cloud', ''];
+  var h = phHour(); return [(h >= 18 || h < 6) ? 'night' : 'day', ''];
+}
+function sceneOf(a) { return sceneInfo(a)[0]; }
+function sceneArt(k) {
+  var c = SC[k], W = 560, H = 152, ln = c.ln, s = '<defs><linearGradient id="scSky" x1="0" y1="0" x2="0" y2="1"><stop offset=".75" stop-color="' + c.sky[0] + '"/><stop offset="1" stop-color="' + c.sky[1] + '"/></linearGradient>' +
+    '<pattern id="scRain" width="15" height="26" patternUnits="userSpaceOnUse"' + (k === 'typhoon' ? ' patternTransform="rotate(38)"' : ' patternTransform="rotate(14)"') + '><path d="M7 3v10" stroke="' + (c.dk ? '#fff' : '#005687') + '" stroke-width="1" stroke-linecap="round"/></pattern>' +
+    '<pattern id="scAsh" width="46" height="40" patternUnits="userSpaceOnUse"><g fill="#5B4E42"><circle cx="6" cy="8" r="1.100"/><circle cx="27" cy="3" r=".800"/><circle cx="38" cy="19" r="1.200"/><circle cx="15" cy="27" r=".900"/><circle cx="31" cy="34" r="1"/></g></pattern></defs>' +
+    '<rect x="-900" y="-500" width="2400" height="' + (H + 500) + '" fill="url(#scSky)"/>';
+  var cl = function (x, y, z, o) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + z + ')" fill="#fff" opacity="' + o + '"><rect x="-70" y="-10" width="140" height="20" rx="10"/><rect x="-36" y="-24" width="84" height="22" rx="11"/></g>'; };
+  var streaks = function (col, o) { return '<g class="sc-streak" stroke="' + col + '" stroke-width="1.300" stroke-linecap="round" opacity="' + o + '" fill="none"><path d="M392 58h96"/><path d="M420 74h120"/><path d="M380 90h70"/><path d="M300 104h60"/></g>'; };
+  if (k === 'night') s += '<g fill="#fff" opacity=".55"><circle cx="300" cy="22" r="1"/><circle cx="352" cy="58" r=".800"/><circle cx="398" cy="30" r="1.100"/><circle cx="446" cy="18" r=".800"/><circle cx="508" cy="76" r="1"/><circle cx="262" cy="70" r=".800"/><circle cx="536" cy="104" r=".900"/><circle cx="330" cy="96" r=".700"/></g>';
+  if (k === 'cloud') s += '<g class="sc-cloud">' + cl(400, 70, 1.4, .8) + cl(500, 96, 1.1, .7) + cl(300, 104, 1, .6) + '</g>';
+  if (k === 'tywatch') s += '<g class="sc-cloud fast">' + cl(420, 64, 1.6, .45) + cl(520, 92, 1.2, .4) + '</g>' + streaks('#005687', .4);
+  if (k === 'wind') s += streaks(ln, .5);
+  var ground = k === 'quake' ? 'M0 108H300l5-7 6 15 6-20 6 22 6-14 5 6 4-2H' + W : 'M0 108H' + W, roof = ''; for (var i = 0; i < 6; i++) roof += 'l14-12 14 12';
+  s += '<g transform="translate(50 22)" opacity="' + (c.fade || 1) + '"><g fill="none" stroke="' + ln + '" stroke-width="1.600" stroke-linejoin="round" stroke-linecap="round"' + (k === 'none' ? ' stroke-dasharray="5 5"' : '') + '>' +
+    '<path d="' + ground + '"/><path d="M-950 108H0"/><path d="M250 108V90' + roof + 'V108"/><path d="M250 98H418"/><path d="M452 108V62M444 62h16l-3-9h-10z"/><path d="M150 100h46q10 0 12 4-2 4-12 4h-46q-8 0-8-4 0-4 8-4M196 100l8-11h5l-3 11"/></g>' +
+    '<path d="M-950 120H' + W + '" stroke="' + ln + '" stroke-width="1" stroke-dasharray="14 12" opacity=".45"/></g>';
+  if (k === 'rain' || k === 'heavy' || k === 'thunder' || k === 'typhoon') s += '<rect class="sc-rain" x="-900" y="-500" width="2400" height="' + (H + 560) + '" fill="url(#scRain)" opacity="' + (k === 'heavy' ? .42 : .3) + '"/>';
+  if (k === 'typhoon') s += streaks('#fff', .35);
+  if (k === 'ash') s += '<rect class="sc-ash" x="-900" y="-500" width="2400" height="' + (H + 500) + '" fill="url(#scAsh)" opacity=".5"/>';
+  if (k === 'fog') s += '<g class="sc-fog" fill="#fff"><rect x="-900" y="92" width="2400" height="30" opacity=".55"/><rect x="-900" y="74" width="2400" height="12" opacity=".4"/></g>';
+  return '<svg class="scn-art" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">' + s + '</svg>';
+}
+function sceneBanner(a) {
+  var I = sceneInfo(a), k = I[0], c = SC[k], t = String(a.now || '').replace(/^Estimate: /, ''), line = I[1] || t.split('. ')[0].replace(/\.$/, '') + '.'; line = line.charAt(0).toUpperCase() + line.slice(1);
+  return '<div class="scn' + (c.dk ? ' dk' : '') + '" data-scene="' + k + '">' + sceneArt(k) +
+    '<div class="scn-tx"><div class="scn-pl">' + pill(a.level) + (a.est ? EST : '') + '</div><h3>' + esc(a.name) + '</h3><p>' + esc(line) + '</p></div>' +
+    '<span class="scn-ic" title="' + SC_WORD[k] + '"><svg viewBox="-22 -22 44 44" role="img" aria-label="' + SC_WORD[k] + '"><g fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round" stroke-linejoin="round">' + SC_IC[c.ic] + '</g></svg></span>' +
+    '<button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
+}
+// Crosswind and headwind on the runway end that faces the wind, worked out from the stronger of wind and gusts.
+function crossOf(a) {
+  var o = a.obs, R = RWY[a.id], best = null; if (!o || o.est || !R || !R.length) return null;
+  var sp = Math.max(o.w || 0, o.g || 0); if (!sp) return { calm: 1 }; if (o.wd == null) return { vrb: 1 };
+  R.forEach(function (r) { [[r[0], r[2]], [r[1], (r[2] + 180) % 360]].forEach(function (e) { var d = (o.wd - e[1]) * Math.PI / 180, hw = sp * Math.cos(d), cw = Math.abs(sp * Math.sin(d)); if (!best || hw > best.hw) best = { end: e[0], hw: hw, cw: cw, gust: (o.g || 0) > (o.w || 0), pair: r[0] + '/' + r[1] }; }); });
+  return best;
+}
+var COMPASS = ['north', 'north-northeast', 'northeast', 'east-northeast', 'east', 'east-southeast', 'southeast', 'south-southeast', 'south', 'south-southwest', 'southwest', 'west-southwest', 'west', 'west-northwest', 'northwest', 'north-northwest'];
+function visText(v) { return v == null ? 'Not reported' : v >= 9999 ? '10 km or more' : v >= 5000 ? Math.round(v / 1000) + ' km' : v >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + ' km' : v + ' m'; }
+function nowFacts(a) {
+  var o = a.obs; if (!o) return nowBlock(a);
+  var cell = function (k, v) { return '<div><span>' + k + '</span><b>' + esc(v) + '</b></div>'; }, row = function (k, v) { return '<div><span>' + k + '</span><b>' + esc(v) + '</b></div>'; }, at = /as of ([^.]+)\./.exec(String(a.now || '')), x = crossOf(a), r = '';
+  var cells = o.est ?
+    cell('Wind', o.w ? o.w + ' km/h' : 'Calm') + cell('Rain', o.rain >= 7.6 ? 'Heavy' : o.rain >= 2.5 ? 'Moderate' : o.rain >= 0.1 ? 'Light' : 'None') + cell('Cloud cover', o.cloud + '%') + cell('Temperature', o.temp != null ? o.temp + '°C' : 'Not reported') :
+    cell('Wind', o.w ? o.w + ' km/h' : 'Calm') + cell('Gusts', o.g ? o.g + ' km/h' : 'None') + cell('Visibility', visText(o.vis)) + cell('Cloud base', o.cb != null ? o.cb.toLocaleString('en-US') + ' ft' : 'No low cloud');
+  if (!o.est) {
+    if (o.wd != null && o.w) r += row('Wind is from the', COMPASS[Math.round(o.wd / 22.5) % 16] + ' (' + ('00' + o.wd).slice(-3) + '°)');
+    if (x && x.end) r += row('Crosswind on runway ' + x.end, Math.round(x.cw) + ' km/h' + (x.gust ? ' in gusts' : '')) + row((x.hw >= 0 ? 'Headwind' : 'Tailwind') + ' on runway ' + x.end, Math.round(Math.abs(x.hw)) + ' km/h');
+    else if (x && x.vrb) r += row('Crosswind', 'Wind direction varies, so it cannot be worked out');
+    if (o.temp != null) r += row('Temperature', o.temp + '°C');
+    if (at) r += row('Reported', at[1]);
+  } else r += row('Kind of reading', 'Computer forecast, not an airport report');
+  return '<div class="dfacts four">' + cells + '</div><div class="drows">' + r + '</div>';
+}
+// The small runway drawing on the map while an airport is selected: runway at its true direction, wind arrow, 5 km and 10 km rings.
+function airportInset() {
+  var box = $('apInset'), a = S.sel ? byId(S.sel) : null, R = a && RWY[a.id];
+  if (!box) { box = document.createElement('div'); box.id = 'apInset'; box.className = 'apinset'; box.hidden = true; $('vp').appendChild(box); }
+  if (!a || !R || !R.length) { box.hidden = true; box.innerHTML = ''; return; }
+  var o = a.obs || {}, x = crossOf(a), W = 240, H = 200, cx = 120, cy = 102, K = 14, s = '';
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (10 * K) + '" class="r2"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (5 * K) + '" class="r1"/>' +
+    '<text x="' + cx + '" y="' + (cy - 5 * K - 4) + '" text-anchor="middle" class="rt">5 km</text><text x="' + (W - 6) + '" y="' + (H - 7) + '" text-anchor="end" class="rt">10 km</text>';
+  R.forEach(function (r) {
+    var ax = cx + r[3] * K, ay = cy - r[4] * K, bx = cx + r[5] * K, by = cy - r[6] * K, ux = bx - ax, uy = by - ay, L = Math.sqrt(ux * ux + uy * uy) || 1; ux /= L; uy /= L;
+    s += '<line x1="' + ax.toFixed(1) + '" y1="' + ay.toFixed(1) + '" x2="' + bx.toFixed(1) + '" y2="' + by.toFixed(1) + '" class="rw"/>' +
+      '<text x="' + (ax - ux * 13).toFixed(1) + '" y="' + (ay - uy * 13 + 4.5).toFixed(1) + '" text-anchor="middle" class="rn">' + esc(r[0]) + '</text><text x="' + (bx + ux * 13).toFixed(1) + '" y="' + (by + uy * 13 + 4.5).toFixed(1) + '" text-anchor="middle" class="rn">' + esc(r[1]) + '</text>';
+  });
+  if (!o.est && o.wd != null && o.w) {
+    var wx = Math.sin(o.wd * Math.PI / 180), wy = -Math.cos(o.wd * Math.PI / 180), r0 = 92, r1 = 50;
+    s += '<defs><marker id="apAh" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" class="wa"/></marker></defs>' +
+      '<line x1="' + (cx + wx * r0).toFixed(1) + '" y1="' + (cy + wy * r0).toFixed(1) + '" x2="' + (cx + wx * r1).toFixed(1) + '" y2="' + (cy + wy * r1).toFixed(1) + '" class="wl" marker-end="url(#apAh)"/>';
+  }
+  s += '<g transform="translate(' + (W - 16) + ' 18)"><path d="M0 -9l4 10h-8z" class="nn"/><text y="13" text-anchor="middle" class="rt">N</text></g>';
+  var cap = o.est ? 'No official wind direction here' : !o.w && !o.g ? 'Calm, no wind' : o.wd == null ? 'Wind ' + o.w + ' km/h, direction varies' : 'Wind ' + o.w + ' km/h' + (o.g ? ', gusts ' + o.g : '');
+  var foot = x && x.end ? '<b>Crosswind ' + Math.round(x.cw) + ' km/h</b><span>runway ' + esc(x.end) + ', ' + (x.hw >= 0 ? 'headwind ' : 'tailwind ') + Math.round(Math.abs(x.hw)) + ' km/h</span>' : '<b>Runway ' + esc(R.map(function (r) { return r[0] + '/' + r[1]; }).join(' and ')) + '</b><span>' + esc(cap) + '</span>';
+  box.innerHTML = '<div class="aph"><b>Airport close-up</b><span>' + esc(a.name) + '</span></div><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Runway and wind at ' + esc(a.name) + '">' + s + '</svg>' +
+    '<div class="apf">' + foot + '</div>' + (x && x.end ? '<div class="apw">' + esc(cap) + '</div>' : '');
+  box.hidden = false;
+}
+// Extra detail on the map while an earthquake, volcano or typhoon is selected: inner distance rings and how far each airport is.
+function closeUp() {
+  var pins = $('pins'); if (!pins || !D) return;
+  Array.prototype.forEach.call(pins.querySelectorAll('.cu'), function (e) { e.parentNode.removeChild(e); });
+  Array.prototype.forEach.call(pins.querySelectorAll('.pin.a [data-km]'), function (p) { p.removeAttribute('data-km'); });
+  airportInset(); pins.classList.remove('ashmove');
+  var F = focusTarget(), o = F && F.o; if (!F) return;
+  var ring = function (km, cls, text, up) {
+    var hPct = km / 111 * 5.91775 * 2, wPct = hPct * 1506 / 1000 / Math.max(.5, Math.cos((o.lat || 12) * Math.PI / 180)) * Math.cos(12 * Math.PI / 180);
+    var d = document.createElement('div'); d.className = 'vrange cu k-' + F.k + ' ' + cls; d.style.left = o.x.toFixed(2) + '%'; d.style.top = o.y.toFixed(2) + '%'; d.style.width = wPct.toFixed(2) + '%'; d.style.height = hPct.toFixed(2) + '%'; pins.insertBefore(d, pins.firstChild);
+    var l = document.createElement('span'); l.className = 'vrangelab cu inner k-' + F.k; l.style.left = o.x.toFixed(2) + '%'; l.style.top = (o.y + (up ? -1 : 1) * hPct / 2).toFixed(2) + '%'; l.textContent = text; pins.appendChild(l);
+  };
+  if (F.k === 'q') { ring(25, 'in', '25 km', true); ring(50, 'in', '50 km'); }
+  if (F.k === 'v') {      // where the ash is heading: a direction arrow, and the areas Tokyo VAAC expects in the coming hours
+    var cur = (D.ash || []).filter(function (a) { return (a.v || a.name) === o.id; }), fcs = (D.ash_fc || []).filter(function (a) { return a.v === o.id; });
+    var cx0 = o.x, cy0 = o.y, bot = o.y, topy = o.y, np = 0, sx = 0, sy = 0;
+    cur.forEach(function (a) { a.p.forEach(function (q) { sx += q[0]; sy += q[1]; np++; if (q[1] > bot) bot = q[1]; if (q[1] < topy) topy = q[1]; }); });
+    if (np) { cx0 = sx / np; cy0 = sy / np; }
+    pins.classList.add('ashmove');      // the large name card would cover the arrow, so it steps aside; the name moves to the tag under the ash
+    if (fcs.length) {
+      var g = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); g.setAttribute('class', 'ashlayer fc cu'); g.setAttribute('viewBox', '0 0 100 100'); g.setAttribute('preserveAspectRatio', 'none');
+      g.innerHTML = fcs.map(function (a) { return '<polygon points="' + a.p.map(function (q) { return q[0] + ',' + q[1]; }).join(' ') + '"/>'; }).join(''); pins.insertBefore(g, pins.firstChild);
+      var seen = {};
+      fcs.forEach(function (a) {
+        if (seen[a.h]) return; seen[a.h] = 1; var far = a.p[0], fd = -1;
+        a.p.forEach(function (q) { var d = Math.pow(q[0] - o.x, 2) + Math.pow((q[1] - o.y) * 1.506, 2); if (d > fd) { fd = d; far = q; } });
+        var t = document.createElement('span'); t.className = 'ashtag fc cu'; t.style.left = far[0].toFixed(1) + '%'; t.style.top = far[1].toFixed(1) + '%'; t.textContent = 'By ' + phTime(a.ms); pins.appendChild(t);
+      });
+    }
+    // the volcano's name and level sit above or below it as a small tag, on the side away from the arrow
+    var west = o.mv ? Math.cos(o.mv.deg * Math.PI / 180) >= 0 : true, nt = document.createElement('span');      // arrow pointing up the map: the tag goes below, and the other way round
+    nt.className = 'ashtag vname cu' + (west ? '' : ' lft'); nt.style.left = o.x.toFixed(2) + '%'; nt.style.top = o.y.toFixed(2) + '%';
+    nt.textContent = o.name + ', ' + (o.level != null ? 'Alert Level ' + o.level : volcanoWord(o)); pins.appendChild(nt);
+    var hm = /up to about ([\d,]+ m)/.exec(String(o.ashline || '')), words = 'Ash cloud' + (hm ? ', up to ' + hm[1] : '');
+    if (o.mv) {      // an arrow from the volcano through the ash cloud, pointing the way the ash is moving
+      var ux_ = Math.sin(o.mv.deg * Math.PI / 180), uy_ = -Math.cos(o.mv.deg * Math.PI / 180), L = 0;
+      cur.forEach(function (a) { a.p.forEach(function (q) { var d = (q[0] - o.x) * 10 * ux_ + (q[1] - o.y) * 15.06 * uy_; if (d > L) L = d; }); });
+      L = Math.max(L + 14, 46);      // map units (the map is 1000 wide): a little past the edge of the ash, and never too short to see
+      var ex = o.x + ux_ * L / 10, ey = o.y + uy_ * L / 15.06;
+      var ln = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); ln.setAttribute('class', 'ashline cu'); ln.setAttribute('viewBox', '0 0 100 100'); ln.setAttribute('preserveAspectRatio', 'none');
+      ln.innerHTML = '<line class="h" x1="' + o.x.toFixed(2) + '" y1="' + o.y.toFixed(2) + '" x2="' + ex.toFixed(2) + '" y2="' + ey.toFixed(2) + '"/><line x1="' + o.x.toFixed(2) + '" y1="' + o.y.toFixed(2) + '" x2="' + ex.toFixed(2) + '" y2="' + ey.toFixed(2) + '"/>'; pins.appendChild(ln);
+      var ar = document.createElement('div'); ar.className = 'asharrow cu'; ar.style.left = ex.toFixed(2) + '%'; ar.style.top = ey.toFixed(2) + '%';
+      ar.innerHTML = '<svg viewBox="-20 -20 40 40" aria-hidden="true"><path transform="rotate(' + o.mv.deg + ')" d="M0 -13L10 7H-10z"/></svg>'; pins.appendChild(ar);
+      words += ', moving ' + o.mv.word + (o.mv.sp ? ' at ' + o.mv.sp + ' km/h' : '');
+    }
+    if (cur.length || o.mv) { var mt = document.createElement('span'); mt.className = 'ashtag mv cu'; mt.style.left = cx0.toFixed(1) + '%'; mt.style.top = topy.toFixed(1) + '%'; mt.textContent = words; pins.appendChild(mt); }
+  }
+  if (F.k === 't' && o.storm && o.storm < F.km) ring(o.storm, 'storm', 'Storm-force winds, ' + (Math.round(o.storm / 10) * 10) + ' km', true);
+  var kx = 111 * Math.cos((o.lat || 12) * Math.PI / 180) / 8.69278161, ky = 111 / 5.91775171;
+  Array.prototype.forEach.call(pins.querySelectorAll('.pin.a:not(.v-out)'), function (p) {
+    var a = byId(p.getAttribute('data-a')); if (!a) return;
+    var dx = (a.x - o.x) * kx, dy = (a.y - o.y) * ky, d = Math.sqrt(dx * dx + dy * dy), t = '';
+    if (F.k === 't') t = (o.now || []).indexOf(a.name) >= 0 ? 'now' : (o.soon || []).indexOf(a.name) >= 0 ? 'within 24 h' : '';
+    else t = (d < 10 ? Math.round(d) : Math.round(d / 5) * 5) + ' km';
+    var lb = p.querySelector('.lab b'); if (t && lb) lb.setAttribute('data-km', ', ' + t);
+  });
+}
+var volcanoFocusBase = volcanoFocus;
+volcanoFocus = function () { volcanoFocusBase(); closeUp(); };
 function placeLabels() {
   if (!GLASS) return;
   var vp0 = $('vp'), vr = vp0.getBoundingClientRect(); if (!vr.width) return;
