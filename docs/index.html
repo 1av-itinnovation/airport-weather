@@ -2322,6 +2322,16 @@ html[data-theme="dark"] .newsvid{background:rgba(30,39,58,.97);color:#E6ECF5}htm
 html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
 .news .nwm em.of{color:#fff;background:#005687}html[data-theme="dark"] .news .nwm em.of{color:#04314F;background:#9FD8F5}
 .news .nwi.off{background:linear-gradient(135deg,#005687,#0077C8)}
+/* the cyclone icon turns anticlockwise, as cyclones do north of the equator; stronger ones turn faster */
+@keyframes tySpin{to{transform:rotate(-360deg)}}
+@keyframes tyHalo{0%{transform:scale(.6);opacity:.55}100%{transform:scale(1.9);opacity:0}}
+#pins .pin.t svg{transform-origin:50% 50%;animation:tySpin 4.5s linear infinite}
+#pins .pin.t.st-TD svg{animation-duration:6s}#pins .pin.t.st-TS svg{animation-duration:4.5s}#pins .pin.t.st-STS svg{animation-duration:3.4s}
+#pins .pin.t.st-TY svg{animation-duration:2.4s}#pins .pin.t.st-STY svg{animation-duration:1.6s}
+#pins .pin.t.unc svg{animation-duration:8s}
+#pins .pin.t.st-TY button::before,#pins .pin.t.st-STY button::before{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid rgba(11,110,138,.55);animation:tyHalo 2.4s ease-out infinite;pointer-events:none}
+#pins .pin.t.st-STY button::before{border-color:rgba(198,40,40,.55);animation-duration:1.8s}
+@media (prefers-reduced-motion:reduce){#pins .pin.t svg,#pins .pin.t button::before{animation:none}}
 </style>
 </head>
 <body class="glass">
@@ -2549,7 +2559,7 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
       <h3>4. Rain on the map</h3>
       <ul>
         <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Pause it, or drag the slider to any hour.</li>
-        <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. A small dashed ring stays at its last reported position.</li>
+        <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. The typhoon icon turns anticlockwise, as typhoons do; the stronger the typhoon, the faster it turns, and a typhoon or super typhoon sends out a soft ring. A small dashed ring stays at its last reported position.</li>
         <li><strong>Colours.</strong> Blue is light rain, green moderate, yellow heavy and red very heavy. The key sits just above the timeline.</li>
         <li><strong>Lightning marks.</strong> These come only from official thunderstorm warnings and airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>A picture of the forecast.</strong> It plays no part in the alert levels. When the two differ, go by the alert level.</li>
