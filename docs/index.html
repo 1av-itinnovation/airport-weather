@@ -4409,6 +4409,7 @@ document.addEventListener('visibilitychange', function () { if (!document.hidden
 // for the aircraft over the Philippines every FLT_EVERY_MS and keeps only Cebu Pacific (callsign CEB, shown as 5J) and Cebgo
 // (SRQ, shown as DG). Between updates each plane is moved forward along its track at its ground speed, so it flies smoothly.
 // A plane not heard for FLT_STALE_MS stops and fades; after FLT_DROP_MS it is removed. Nothing here changes an alert.
+var FLT_RELAY = 'https://weathered-rain-9afbdmd-flights.1avithelpdesk.workers.dev/';      // the flights relay (Cloudflare Worker) address; when set, the page asks it instead of adsb.lol directly
 var FLT_EVERY_MS = 15000, FLT_STALE_MS = 60000, FLT_DROP_MS = 300000, FLT_TRAIL_MS = 600000;
 var FLT_AREAS = [[17.5, 121.2], [13.2, 122.5], [10.2, 123.8], [7.4, 124.8], [9.6, 118.6]];      // circles of 250 nautical miles that cover the country
 var FLT = { on: true, timer: null, planes: {}, ok: null, last: 0, err: '', n: 0, raf: 0 };
@@ -4449,8 +4450,9 @@ function fltPoll() {
   if (!FLT.on) return;
   if (document.hidden) { FLT.timer = setTimeout(fltPoll, 5000); return; }
   var got = {}, done = 0, okAny = false, errs = [];
-  FLT_AREAS.forEach(function (c) {
-    fetch('https://api.adsb.lol/v2/point/' + c[0] + '/' + c[1] + '/250', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  var URLS = FLT_RELAY ? [FLT_RELAY] : FLT_AREAS.map(function (c) { return 'https://api.adsb.lol/v2/point/' + c[0] + '/' + c[1] + '/250'; });
+  URLS.forEach(function (u) {
+    fetch(u, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (j) {
         okAny = true; var now = j.now ? j.now * (j.now > 1e12 ? 1 : 1000) : Date.now();
         (j.ac || []).forEach(function (a) {
@@ -4459,7 +4461,7 @@ function fltPoll() {
           if (!got[a.hex] || got[a.hex].t < t) got[a.hex] = { hex: a.hex, code: code, lat: a.lat, lon: a.lon, track: a.track != null ? a.track : (a.true_heading || 0), gs: a.gs || 0, alt: a.alt_baro === 'ground' ? 0 : (a.alt_baro || a.alt_geom || 0), ground: a.alt_baro === 'ground', rate: a.baro_rate || a.geom_rate || 0, reg: a.r || '', type: a.t || '', t: t };
         });
       }).catch(function (e) { errs.push(String(e.message || e)); })
-      .then(function () { if (++done === FLT_AREAS.length) fltMerge(got, okAny, errs); });
+      .then(function () { if (++done === URLS.length) fltMerge(got, okAny, errs); });
   });
   FLT.timer = setTimeout(fltPoll, FLT_EVERY_MS);
 }
