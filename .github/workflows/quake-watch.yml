@@ -51,6 +51,8 @@ jobs:
       - name: Build latest weather data
         if: steps.watch.outputs.refresh == 'true'
         run: python3 build.py
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
 
       - name: Check for alerts to send
         id: alerts
