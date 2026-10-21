@@ -2356,6 +2356,9 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
 .fltin .flti .m{font-size:12.5px;white-space:nowrap}
 html[data-theme="dark"] .fltin .flti{background:#222B40}html[data-theme="dark"] .fltin .flti.hot{background:#3A2026}
 html[data-theme="dark"] .fltp .fltl{background:rgba(30,39,58,.9);color:#9FD8F5}
+/* a Danger airport keeps its flashing red ring, but its name card shows only when it is selected, hovered or focused,
+   or when "All airport names" is on, so the map stays clean */
+#pins:not(.all-labels) .pin.a.lv-danger:not(.sel):not(:hover):not(:focus-within) .lab{display:none}
 </style>
 </head>
 <body class="glass">
@@ -2524,7 +2527,7 @@ html[data-theme="dark"] .fltp .fltl{background:rgba(30,39,58,.9);color:#9FD8F5}
     <div class="sec hs">
       <h3>2. Finding your way around</h3>
       <ul>
-        <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing dot is a thunderstorm now. A dashed outline is an Estimate.</li>
+        <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing red dot is a thunderstorm now; its name shows when you point at it or select it, so the map stays clear. A dashed outline is an Estimate.</li>
         <li><strong>Other marks on the map.</strong> Purple rings are earthquakes. Triangles are volcanoes. A swirl is a tropical cyclone. A red circle with an L is a low pressure area.</li>
         <li><strong>Airport list.</strong> The airports at the chosen level, with what to expect and when. Press a row to open it.</li>
         <li><strong>Tiles.</strong> The counts at each level and the key figures. Press one to filter the map and the list. Press it again, or "Clear filter", to go back.</li>
