@@ -1809,6 +1809,8 @@ NEWS_SOURCES = [
                                     'https://data.gmanetwork.com/gno/rss/news/regions/feed.xml']),
     ('ABS-CBN News', 'abs-cbn.com', ['https://www.abs-cbn.com/rss/news', 'https://news.abs-cbn.com/rss/news', 'https://news.abs-cbn.com/rss/latest-news']),
     ('TV5 / News5', 'news5.com.ph', ['https://www.news5.com.ph/feed', 'https://news.tv5.com.ph/feed', 'https://interaksyon.philstar.com/feed/']),
+    # CNN Philippines closed in January 2024, so this is CNN International (Asia and world news), which reports major Philippine events
+    ('CNN', 'cnn.com', ['https://rss.cnn.com/rss/edition_asia.rss', 'http://rss.cnn.com/rss/edition_asia.rss', 'http://rss.cnn.com/rss/edition_world.rss']),
 ]
 NEWS_PLACES = {
     'bacolod': r'Bacolod|Silay|Negros Occidental', 'boholpanglao': r'Bohol|Panglao|Tagbilaran', 'busuangacoron': r'Coron|Busuanga',
@@ -1872,11 +1874,12 @@ try:
         print(f'NEWS: {_name}: read {_u} ({len(items)} stories, {len(recent)} in the last {NEWS_HOURS} hours)' + (' [backup]' if backup else ''), file=sys.stderr)
         NEWS_SRC.append(dict(name=_name, ok=True, backup=backup))
         for x in recent: x['src'] = _name; _stories.append(x)
-    _seen = set()
+    _seen = set(); _kept = []
     for x in sorted(_stories, key=lambda x: x['t'], reverse=True):
         key = re.sub(r'[^a-z0-9]', '', x['title'].lower())[:70]
         if key in _seen: continue
         _seen.add(key)
+        _kept.append(x)
         text = x['title'] + ' ' + x['desc']; placetext = re.sub(r'Cebu Pacific|Cebu-based', ' ', text, flags=re.I)
         air = bool(NEWS_AIR.search(text)); haz = bool(NEWS_HAZ.search(re.sub(r'flood[- ]control', ' ', text, flags=re.I)))
         if not (air or haz): continue
@@ -1887,6 +1890,34 @@ try:
             if len(L) < NEWS_MAX:
                 L.append(dict(yt=x['yt'], title=x['title'], link=x['link'], ms=int(x['t'].timestamp() * 1000), src=x['src'], img=x['img'], video=x['video'],
                               about=('airport' if air else 'area'), desc=(x['desc'][:180].rsplit(' ', 1)[0] + '...' if len(x['desc']) > 180 else x['desc'])))
+    # News about each earthquake, volcano and typhoon on the map, matched by its own name or figures
+    def _item(x): return dict(yt=x['yt'], title=x['title'], link=x['link'], ms=int(x['t'].timestamp() * 1000), src=x['src'], img=x['img'], video=x['video'], about='hazard',
+                              desc=(x['desc'][:180].rsplit(' ', 1)[0] + '...' if len(x['desc']) > 180 else x['desc']))
+    QUAKE_W = re.compile(r'earthquake|\bquake|tremor|magnitude|\blindol\b|aftershock|tsunami', re.I)
+    VOLC_W = re.compile(r'volcan|erupt|\bash\b|ashfall|Phivolcs|alert level|lahar|phreatic|sulfur', re.I)
+    TY_W = re.compile(r'typhoon|tropical (?:storm|depression|cyclone)|\bstorm\b|\bbagyo\b|signal|PAGASA|landfall|super typhoon', re.I)
+    for v in volcanoes:
+        if not (v.get('show') or v.get('alert')): continue
+        nm = {'Kanlaon': r'K[ae]nlaon|Canlaon', 'Hibok-Hibok': r'Hibok-?Hibok'}.get(v['name'], re.escape(v['name']))
+        L = [_item(x) for x in _kept if re.search(r'\b(' + nm + r')\b', x['title'] + ' ' + x['desc'], re.I) and VOLC_W.search(x['title'] + ' ' + x['desc']) and not (NEWS_NOT.search(x['title']) and not VOLC_W.search(x['title']))][:NEWS_MAX]
+        if L: NEWS['v:' + v['id']] = L
+    for q in quakes:
+        if not q.get('ms') or (NOW.timestamp() * 1000 - q['ms']) > NEWS_HOURS * 3600000: continue
+        place = re.sub(r'^.*? of ', '', str(q.get('place') or '')); words = [w.strip() for w in re.split(r'[(),]', place) if len(w.strip()) >= 4]
+        words += [n.split(' (')[0] for n in (q.get('hits') or [])]
+        magtxt = f"{q['mag']:.1f}"
+        L = []
+        for x in _kept:
+            t_ = x['title'] + ' ' + x['desc']
+            if x['t'].timestamp() * 1000 < q['ms'] - 600000 or not QUAKE_W.search(t_): continue
+            if re.search(r'(?<![\d.])' + re.escape(magtxt) + r'(?![\d])', t_) or any(re.search(r'\b' + re.escape(w) + r'\b', t_, re.I) for w in words): L.append(_item(x))
+        if L: NEWS['q:' + q['id']] = L[:NEWS_MAX]
+    for c in CYCLONES:
+        nms = [n for n in (c.get('name'), c.get('local')) if n and n != 'Unnamed']
+        if not nms: continue
+        L = [_item(x) for x in _kept if any(re.search(r'\b' + re.escape(n) + r'\b', x['title'] + ' ' + x['desc'], re.I) for n in nms) and TY_W.search(x['title'] + ' ' + x['desc'])][:NEWS_MAX]
+        if L: NEWS['t:' + c['id']] = L
+    print(f"NEWS: hazards with news: {', '.join(k for k in NEWS if ':' in k) or 'none'}", file=sys.stderr)
     # find each matched story's own video: reuse what the last refresh found, then open a few new story pages
     try: _prev = {n['link']: n.get('yt', '') for L_ in (json.load(open(OUT, encoding='utf-8')).get('news') or {}).values() for n in L_}
     except Exception: _prev = {}
@@ -1900,7 +1931,7 @@ try:
                 _opened += 1; page = fetch(n['link'], tries=1, text=True, timeout=12) or ''
                 n['yt'] = _story_video(page); _found[n['link']] = n['yt']
             if n['yt']: n['video'] = True
-    print(f"NEWS: {sum(len(v) for v in NEWS.values())} stories matched {len(NEWS)} airports; {sum(1 for L_ in NEWS.values() for n in L_ if n['yt'])} with a playable video ({_opened} story pages opened)", file=sys.stderr)
+    print(f"NEWS: {sum(len(v) for k_, v in NEWS.items() if ':' not in k_)} stories matched {sum(1 for k_ in NEWS if ':' not in k_)} airports; {sum(1 for L_ in NEWS.values() for n in L_ if n['yt'])} with a playable video ({_opened} story pages opened)", file=sys.stderr)
 except Exception as _e:
     print('NEWS ERROR', _e, file=sys.stderr); NEWS = {}
 

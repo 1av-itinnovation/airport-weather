@@ -84,12 +84,18 @@ Notes on the airport view:
 - **Crosswind and headwind.** Worked out from the reported wind direction and the stronger of wind or
   gusts, for the runway end facing the wind. A guide for ground staff only. Not shown when the wind is
   calm or variable, or for an Estimate.
-- **In the news.** Headlines from the last 24 hours from GMA News, ABS-CBN News and TV5, newest
+- **In the news.** Headlines from the last 24 hours from GMA News, ABS-CBN News, TV5 and CNN, newest
   first. A story is shown only if it names the airport's place and is about flights or a hazard
   there; it is tagged "Flights or airport" or "Hazard in the area". Only the headline, a short summary,
   the publisher's thumbnail and a link are kept; the story stays on the publisher's site. News never
-  changes an alert level. A story with its own YouTube video has a "Play video here" button; the video
+  changes an alert level. Stories are listed most critical first (flights or airport, then the event, then the area;
+  newest first within each). Selecting an airport or event plays its most critical video at once,
+  muted, at the top of the details panel, and closing the selection stops it. Other videos have a
+  "Play video here" button; the video
   plays in the publisher's YouTube player. The refresh opens at most 12 story pages to find their videos.
+- **News for events.** Earthquakes, volcanoes and typhoons have the same news section. A story is
+  linked by the volcano's name, the typhoon's international or PAGASA name, or for an earthquake the
+  place or the magnitude, published after it happened. Tagged "About this event".
 - **Estimates.** Airports with no official report show wind, rain, cloud cover and temperature from a
   computer forecast, and are marked Estimate.
 
@@ -144,7 +150,7 @@ There is no server and no database.
 | PAGASA typhoon names | PAGASA bulletin pages | `typhoon_names.json`, entered by hand |
 | Rain on the map | MET Norway | None |
 | Runways | OurAirports, stored in `runways.json` | None |
-| News | Public news feeds of GMA News, ABS-CBN News and TV5 | A Google News search limited to the same newsroom's site |
+| News | Public news feeds of GMA News, ABS-CBN News, TV5 and CNN International (CNN Philippines closed in 2024) | A Google News search limited to the same newsroom's site |
 
 When sources differ, the more reliable one is used, in this order: official airport report, official
 airport forecast, official area warning, Estimate.
@@ -282,7 +288,7 @@ The main values can be changed at the top of the files.
 | `SEND_VOLCANO_LEVEL` | `notify.py` | Off | Alerts for Alert Level 3 or higher |
 | `SEND_HEADSUP`, `SEND_BRIEFING` | `notify.py` | Off | Advance notices and twice-daily briefings |
 | `WATCH_MAG` | `quake_watch.py` | 4.5 | Smallest earthquake the 5-minute check reacts to |
-| `NEWS_SOURCES` | `build.py` | GMA, ABS-CBN, TV5 | Newsrooms read for airport news, each with its feed addresses |
+| `NEWS_SOURCES` | `build.py` | GMA, ABS-CBN, TV5, CNN | Newsrooms read for airport news, each with its feed addresses |
 | `NEWS_PLACES` | `build.py` | One per airport | The place names that link a story to an airport |
 | `NEWS_HOURS`, `NEWS_MAX` | `build.py` | 24, 8 | How far back news goes, and how many stories per airport |
 | `NEWS_PAGE_FETCH` | `build.py` | 12 | Story pages opened per refresh to find a story's video |
