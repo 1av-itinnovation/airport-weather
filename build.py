@@ -1252,12 +1252,13 @@ try:
     # PAGASA gives every cyclone inside the PAR a local name. It is read from the PAGASA bulletin pages, with names typed into
     # typhoon_names.json as the backup. Unnamed tropical depressions get the PAGASA name only when exactly one of each exists.
     _pnames, _plocal_only = _pagasa_names()
-    _unnamed_in = [c for c in _c if c['inpar'] and (not c['name'] or c['name'] == 'Unnamed')]
     for c in _c:
-        c['local'] = ''
-        if c['inpar']:
-            c['local'] = _pnames.get(re.sub(r'[^A-Z]', '', (c['name'] or '').upper()), '')
-            if not c['local'] and len(_unnamed_in) == 1 and c is _unnamed_in[0] and len(_plocal_only) == 1: c['local'] = _plocal_only[0]
+        c['local'] = _pnames.get(re.sub(r'[^A-Z]', '', (c['name'] or '').upper()), '') if c['inpar'] else ''
+    # PAGASA's page sometimes gives the local name without the international one. When exactly one such name is listed and
+    # exactly one cyclone inside the PAR still has no local name, they are the same cyclone.
+    _nolocal = [c for c in _c if c['inpar'] and not c['local']]
+    if len(_nolocal) == 1 and len(_plocal_only) == 1: _nolocal[0]['local'] = _plocal_only[0]
+    for c in _c:
         if c['inpar'] or c['local']: print(f"TYPHOON: {c['name'] or 'unnamed'} inside the PAR: PAGASA name {c['local'] or 'not found'}", file=sys.stderr)
     for c in _c:
         j = c['jma']; g = c['gd']
@@ -1820,7 +1821,6 @@ NEWS_SOURCES = [
     ('TV5 / News5', 'news5.com.ph', ['https://www.news5.com.ph/feed', 'https://news.tv5.com.ph/feed', 'https://interaksyon.philstar.com/feed/']),
     # CNN Philippines closed in January 2024, so this is CNN International, which reports major Philippine events
     ('CNN', 'cnn.com', ['https://rss.cnn.com/rss/edition_asia.rss', 'http://rss.cnn.com/rss/edition_asia.rss', 'http://rss.cnn.com/rss/edition_world.rss']),
-    ('Philippine News Agency', 'pna.gov.ph', ['https://www.pna.gov.ph/latest.rss', 'https://www.pna.gov.ph/feed']),
     ('Inquirer', 'inquirer.net', ['https://newsinfo.inquirer.net/feed', 'https://www.inquirer.net/fullfeed/']),
     ('SunStar', 'sunstar.com.ph', ['https://www.sunstar.com.ph/rss', 'https://www.sunstar.com.ph/feed']),
 ]
@@ -1829,9 +1829,9 @@ NEWS_SITES = {'gmanetwork.com': 'GMA News', 'abs-cbn.com': 'ABS-CBN News', 'news
               'pna.gov.ph': 'Philippine News Agency', 'inquirer.net': 'Inquirer', 'sunstar.com.ph': 'SunStar', 'philstar.com': 'Philstar', 'rappler.com': 'Rappler',
               'mb.com.ph': 'Manila Bulletin', 'phivolcs.dost.gov.ph': 'PHIVOLCS', 'pagasa.dost.gov.ph': 'PAGASA'}
 # YouTube channels: (shown name, channel id if known, page handles to look it up from)
-NEWS_CHANNELS = [('GMA News (YouTube)', '', ['@gmanews', '@GMAIntegratedNews']), ('ABS-CBN News (YouTube)', 'UCE2606prvXQc_noEqKxVJXA', []),
-                 ('TV5 / News5 (YouTube)', '', ['@News5Everywhere', '@news5']), ('PAGASA (YouTube)', '', ['@dostpagasa', '@DOST_PAGASA', '@PAGASA']),
-                 ('PHIVOLCS (YouTube)', '', ['@phivolcs_dost', '@PHIVOLCS', '@dostphivolcs'])]
+NEWS_CHANNELS = [('GMA News (YouTube)', 'UCqYw-CTd1dU2yGI71sEyqNw', []), ('ABS-CBN News (YouTube)', 'UCE2606prvXQc_noEqKxVJXA', []),
+                 ('TV5 / News5 (YouTube)', '', ['@News5PH', '@news5everywhere', '@TV5Philippines']), ('PAGASA (YouTube)', 'UCpyLikj1x70S8UPxVqsPr6g', []),
+                 ('PHIVOLCS (YouTube)', 'UCNtpwEyrUvcs7HHppMbLP8A', [])]
 # PAGASA regional services: thunderstorm and rainfall advisories for the airports in each region
 PAGASA_REGIONS = {'ncrprsd': ['manilanaia'], 'nlprsd': ['laoag', 'tuguegarao', 'cauayan', 'clark'],
                   'slprsd': ['legazpibicol', 'naga', 'virac', 'masbate', 'sanjosemindoro', 'puertoprincesa', 'busuangacoron', 'elnido', 'sanvicente'],
@@ -1909,10 +1909,24 @@ def _yt_channel(name, cid, handles):
             m = re.search(r'"(?:externalId|channelId)":"(UC[A-Za-z0-9_-]{22})"', page) or re.search(r'youtube\.com/channel/(UC[A-Za-z0-9_-]{22})', page)
             if m: cid = m.group(1); break
     if not cid: print(f'NEWS: {name}: channel not found', file=sys.stderr); return []
-    body = fetch('https://www.youtube.com/feeds/videos.xml?channel_id=' + cid, tries=1, text=True, timeout=15)
-    items = _news_items(body) if body else []
+    items = []; how = ''
+    key = os.environ.get('YOUTUBE_API_KEY', '').strip()
+    if key:      # the YouTube Data API (free key, kept as a repository secret): the channel's latest uploads, 1 quota unit
+        j = fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=25&playlistId=UU' + cid[2:] + '&key=' + urllib.parse.quote(key), tries=1, timeout=15)
+        for it in ((j or {}).get('items') or []) if isinstance(j, dict) else []:
+            sn = it.get('snippet') or {}; vid = (sn.get('resourceId') or {}).get('videoId', '')
+            try: t = dt.datetime.fromisoformat(sn.get('publishedAt', '').replace('Z', '+00:00'))
+            except Exception: continue
+            if vid: items.append(dict(title=sn.get('title', ''), link='https://www.youtube.com/watch?v=' + vid, t=t, desc=' '.join(str(sn.get('description', '')).split())[:400],
+                                      img=((sn.get('thumbnails') or {}).get('medium') or {}).get('url', ''), video=True, yt=vid, host='youtube.com'))
+        how = 'YouTube Data API'
+    if not items:      # the public feeds: by channel, then by the channel's uploads list
+        for u in ('https://www.youtube.com/feeds/videos.xml?channel_id=' + cid, 'https://www.youtube.com/feeds/videos.xml?playlist_id=UU' + cid[2:]):
+            body = fetch(u, tries=1, text=True, timeout=15)
+            items = _news_items(body) if body else []
+            if items: how = 'public feed'; break
     for x in items: x['src'] = name; x['video'] = True
-    print(f'NEWS: {name}: channel {cid}, {len(items)} videos', file=sys.stderr)
+    print(f"NEWS: {name}: channel {cid}, {len(items)} videos" + (f' ({how})' if items else (' (no YouTube key set, and the public feed did not answer)' if not key else ' (key set, but neither the API nor the feed answered)')), file=sys.stderr)
     return items
 def _item(x, about):
     return dict(yt=x.get('yt', ''), title=x['title'], link=x['link'], ms=int(x['t'].timestamp() * 1000), src=x['src'], img=x.get('img', ''), video=bool(x.get('video')), about=about,
@@ -1969,8 +1983,11 @@ try:
         text = x['title'] + ' ' + x['desc']; placetext = re.sub(r'Cebu Pacific|Cebu-based', ' ', text, flags=re.I)
         air = bool(NEWS_AIR.search(text)); haz = bool(NEWS_HAZ.search(re.sub(r'flood[- ]control', ' ', text, flags=re.I)))
         if not (air or haz) or (not air and NEWS_NOT.search(text)): continue
+        placetitle = re.sub(r'Cebu Pacific|Cebu-based|SunStar \w+', ' ', x['title'], flags=re.I); placetext = re.sub(r'SunStar \w+', ' ', placetext, flags=re.I)
         for aid, pat in NEWS_PLACES.items():
-            if re.search(pat, placetext, re.I):
+            # a story about flights may name the place anywhere; a general hazard story must name it in the headline,
+            # so a long summary listing many provinces does not attach one story to many airports
+            if re.search(pat, placetext if air else placetitle, re.I):
                 L = NEWS.setdefault(aid, [])
                 if len(L) < NEWS_MAX: L.append(_item(x, 'airport' if air else 'area'))
     # events, matched by their own name or figures, within EVENT_HOURS
@@ -2039,6 +2056,29 @@ try:
 except StopIteration: pass
 except Exception as _e:
     print('NEWS ERROR', type(_e).__name__, _e, file=sys.stderr); NEWS = NEWS or {}
+# A PAGASA name the bulletin pages did not give can be learned from the news, which writes for example
+# "Super Typhoon Rosal (international name: Champi)". It is used only when several stories agree or none disagrees.
+try:
+    _txts = [n['title'] + ' ' + n.get('desc', '') for L_ in NEWS.values() for n in L_ if n.get('about') != 'official']
+    for c in CYCLONES:
+        if not c.get('inpar') or c.get('local') or not c.get('name') or c['name'] == 'Unnamed': continue
+        votes = Counter()
+        for t_ in _txts:
+            for m in re.finditer(r'["\u201c]?([A-Z][a-z]{2,})["\u201d]?\s*\((?:international name:?\s*|int\'l name:?\s*)?' + re.escape(c['name']) + r'\)', t_, re.I):
+                if m.group(1).lower() not in (c['name'].lower(), 'typhoon', 'storm', 'depression', 'super', 'tropical', 'severe', 'bagyong'): votes[m.group(1).capitalize()] += 1
+        if not votes: continue
+        local, n_ = votes.most_common(1)[0]
+        if len(votes) > 1 and n_ < 2 * sorted(votes.values())[-2]: print(f"TYPHOON: news gives different PAGASA names for {c['name']}: {dict(votes)}; none used", file=sys.stderr); continue
+        old = c['title']; new = re.sub(r'\b' + re.escape(c['name']) + r'\b', f"{local} ({c['name']})", old, count=1)
+        for k_, v_ in list(c.items()):
+            if isinstance(v_, str) and old in v_: c[k_] = v_.replace(old, new)
+        c['title'] = new; c['local'] = local; c['dname'] = local
+        for a_ in TY_ALERTS: a_['text'] = a_['text'].replace(old, new)
+        ty_banner = re.sub(r'\b' + re.escape(c['name']) + r'\b', local, ty_banner)
+        for n in NEWS.get('t:' + c['id'], []):
+            if n.get('about') == 'official' and n['title'] == 'PAGASA tropical cyclone bulletin': n['title'] += ': ' + local
+        print(f"TYPHOON: PAGASA name of {c['name']} taken from the news: {local} ({n_} stories)", file=sys.stderr)
+except Exception as _e: print('TYPHOON NAME FROM NEWS ERROR', _e, file=sys.stderr)
 
 data=dict(
     generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000), recent=RECENT,

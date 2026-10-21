@@ -155,7 +155,7 @@ There is no server and no database.
 | Earthquakes | PHIVOLCS | USGS, then EMSC |
 | Volcanic ash and eruptions | Aviation ash warnings (SIGMET) | Tokyo Volcanic Ash Advisory Centre (VAAC) |
 | Volcano Alert Levels | PHIVOLCS bulletins | `volcano_levels.json`, entered by hand |
-| PAGASA typhoon names | PAGASA bulletin pages | `typhoon_names.json`, entered by hand |
+| PAGASA typhoon names | PAGASA bulletin pages | Learned from the news when several stories agree ("Rosal (international name: Champi)"), then `typhoon_names.json`, entered by hand |
 | Rain on the map | MET Norway | None |
 | Runways | OurAirports, stored in `runways.json` | None |
 | News, official | PHIVOLCS volcano bulletins; PAGASA cyclone bulletin and regional advisories | None |
@@ -283,6 +283,12 @@ The run log of each refresh shows what every reader found. Lines start with a la
 `TYPHOON:`, `VAAC:`, `VOLCANO:` or `NEWS:`.
 
 ## Settings
+
+**Optional secret `YOUTUBE_API_KEY`.** YouTube's public channel feeds often refuse requests from GitHub, so news
+videos may not be found without it. A free YouTube Data API key fixes this: in Google Cloud Console create a
+project, enable "YouTube Data API v3", create an API key (restrict it to that API), and add it to the
+repository under Settings > Secrets and variables > Actions as `YOUTUBE_API_KEY`. The dashboard uses about
+250 of the 10,000 free daily units. Without the key everything else still works.
 
 The main values can be changed at the top of the files.
 
