@@ -1,4 +1,4 @@
-name: Refresh Airport Weather Data
+name: Refresh Disruption Management Data
 
 on:
   schedule:
@@ -96,7 +96,7 @@ jobs:
               echo "No generated data changes to commit."
               exit 0
             fi
-            git commit -q -m "chore: refresh airport weather data"
+            git commit -q -m "chore: refresh dashboard data"
             if git push origin HEAD:main; then
               exit 0
             fi
@@ -179,7 +179,7 @@ jobs:
               echo "No generated data changes to commit."
               exit 0
             fi
-            git commit -q -m "chore: refresh airport weather data"
+            git commit -q -m "chore: refresh dashboard data"
             if git push origin HEAD:main; then
               exit 0
             fi
