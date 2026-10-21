@@ -2588,7 +2588,7 @@ html[data-theme="dark"] .fltp .fltl{background:rgba(30,39,58,.9);color:#9FD8F5}
       <ul>
         <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Pause it, or drag the slider to any hour.</li>
         <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. The typhoon icon turns anticlockwise, as typhoons do; the stronger the typhoon, the faster it turns, and a typhoon or super typhoon sends out a soft ring. A small dashed ring stays at its last reported position.</li>
-        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 15 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Planes on the ground, and planes landing or taking off near an airport, are left off so the airport's own status always shows. Hover or tap a plane for its height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
+        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 10 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Planes on the ground, and planes landing or taking off near an airport, are left off so the airport's own status always shows. Hover or tap a plane for its height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
         <li><strong>Colours.</strong> Blue is light rain, green moderate, yellow heavy and red very heavy. The key sits just above the timeline.</li>
         <li><strong>Lightning marks.</strong> These come only from official thunderstorm warnings and airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>A picture of the forecast.</strong> It plays no part in the alert levels. When the two differ, go by the alert level.</li>
@@ -2631,7 +2631,7 @@ html[data-theme="dark"] .fltp .fltl{background:rgba(30,39,58,.9);color:#9FD8F5}
       <div class="src"><b>Volcanoes</b><span class="t">Ash and eruptions: aviation ash warnings (aviationweather.gov) and the Tokyo Volcanic Ash Advisory Centre. Alert Levels: PHIVOLCS bulletins.</span></div>
       <div class="src"><b>Rain on the map</b><span class="t">MET Norway forecast, rebuilt every 3 hours.</span></div>
       <div class="src"><b>News</b><span class="t">Official: PAGASA bulletins and regional advisories, PHIVOLCS volcano bulletins. Newsrooms: GMA News, ABS-CBN News, TV5, CNN International (CNN Philippines closed in 2024), Philippine News Agency, Inquirer, SunStar, Philstar, Rappler and Manila Bulletin, read from their feeds and a news search limited to these sites. Social media: their public YouTube channels. Headlines and links only; the stories stay on their sites.</span></div>
-      <div class="src"><b>Live flights</b><span class="t">adsb.lol, an open network of volunteer ADS-B receivers (open data, ODbL licence). Only Cebu Pacific and Cebgo aircraft are shown. Read by your browser every 15 seconds while the layer is on.</span></div>
+      <div class="src"><b>Live flights</b><span class="t">adsb.lol, an open network of volunteer ADS-B receivers (open data, ODbL licence). Only Cebu Pacific and Cebgo aircraft are shown. Read through the company relay every 10 seconds while the layer is on.</span></div>
       <div class="src"><b>Runways</b><span class="t">OurAirports public database. For a few airports only the runway number is published, so the direction comes from that number.</span></div>
     </div>
     <div class="sec hs">
@@ -4410,7 +4410,7 @@ document.addEventListener('visibilitychange', function () { if (!document.hidden
 // (SRQ, shown as DG). Between updates each plane is moved forward along its track at its ground speed, so it flies smoothly.
 // A plane not heard for FLT_STALE_MS stops and fades; after FLT_DROP_MS it is removed. Nothing here changes an alert.
 var FLT_RELAY = 'https://weathered-rain-9afbdmd-flights.1avithelpdesk.workers.dev/';      // the flights relay (Cloudflare Worker) address; when set, the page asks it instead of adsb.lol directly
-var FLT_EVERY_MS = 15000, FLT_STALE_MS = 60000, FLT_DROP_MS = 300000, FLT_TRAIL_MS = 600000;
+var FLT_EVERY_MS = 10000, FLT_STALE_MS = 60000, FLT_DROP_MS = 300000, FLT_TRAIL_MS = 600000;
 var FLT_AREAS = [[17.5, 121.2], [13.2, 122.5], [10.2, 123.8], [7.4, 124.8], [9.6, 118.6]];      // circles of 250 nautical miles that cover the country
 var FLT = { on: true, timer: null, planes: {}, ok: null, last: 0, err: '', n: 0, raf: 0 };
 try { FLT.on = localStorage.getItem('awm-flights') !== 'off'; } catch (e) {}
@@ -4484,6 +4484,7 @@ function fltMerge(got, ok, errs) {
 }
 function fltDraw() {
   FLT.raf = requestAnimationFrame(fltDraw);
+  if (Date.now() - (FLT.st || 0) > 1000) { FLT.st = Date.now(); fltStatus(); }      // keeps the "updated ... s ago" line ticking
   var L = $('fltLayer'), pn = $('pins'); if (!L || !pn) return;
   if (L.style.cssText !== pn.style.cssText) L.style.cssText = pn.style.cssText;      // same size, place and scale as the map's own marks
   L.hidden = !FLT.on; if (!FLT.on) return;
@@ -4516,7 +4517,8 @@ function fltStatus() {
   var s = $('fltStatus'); if (!s) return;
   if (!FLT.on) { s.textContent = ''; return; }
   var fly = Object.keys(FLT.planes).filter(function (h) { var p = FLT.planes[h]; return !p.ground && (p.gs || 0) >= 40; }).length;
-  s.textContent = FLT.ok === null ? 'Looking for flights...' : FLT.ok ? fly + ' flying, ' + (FLT.n - fly) + ' on the ground, live from adsb.lol' : 'Flight data could not be reached (' + FLT.err + ')';
+  var ago = FLT.last ? Math.max(0, Math.round((Date.now() - FLT.last) / 1000)) : 0;
+  s.textContent = FLT.ok === null ? 'Looking for flights...' : FLT.ok ? fly + ' flying, ' + (FLT.n - fly) + ' on the ground. Updated ' + (ago < 2 ? 'just now' : ago + ' s ago') + ', live from adsb.lol' : 'Flight data could not be reached (' + FLT.err + ')';
 }
 // The airport's details list the flights likely heading there in the next hour
 function fltInbound() {
