@@ -84,18 +84,24 @@ Notes on the airport view:
 - **Crosswind and headwind.** Worked out from the reported wind direction and the stronger of wind or
   gusts, for the runway end facing the wind. A guide for ground staff only. Not shown when the wind is
   calm or variable, or for an Estimate.
-- **In the news.** Headlines from the last 24 hours from GMA News, ABS-CBN News, TV5 and CNN, newest
-  first. A story is shown only if it names the airport's place and is about flights or a hazard
-  there; it is tagged "Flights or airport" or "Hazard in the area". Only the headline, a short summary,
-  the publisher's thumbnail and a link are kept; the story stays on the publisher's site. News never
-  changes an alert level. Stories are listed most critical first (flights or airport, then the event, then the area;
-  newest first within each). Selecting an airport or event plays its most critical video at once,
-  muted, at the top of the details panel, and closing the selection stops it. Other videos have a
-  "Play video here" button; the video
-  plays in the publisher's YouTube player. The refresh opens at most 12 story pages to find their videos.
-- **News for events.** Earthquakes, volcanoes and typhoons have the same news section. A story is
-  linked by the volcano's name, the typhoon's international or PAGASA name, or for an earthquake the
-  place or the magnitude, published after it happened. Tagged "About this event".
+- **Official updates and news.** Each airport, earthquake, volcano and typhoon has a list, most critical first:
+  official updates, then stories about flights or the airport, then the event itself, then hazards in the area;
+  newest first within each. Airports look back 24 hours, events 48 hours.
+  - *Official:* the latest PHIVOLCS bulletin of a volcano; the PAGASA tropical cyclone bulletin while a cyclone
+    is inside the PAR; PAGASA regional thunderstorm and rainfall advisories that name an airport's place.
+  - *Newsrooms:* the feeds of GMA News, ABS-CBN News, TV5, CNN International, the Philippine News Agency,
+    Inquirer and SunStar, plus a news search (Google News) limited to these and to Philstar, Rappler,
+    Manila Bulletin, PHIVOLCS and PAGASA. The search finds regional and older stories the feeds have dropped.
+  - *Social media:* the public YouTube channels of GMA, ABS-CBN, TV5, PAGASA and PHIVOLCS. Facebook, X and
+    TikTok are not read: they need an account and an approved developer key, and reading their pages
+    otherwise breaks their terms. The same videos are usually on YouTube.
+  - *Matching:* an airport story names its place and is about flights or a hazard; an event story names the
+    volcano or typhoon (international or PAGASA name), or for an earthquake the place or the magnitude.
+    Stories about investigations, courts or budgets are skipped unless they are about flights.
+  - *Video:* selecting something plays its most critical video at once, muted, at the top of the details
+    panel; closing the selection stops it. Auto-show does the same. Only YouTube videos can play here.
+  - Only headlines, a short summary, the thumbnail and a link are kept. News never changes an alert level.
+    Everything is read at most every 30 minutes; refreshes in between reuse the last result.
 - **Estimates.** Airports with no official report show wind, rain, cloud cover and temperature from a
   computer forecast, and are marked Estimate.
 
@@ -150,7 +156,9 @@ There is no server and no database.
 | PAGASA typhoon names | PAGASA bulletin pages | `typhoon_names.json`, entered by hand |
 | Rain on the map | MET Norway | None |
 | Runways | OurAirports, stored in `runways.json` | None |
-| News | Public news feeds of GMA News, ABS-CBN News, TV5 and CNN International (CNN Philippines closed in 2024) | A Google News search limited to the same newsroom's site |
+| News, official | PHIVOLCS volcano bulletins; PAGASA cyclone bulletin and regional advisories | None |
+| News, newsrooms | Feeds of GMA, ABS-CBN, TV5, CNN International, PNA, Inquirer, SunStar | News search limited to trusted sites |
+| News, video | YouTube channels of GMA, ABS-CBN, TV5, PAGASA, PHIVOLCS | None |
 
 When sources differ, the more reliable one is used, in this order: official airport report, official
 airport forecast, official area warning, Estimate.
@@ -288,9 +296,10 @@ The main values can be changed at the top of the files.
 | `SEND_VOLCANO_LEVEL` | `notify.py` | Off | Alerts for Alert Level 3 or higher |
 | `SEND_HEADSUP`, `SEND_BRIEFING` | `notify.py` | Off | Advance notices and twice-daily briefings |
 | `WATCH_MAG` | `quake_watch.py` | 4.5 | Smallest earthquake the 5-minute check reacts to |
-| `NEWS_SOURCES` | `build.py` | GMA, ABS-CBN, TV5, CNN | Newsrooms read for airport news, each with its feed addresses |
+| `NEWS_SOURCES`, `NEWS_SITES`, `NEWS_CHANNELS` | `build.py` | See above | Newsroom feeds, the sites a search may return, and the YouTube channels |
+| `PAGASA_REGIONS` | `build.py` | 5 regions | Which PAGASA regional page covers each airport |
 | `NEWS_PLACES` | `build.py` | One per airport | The place names that link a story to an airport |
-| `NEWS_HOURS`, `NEWS_MAX` | `build.py` | 24, 8 | How far back news goes, and how many stories per airport |
+| `NEWS_HOURS`, `EVENT_HOURS`, `NEWS_MAX`, `NEWS_EVERY_MIN` | `build.py` | 24, 48, 8, 30 | How far back news goes for airports and events, stories per list, and how often news is read |
 | `NEWS_PAGE_FETCH` | `build.py` | 12 | Story pages opened per refresh to find a story's video |
 | `VID_MAX_MS`, `VID_AGAIN_MS` | `docs/index.html` | 150 s, 2 h | Longest auto-played video, and how soon the same video can play again |
 
@@ -315,8 +324,8 @@ The main values can be changed at the top of the files.
 
 Data belongs to its publishers: PAGASA, the US Aviation Weather Center and NOAA, MET Norway,
 Open-Meteo, the Japan Meteorological Agency (RSMC Tokyo and Tokyo VAAC), GDACS, the Joint Typhoon
-Warning Center, PHIVOLCS, USGS, EMSC and OurAirports. Headlines belong to GMA News, ABS-CBN News
-and TV5, and link to their sites. The optional detailed rain map is by Windy.com.
+Warning Center, PHIVOLCS, USGS, EMSC and OurAirports. Headlines and videos belong to their
+newsrooms and agencies, and link to their sites. The optional detailed rain map is by Windy.com.
 
 ## Copyright
 
