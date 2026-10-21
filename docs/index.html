@@ -2332,6 +2332,30 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
 #pins .pin.t.st-TY button::before,#pins .pin.t.st-STY button::before{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid rgba(11,110,138,.55);animation:tyHalo 2.4s ease-out infinite;pointer-events:none}
 #pins .pin.t.st-STY button::before{border-color:rgba(198,40,40,.55);animation-duration:1.8s}
 @media (prefers-reduced-motion:reduce){#pins .pin.t svg,#pins .pin.t button::before{animation:none}}
+/* live flights */
+.fltlayer{pointer-events:none;z-index:4}
+.fltlayer[hidden]{display:none}
+.fltlayer .flttrails{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fltlayer .flttrails polyline{fill:none;stroke:#0077C8;stroke-width:calc(1.4px * var(--inv,1));stroke-opacity:.35;vector-effect:non-scaling-stroke;stroke-dasharray:3 3}
+.fltlayer .flttrails polyline.hot{stroke:#C62828;stroke-opacity:.6}
+.fltp{position:absolute;width:0;height:0;pointer-events:auto;transform:scale(var(--inv,1));z-index:5}
+.fltp svg{position:absolute;left:-10px;top:-10px;width:20px;height:20px;overflow:visible}
+.fltp svg path{fill:#0077C8;stroke:#fff;stroke-width:1.3;stroke-linejoin:round}
+.fltp .fltl{position:absolute;left:12px;top:-9px;white-space:nowrap;font:600 10.5px "Noto Sans",sans-serif;color:#0B4F7C;background:rgba(255,255,255,.85);border-radius:5px;padding:0 5px;display:none}
+.fltp:hover .fltl,.fltp:focus .fltl,.fltp.hot .fltl,#pins.all-labels ~ .fltlayer .fltp .fltl{display:block}
+.fltp:not(.hot){opacity:.7}
+.fltp.hot svg path{fill:#C62828}.fltp.hot .fltl{color:#B71C1C;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);font-size:11px}
+.fltp.stale{opacity:.35}.fltp.stale svg path{fill:#8B94A1}
+.fltp.gnd svg{transform:scale(.8)}
+.fltstatus{font-size:11.5px;color:#56657F;margin:-2px 0 6px 24px}
+.fltin .flti{display:flex;align-items:center;gap:10px;background:#F4F7FA;border-radius:10px;padding:7px 10px}
+.fltin .flti.hot{background:#FDECEC}
+.fltin .flti .ic{font-size:17px;color:#0077C8}.fltin .flti.hot .ic{color:#C62828}
+.fltin .flti .t{flex:1;display:flex;flex-direction:column;font-size:13px}.fltin .flti .t em{font-style:normal;color:#56657F;font-size:12px;margin-left:4px}
+.fltin .flti .t i{font-style:normal;font-size:11.5px;color:#56657F}.fltin .flti.hot .t i{color:#7A1F1F}
+.fltin .flti .m{font-size:12.5px;white-space:nowrap}
+html[data-theme="dark"] .fltin .flti{background:#222B40}html[data-theme="dark"] .fltin .flti.hot{background:#3A2026}
+html[data-theme="dark"] .fltp .fltl{background:rgba(30,39,58,.9);color:#9FD8F5}
 </style>
 </head>
 <body class="glass">
@@ -2527,6 +2551,7 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
         <li><strong>Forecast for later today.</strong> What the official airport forecast expects in the hours ahead. If weather arrives that the forecast did not expect, it says so; go by the current report.</li>
         <li><strong>Rain in the next 12 hours.</strong> For each hour: the chance of rain, how heavy, and the amount. A lightning mark means the official forecast has a thunderstorm.</li>
         <li><strong>Official updates and news.</strong> From the last 24 hours, newest first. Only items whose headline names the airport's place are shown, so every item is about that airport or its area. Each is tagged: Official (PAGASA thunderstorm and rainfall advisories), Flights or airport, or Hazard in the area. Sources: PAGASA and PHIVOLCS, GMA News, ABS-CBN News, TV5, CNN, Inquirer, SunStar, Philstar, Rappler, Manila Bulletin and the Philippine News Agency, plus the YouTube channels of GMA, ABS-CBN, PAGASA and PHIVOLCS. Each item opens on the publisher's site; read it before acting on it. When you select something, the most critical video plays by itself, without sound, at the top of the details panel, and stops when you close the selection. News never changes an alert level.</li>
+        <li><strong>Flights likely inbound.</strong> Cebu Pacific and Cebgo flights that seem to be heading to this airport in the next hour, with the estimated minutes to arrival. They are red when the airport has an alert. The estimate uses each plane's position, heading and speed, not the schedule.</li>
         <li><strong>Tomorrow and the week ahead.</strong> For planning. It is less certain the further ahead it looks.</li>
         <li><strong>About this reading.</strong> How far to trust it, when it was taken and who supplied it.</li>
       </ul>
@@ -2560,6 +2585,7 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
       <ul>
         <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Pause it, or drag the slider to any hour.</li>
         <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. The typhoon icon turns anticlockwise, as typhoons do; the stronger the typhoon, the faster it turns, and a typhoon or super typhoon sends out a soft ring. A small dashed ring stays at its last reported position.</li>
+        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 15 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Hover or tap a plane for its height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
         <li><strong>Colours.</strong> Blue is light rain, green moderate, yellow heavy and red very heavy. The key sits just above the timeline.</li>
         <li><strong>Lightning marks.</strong> These come only from official thunderstorm warnings and airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>A picture of the forecast.</strong> It plays no part in the alert levels. When the two differ, go by the alert level.</li>
@@ -2602,6 +2628,7 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
       <div class="src"><b>Volcanoes</b><span class="t">Ash and eruptions: aviation ash warnings (aviationweather.gov) and the Tokyo Volcanic Ash Advisory Centre. Alert Levels: PHIVOLCS bulletins.</span></div>
       <div class="src"><b>Rain on the map</b><span class="t">MET Norway forecast, rebuilt every 3 hours.</span></div>
       <div class="src"><b>News</b><span class="t">Official: PAGASA bulletins and regional advisories, PHIVOLCS volcano bulletins. Newsrooms: GMA News, ABS-CBN News, TV5, CNN International (CNN Philippines closed in 2024), Philippine News Agency, Inquirer, SunStar, Philstar, Rappler and Manila Bulletin, read from their feeds and a news search limited to these sites. Social media: their public YouTube channels. Headlines and links only; the stories stay on their sites.</span></div>
+      <div class="src"><b>Live flights</b><span class="t">adsb.lol, an open network of volunteer ADS-B receivers (open data, ODbL licence). Only Cebu Pacific and Cebgo aircraft are shown. Read by your browser every 15 seconds while the layer is on.</span></div>
       <div class="src"><b>Runways</b><span class="t">OurAirports public database. For a few airports only the runway number is published, so the direction comes from that number.</span></div>
     </div>
     <div class="sec hs">
@@ -3139,7 +3166,7 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
   if (a) {
     d.innerHTML = '<div class="detail ap">' + sceneBanner(a) +
-      todoBox(a.level, a.todo) + nowFacts(a) + field('Forecast for later today', a.next) + hoursStrip(a) + newsBlock(a) +
+      todoBox(a.level, a.todo) + fltBlock(a) + nowFacts(a) + field('Forecast for later today', a.next) + hoursStrip(a) + newsBlock(a) +
       fold('out', 'Tomorrow and the week ahead', '', field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days))) +
       fold('about', 'About this reading', a.est ? 'Estimate' : 'Official report', field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src)) + '</div>';
   } else if (q) {
@@ -3201,6 +3228,7 @@ function applyState() {
   renderAlerts();
   applyView();
   wxUpdate();
+  if (typeof fltInbound === 'function') setTimeout(fltInbound, 0);
   R.lab = -1; rainDraw();
 }
 /* ---------- rain and thunder animation (Windy.com embed) ---------- */
@@ -4373,6 +4401,143 @@ function peek() {
 setInterval(peek, PEEK_MS); setTimeout(peek, 4000);
 setInterval(loadRain, RAIN_MS);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+/* ---------- Cebu Pacific and Cebgo flights, live ---------- */
+// Positions come from adsb.lol, a free, open network of volunteer ADS-B receivers (data licence ODbL). The page itself asks
+// for the aircraft over the Philippines every FLT_EVERY_MS and keeps only Cebu Pacific (callsign CEB, shown as 5J) and Cebgo
+// (SRQ, shown as DG). Between updates each plane is moved forward along its track at its ground speed, so it flies smoothly.
+// A plane not heard for FLT_STALE_MS stops and fades; after FLT_DROP_MS it is removed. Nothing here changes an alert.
+var FLT_EVERY_MS = 15000, FLT_STALE_MS = 60000, FLT_DROP_MS = 300000, FLT_TRAIL_MS = 600000;
+var FLT_AREAS = [[17.5, 121.2], [13.2, 122.5], [10.2, 123.8], [7.4, 124.8], [9.6, 118.6]];      // circles of 250 nautical miles that cover the country
+var FLT = { on: true, timer: null, planes: {}, ok: null, last: 0, err: '', n: 0, raf: 0 };
+try { FLT.on = localStorage.getItem('awm-flights') !== 'off'; } catch (e) {}
+function fltCode(cs) { cs = String(cs || '').trim().toUpperCase(); var m = /^(CEB|SRQ)(\d+[A-Z]?)$/.exec(cs); return m ? (m[1] === 'CEB' ? '5J ' : 'DG ') + m[2] : ''; }
+function fltXY(lat, lon) { return { x: 8.69278161 * lon - 1008.33883896, y: -5.91775171 * lat + 125.45788502 }; }
+function fltAhead(p, ms) {      // where the plane is ms after its last position, flying straight on at its speed
+  var s = Math.min(ms, FLT_STALE_MS) / 1000, km = (p.gs || 0) * 1.852 / 3600 * s, tr = (p.track || 0) * Math.PI / 180;
+  return { lat: p.lat + km * Math.cos(tr) / 111.2, lon: p.lon + km * Math.sin(tr) / (111.2 * Math.max(.2, Math.cos(p.lat * Math.PI / 180))) };
+}
+function fltLayer() {
+  var L = $('fltLayer');
+  if (!L) { L = document.createElement('div'); L.id = 'fltLayer'; L.className = 'stage fltlayer'; L.innerHTML = '<svg class="flttrails" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>'; $('pins').parentNode.insertBefore(L, $('pins').nextSibling); }
+  return L;
+}
+function fltKm(a, b, c, d) { var R = 6371, p1 = a * Math.PI / 180, p2 = c * Math.PI / 180, x = Math.sin((p2 - p1) / 2), y = Math.sin((d - b) * Math.PI / 360); return 2 * R * Math.asin(Math.sqrt(x * x + Math.cos(p1) * Math.cos(p2) * y * y)); }
+function fltBearing(a, b, c, d) { var p1 = a * Math.PI / 180, p2 = c * Math.PI / 180, dl = (d - b) * Math.PI / 180; return (Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) * 180 / Math.PI + 360) % 360; }
+function fltAlertAirport(a) {      // an airport with an alert: Danger, typhoon winds now, or an ash warning over it
+  if (!a) return false; if (a.level === 'danger') return true;
+  return cyclonesShown().some(function (c) { return c.confirmed && (c.now || []).indexOf(a.name) >= 0; }) || ((D && D.volcanoes) || []).some(function (v) { return (v.hits || []).indexOf(a.name) >= 0; });
+}
+// The airport a plane is most likely heading for: ahead of it (within 15 degrees of its track), within 400 km, below
+// 25,000 ft or descending. Arrival is estimated from distance and ground speed, so it is marked "about".
+function fltDest(p) {
+  if (!D || !p.gs || p.gs < 80 || p.ground) return null;
+  var best = null;
+  D.airports.forEach(function (a) {
+    var km = fltKm(p.lat, p.lon, a.lat, a.lon); if (km > 400 || km < 3) return;
+    var off = Math.abs(((fltBearing(p.lat, p.lon, a.lat, a.lon) - p.track + 540) % 360) - 180);
+    if (off > 15 + Math.max(0, 40 - km) || !(p.alt < 25000 || p.rate < -300)) return;
+    var score = km * (1 + off / 15);
+    if (!best || score < best.score) best = { a: a, km: km, min: Math.max(1, Math.round(km / (p.gs * 1.852) * 60)), score: score };
+  });
+  return best;
+}
+function fltPoll() {
+  clearTimeout(FLT.timer);
+  if (!FLT.on) return;
+  if (document.hidden) { FLT.timer = setTimeout(fltPoll, 5000); return; }
+  var got = {}, done = 0, okAny = false, errs = [];
+  FLT_AREAS.forEach(function (c) {
+    fetch('https://api.adsb.lol/v2/point/' + c[0] + '/' + c[1] + '/250', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (j) {
+        okAny = true; var now = j.now ? j.now * (j.now > 1e12 ? 1 : 1000) : Date.now();
+        (j.ac || []).forEach(function (a) {
+          var code = fltCode(a.flight); if (!code || a.lat == null || a.lon == null) return;
+          var t = now - (a.seen_pos || 0) * 1000;
+          if (!got[a.hex] || got[a.hex].t < t) got[a.hex] = { hex: a.hex, code: code, lat: a.lat, lon: a.lon, track: a.track != null ? a.track : (a.true_heading || 0), gs: a.gs || 0, alt: a.alt_baro === 'ground' ? 0 : (a.alt_baro || a.alt_geom || 0), ground: a.alt_baro === 'ground', rate: a.baro_rate || a.geom_rate || 0, reg: a.r || '', type: a.t || '', t: t };
+        });
+      }).catch(function (e) { errs.push(String(e.message || e)); })
+      .then(function () { if (++done === FLT_AREAS.length) fltMerge(got, okAny, errs); });
+  });
+  FLT.timer = setTimeout(fltPoll, FLT_EVERY_MS);
+}
+function fltMerge(got, ok, errs) {
+  var now = Date.now();
+  FLT.ok = ok; FLT.err = ok ? '' : (errs[0] || 'no answer');
+  if (ok) FLT.last = now;
+  Object.keys(got).forEach(function (h) {
+    var n = got[h], p = FLT.planes[h];
+    if (!p) { FLT.planes[h] = n; n.trail = [[n.t, n.lat, n.lon]]; n.dx = 0; n.dy = 0; return; }
+    if (n.t <= p.t) return;
+    var was = fltAhead(p, now - p.t), xy0 = fltXY(was.lat, was.lon), xy1 = fltXY(n.lat, n.lon);      // ease from where it was drawn to the new position
+    n.dx = xy0.x - xy1.x; n.dy = xy0.y - xy1.y; n.ease = now;
+    n.trail = (p.trail || []).concat([[n.t, n.lat, n.lon]]).filter(function (q) { return now - q[0] < FLT_TRAIL_MS; });
+    FLT.planes[h] = n;
+  });
+  Object.keys(FLT.planes).forEach(function (h) { if (now - FLT.planes[h].t > FLT_DROP_MS) delete FLT.planes[h]; });
+  FLT.n = Object.keys(FLT.planes).length;
+  fltStatus(); fltInbound();
+}
+function fltDraw() {
+  FLT.raf = requestAnimationFrame(fltDraw);
+  var L = $('fltLayer'), pn = $('pins'); if (!L || !pn) return;
+  if (L.style.cssText !== pn.style.cssText) L.style.cssText = pn.style.cssText;      // same size, place and scale as the map's own marks
+  L.hidden = !FLT.on; if (!FLT.on) return;
+  var now = Date.now(), seen = {}, svg = '';
+  Object.keys(FLT.planes).forEach(function (h) {
+    var p = FLT.planes[h], age = now - p.t, stale = age > FLT_STALE_MS, at = fltAhead(p, age), xy = fltXY(at.lat, at.lon);
+    if (p.ease) { var k = Math.max(0, 1 - (now - p.ease) / 1500); xy.x += p.dx * k; xy.y += p.dy * k; if (!k) p.ease = 0; }
+    var dest = fltDest(p), hot = !!(dest && fltAlertAirport(dest.a));
+    var el = L.querySelector('[data-h="' + h + '"]');
+    if (!el) {
+      el = document.createElement('div'); el.className = 'fltp'; el.setAttribute('data-h', h); el.setAttribute('tabindex', '0');
+      el.innerHTML = '<svg viewBox="-12 -12 24 24"><path d="M0-10 2-3 9 1 9 3 2 1 1 7 4 9 4 10 0 9-4 10-4 9-1 7-2 1-9 3-9 1-2-3z"/></svg><span class="fltl"></span>'; L.appendChild(el);
+    }
+    seen[h] = 1;
+    el.style.left = xy.x.toFixed(3) + '%'; el.style.top = xy.y.toFixed(3) + '%';
+    el.querySelector('svg').style.transform = 'rotate(' + (p.track || 0) + 'deg)';
+    el.className = 'fltp' + (hot ? ' hot' : '') + (stale ? ' stale' : '') + (p.ground ? ' gnd' : '');
+    var lab = p.code + (dest ? ' → ' + dest.a.name + ', about ' + dest.min + ' min' : '') + (stale ? ', last seen ' + Math.round(age / 60000) + ' min ago' : '');
+    el.querySelector('.fltl').textContent = hot || stale ? lab : p.code;
+    el.title = lab + '. ' + (p.ground ? 'On the ground' : Math.round(p.alt).toLocaleString('en-US') + ' ft, ' + Math.round(p.gs * 1.852) + ' km/h') + (p.type ? '. ' + p.type : '') + (p.reg ? ' ' + p.reg : '') + '. Live position from adsb.lol.';
+    if ((p.trail || []).length > 1) svg += '<polyline class="' + (hot ? 'hot' : '') + '" points="' + p.trail.map(function (q) { var t = fltXY(q[1], q[2]); return t.x.toFixed(2) + ',' + t.y.toFixed(2); }).join(' ') + ' ' + xy.x.toFixed(2) + ',' + xy.y.toFixed(2) + '"/>';
+  });
+  Array.prototype.forEach.call(L.querySelectorAll('.fltp'), function (e) { if (!seen[e.getAttribute('data-h')]) e.remove(); });
+  var sv = L.querySelector('.flttrails'); if (sv && FLT.lastSvg !== svg) { sv.innerHTML = svg; FLT.lastSvg = svg; }
+}
+function fltStatus() {
+  var s = $('fltStatus'); if (!s) return;
+  if (!FLT.on) { s.textContent = ''; return; }
+  s.textContent = FLT.ok === null ? 'Looking for flights...' : FLT.ok ? FLT.n + (FLT.n === 1 ? ' aircraft' : ' aircraft') + ' seen, live from adsb.lol' : 'Flight data could not be reached (' + FLT.err + ')';
+}
+// The airport's details list the flights likely heading there in the next hour
+function fltInbound() {
+  var box = $('fltIn'); if (!box) return;
+  var a = byId(box.getAttribute('data-a')); if (!a) return;
+  if (!FLT.on) { box.innerHTML = ''; return; }
+  var now = Date.now(), L = [];
+  Object.keys(FLT.planes).forEach(function (h) { var p = FLT.planes[h]; if (now - p.t > FLT_STALE_MS) return; var d = fltDest(Object.assign({}, p, fltAhead(p, now - p.t))); if (d && d.a.id === a.id && d.min <= 60) L.push({ p: p, d: d }); });
+  L.sort(function (x, y) { return x.d.min - y.d.min; });
+  var hot = fltAlertAirport(a);
+  box.innerHTML = '<div class="nwh"><span class="k">Cebu Pacific and Cebgo flights likely inbound, next hour</span><span class="nwc">' + (FLT.ok ? 'live' : '') + '</span></div>' +
+    (L.length ? L.map(function (r) { return '<div class="flti' + (hot ? ' hot' : '') + '"><span class="ic">✈</span><span class="t"><b>' + esc(r.p.code) + '</b> ' + (r.p.type ? '<em>' + esc(r.p.type) + '</em>' : '') + '<i>' + Math.round(r.p.alt).toLocaleString('en-US') + ' ft' + (hot ? ', arriving while the alert is in force' : '') + '</i></span><b class="m">about ' + r.d.min + ' min</b></div>'; }).join('') :
+      '<p class="nwe">' + (FLT.ok === false ? 'Flight data could not be reached.' : 'No Cebu Pacific or Cebgo flight is seen heading here in the next hour.') + '</p>') +
+    '<p class="nwn">Estimated from each plane\'s position, heading and speed, not from the schedule. Coverage depends on volunteer receivers, so a flight can be missing.</p>';
+}
+function fltBlock(a) { return '<div class="news fltin" id="fltIn" data-a="' + esc(a.id) + '"></div>'; }
+(function fltInit() {
+  var lp = $('lyrPop');
+  if (lp && !$('lyFlights')) {
+    var lab = document.createElement('label'); lab.innerHTML = '<input type="checkbox" id="lyFlights">Cebu Pacific and Cebgo flights (live)';
+    var nm = $('lyNames'); (nm ? nm.parentNode : lp.firstChild).insertAdjacentElement('afterend', lab);
+    var st = document.createElement('div'); st.id = 'fltStatus'; st.className = 'fltstatus'; lab.insertAdjacentElement('afterend', st);
+    $('lyFlights').checked = FLT.on;
+    $('lyFlights').addEventListener('change', function () { FLT.on = this.checked; try { localStorage.setItem('awm-flights', FLT.on ? 'on' : 'off'); } catch (e) {} fltStatus(); fltInbound(); if (FLT.on) fltPoll(); else clearTimeout(FLT.timer); });
+  }
+  fltLayer(); fltPoll(); fltDraw();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && FLT.on) fltPoll(); });
+})();
+
+setTimeout(fltInbound, 50);
 })();
 </script>
 </body>
