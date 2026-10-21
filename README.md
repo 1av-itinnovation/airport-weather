@@ -38,7 +38,7 @@ not change an airport's level.
 
 | Part | What it does |
 |---|---|
-| Map | Airports as dots coloured by level. Flashing dot: thunderstorm now. Dashed outline: Estimate |
+| Map | Airports as dots coloured by level. Flashing dot: thunderstorm now (its name shows on hover or when selected). Dashed outline: Estimate |
 | Airport list | Airports at the chosen level, with what to expect and when |
 | Tiles | Counts at each level and key figures. Pressing one filters the map and the list |
 | Today and Tomorrow | Switches between today's alerts and tomorrow's forecast |
@@ -61,6 +61,14 @@ not change an airport's level.
   Lightning marks come only from official thunderstorm warnings and airport forecasts.
 - **Marks:** purple rings for earthquakes, small purple dots for weaker ones, triangles for volcanoes,
   a brown area for an official ash cloud, a swirl for a tropical cyclone, a red L for a low pressure area.
+- **Live flights (Layers, on by default):** Cebu Pacific (callsign CEB, shown 5J) and Cebgo (SRQ, shown DG) aircraft
+  from adsb.lol, an open network of volunteer ADS-B receivers (ODbL licence; free, company use allowed with credit).
+  The page asks for aircraft over the Philippines every 15 seconds, directly from the browser, and moves each plane
+  smoothly between updates using its speed and track, with a 10-minute trail. Red: likely heading to an airport with
+  an alert (ahead within 15 degrees, within 400 km, below 25,000 ft or descending). Grey: not heard for a minute;
+  removed after 5 minutes. The airport details list flights likely inbound in the next hour with estimated minutes.
+  These are estimates from position and speed, not the schedule, and coverage depends on volunteer receivers.
+  The Layers panel shows how many aircraft are seen, or that the data could not be reached.
 - **Returns to where you were:** closing a selection restores the previous zoom.
 - **Auto-show:** with nobody using the screen, the map visits each alert in turn: earthquakes, volcanoes,
   typhoons inside the PAR, then Danger airports. If a news video from the last 24 hours is about a place
@@ -160,6 +168,7 @@ There is no server and no database.
 | PAGASA typhoon names | PAGASA bulletin pages | Learned from the news when several stories agree ("Rosal (international name: Champi)"), then `typhoon_names.json`, entered by hand |
 | Rain on the map | MET Norway | None |
 | Runways | OurAirports, stored in `runways.json` | None |
+| Live flights | adsb.lol (open ADS-B network), read by the browser | None; the layer says the data could not be reached |
 | News, official | PHIVOLCS volcano bulletins; PAGASA cyclone bulletin and regional advisories | None |
 | News, newsrooms | Feeds of GMA, ABS-CBN, TV5, CNN International, PNA, Inquirer, SunStar | News search limited to trusted sites |
 | News, video | YouTube channels of GMA, ABS-CBN, TV5, PAGASA, PHIVOLCS | None |
