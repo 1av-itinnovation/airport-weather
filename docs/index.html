@@ -2333,7 +2333,7 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
 #pins .pin.t.st-STY button::before{border-color:rgba(198,40,40,.55);animation-duration:1.8s}
 @media (prefers-reduced-motion:reduce){#pins .pin.t svg,#pins .pin.t button::before{animation:none}}
 /* live flights */
-.fltlayer{pointer-events:none;z-index:4}
+.fltlayer{pointer-events:none;z-index:0}
 .fltlayer[hidden]{display:none}
 .fltlayer .flttrails{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .fltlayer .flttrails polyline{fill:none;stroke:#0077C8;stroke-width:calc(1.4px * var(--inv,1));stroke-opacity:.35;vector-effect:non-scaling-stroke;stroke-dasharray:3 3}
@@ -2588,7 +2588,7 @@ html[data-theme="dark"] .fltp .fltl{background:rgba(30,39,58,.9);color:#9FD8F5}
       <ul>
         <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Pause it, or drag the slider to any hour.</li>
         <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. The typhoon icon turns anticlockwise, as typhoons do; the stronger the typhoon, the faster it turns, and a typhoon or super typhoon sends out a soft ring. A small dashed ring stays at its last reported position.</li>
-        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 15 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Hover or tap a plane for its height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
+        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 15 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Planes on the ground, and planes landing or taking off near an airport, are left off so the airport's own status always shows. Hover or tap a plane for its height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
         <li><strong>Colours.</strong> Blue is light rain, green moderate, yellow heavy and red very heavy. The key sits just above the timeline.</li>
         <li><strong>Lightning marks.</strong> These come only from official thunderstorm warnings and airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>A picture of the forecast.</strong> It plays no part in the alert levels. When the two differ, go by the alert level.</li>
@@ -4422,7 +4422,7 @@ function fltAhead(p, ms) {      // where the plane is ms after its last position
 }
 function fltLayer() {
   var L = $('fltLayer');
-  if (!L) { L = document.createElement('div'); L.id = 'fltLayer'; L.className = 'stage fltlayer'; L.innerHTML = '<svg class="flttrails" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>'; $('pins').parentNode.insertBefore(L, $('pins').nextSibling); }
+  if (!L) { L = document.createElement('div'); L.id = 'fltLayer'; L.className = 'stage fltlayer'; L.innerHTML = '<svg class="flttrails" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>'; $('pins').parentNode.insertBefore(L, $('pins')); }      // under the map's own marks, so a plane never covers an airport's status
   return L;
 }
 function fltKm(a, b, c, d) { var R = 6371, p1 = a * Math.PI / 180, p2 = c * Math.PI / 180, x = Math.sin((p2 - p1) / 2), y = Math.sin((d - b) * Math.PI / 360); return 2 * R * Math.asin(Math.sqrt(x * x + Math.cos(p1) * Math.cos(p2) * y * y)); }
@@ -4489,7 +4489,10 @@ function fltDraw() {
   L.hidden = !FLT.on; if (!FLT.on) return;
   var now = Date.now(), seen = {}, svg = '';
   Object.keys(FLT.planes).forEach(function (h) {
-    var p = FLT.planes[h], age = now - p.t, stale = age > FLT_STALE_MS, at = fltAhead(p, age), xy = fltXY(at.lat, at.lon);
+    var p = FLT.planes[h];
+    if (p.ground || (p.gs || 0) < 40) return;      // parked or taxiing aircraft are left off the map to keep it clear
+    if (p.alt < 4000 && D && D.airports.some(function (a) { return fltKm(p.lat, p.lon, a.lat, a.lon) < 12; })) return;      // landing or just taken off: the airport dot shows instead
+    var age = now - p.t, stale = age > FLT_STALE_MS, at = fltAhead(p, age), xy = fltXY(at.lat, at.lon);
     if (p.ease) { var k = Math.max(0, 1 - (now - p.ease) / 1500); xy.x += p.dx * k; xy.y += p.dy * k; if (!k) p.ease = 0; }
     var dest = fltDest(p), hot = !!(dest && fltAlertAirport(dest.a));
     var el = L.querySelector('[data-h="' + h + '"]');
@@ -4512,7 +4515,8 @@ function fltDraw() {
 function fltStatus() {
   var s = $('fltStatus'); if (!s) return;
   if (!FLT.on) { s.textContent = ''; return; }
-  s.textContent = FLT.ok === null ? 'Looking for flights...' : FLT.ok ? FLT.n + (FLT.n === 1 ? ' aircraft' : ' aircraft') + ' seen, live from adsb.lol' : 'Flight data could not be reached (' + FLT.err + ')';
+  var fly = Object.keys(FLT.planes).filter(function (h) { var p = FLT.planes[h]; return !p.ground && (p.gs || 0) >= 40; }).length;
+  s.textContent = FLT.ok === null ? 'Looking for flights...' : FLT.ok ? fly + ' flying, ' + (FLT.n - fly) + ' on the ground, live from adsb.lol' : 'Flight data could not be reached (' + FLT.err + ')';
 }
 // The airport's details list the flights likely heading there in the next hour
 function fltInbound() {
