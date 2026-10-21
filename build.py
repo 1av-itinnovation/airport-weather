@@ -1825,6 +1825,9 @@ NEWS_PLACES = {
 }
 NEWS_AIR = re.compile(r'\bairports?\b|\bflights?\b|\bflight cancell?ations?\b|\bcancell?ed\b|\bdelay(?:s|ed)?\b|\bdivert|\brunway|\bCAAP\b|\bMIAA\b|Cebu Pacific|\bCebgo\b|Philippine Airlines|\bAirAsia\b|stranded passengers|passengers stranded|\bterminal\b', re.I)
 NEWS_HAZ = re.compile(r'typhoon|tropical (?:storm|depression|cyclone)|wind signal|signal no\.?|\bLPA\b|low pressure|\bbagyo\b|flood|heavy rain|thunderstorm|\bstorm\b|earthquake|\bquake\b|magnitude|tsunami|erupt|ashfall|volcan|Phivolcs|PAGASA|landslide|state of calamity|evacuat|power (?:outage|interruption)|blackout|class(?:es)? suspended|suspension of classes', re.I)
+# Stories about politics, investigations or courts that only mention a hazard word (for example "flood control" projects)
+# are not about a disruption, so a story matching this is kept only when it is about flights or the airport.
+NEWS_NOT = re.compile(r'flood[- ]control|\bNBI\b|\bDOJ\b|Ombudsman|Sandiganbayan|\bSenate\b|\bCongress\b|\bhearing\b|\bprobe\b|graft|corruption|kickback|anomal|\bcharges?\b|\bcase[s]?\b filed|\bcourt\b|\bbudget\b|contractor', re.I)
 def _news_items(xml_text):
     """Stories from an RSS or Atom feed: title, link, time, summary, picture and whether it is a video."""
     out = []
@@ -1875,8 +1878,9 @@ try:
         if key in _seen: continue
         _seen.add(key)
         text = x['title'] + ' ' + x['desc']; placetext = re.sub(r'Cebu Pacific|Cebu-based', ' ', text, flags=re.I)
-        air = bool(NEWS_AIR.search(text)); haz = bool(NEWS_HAZ.search(text))
+        air = bool(NEWS_AIR.search(text)); haz = bool(NEWS_HAZ.search(re.sub(r'flood[- ]control', ' ', text, flags=re.I)))
         if not (air or haz): continue
+        if not air and NEWS_NOT.search(text): continue
         for aid, pat in NEWS_PLACES.items():
             if not re.search(pat, placetext, re.I): continue
             L = NEWS.setdefault(aid, [])
