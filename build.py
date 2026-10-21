@@ -1806,6 +1806,7 @@ for _c2 in CYCLONES:      # the summary line uses the PAGASA name for a cyclone 
 # To keep requests light, everything is read at most every NEWS_EVERY_MIN minutes; refreshes in between reuse the last result.
 # Lines starting NEWS: in the run log show what each source gave.
 NEWS_HOURS = 24; EVENT_HOURS = 48; NEWS_MAX = 8; NEWS_EVERY_MIN = 30
+NEWS_VERSION = 2      # raise this when the news sources change, so the next refresh reads them at once instead of reusing
 NEWS_PAGE_FETCH = 12      # at most this many story pages are opened per read, only to find the story's own YouTube video
 YT_RE = re.compile(r'(?:youtube(?:-nocookie)?\.com/(?:embed/|watch\?v=|shorts/)|youtu\.be/)([A-Za-z0-9_-]{11})')
 def _story_video(page):
@@ -1932,11 +1933,12 @@ def _item(x, about):
     return dict(yt=x.get('yt', ''), title=x['title'], link=x['link'], ms=int(x['t'].timestamp() * 1000), src=x['src'], img=x.get('img', ''), video=bool(x.get('video')), about=about,
                 desc=(x['desc'][:180].rsplit(' ', 1)[0] + '...' if len(x['desc']) > 180 else x['desc']))
 import urllib.parse
-NEWS = {}; NEWS_SRC = []; NEWS_MS = 0
+NEWS = {}; NEWS_SRC = []; NEWS_MS = 0; _nver = str(NEWS_VERSION)
 try:
     try: _prevd = json.load(open(OUT, encoding='utf-8'))
     except Exception: _prevd = {}
-    if _prevd.get('news_ms') and (NOW.timestamp() * 1000 - _prevd['news_ms']) < (NEWS_EVERY_MIN - 2) * 60000 and _prevd.get('news_src'):
+    _nver = f"{NEWS_VERSION}{'k' if os.environ.get('YOUTUBE_API_KEY', '').strip() else ''}"      # also read at once when a YouTube key is added or removed
+    if _prevd.get('news_ms') and (NOW.timestamp() * 1000 - _prevd['news_ms']) < (NEWS_EVERY_MIN - 2) * 60000 and _prevd.get('news_src') and _prevd.get('news_ver') == _nver:
         NEWS = _prevd.get('news') or {}; NEWS_SRC = _prevd['news_src']; NEWS_MS = _prevd['news_ms']
         print(f"NEWS: reusing the news read at {clock_plain(dt.datetime.fromtimestamp(NEWS_MS / 1000, dt.timezone.utc))}", file=sys.stderr)
         raise StopIteration
@@ -2092,7 +2094,7 @@ data=dict(
     quakes_small=QUAKES_SMALL, cyclones=CYCLONES, ty_alerts=TY_ALERTS, ty_near_km=TY_NEAR_KM, lows=LOWS, lows_ok=LOWS_OK,
     quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],ms=a['ms'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), week_ms=WEEK_MS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
-    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], news=NEWS, news_src=NEWS_SRC, news_hours=NEWS_HOURS, event_hours=EVENT_HOURS, news_ms=NEWS_MS, ash=ASH_AREAS, ash_fc=ASH_FC, volcano_ok=vol_ok, volcano_flag=vol_flag,
+    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], news=NEWS, news_src=NEWS_SRC, news_hours=NEWS_HOURS, event_hours=EVENT_HOURS, news_ms=NEWS_MS, news_ver=_nver, ash=ASH_AREAS, ash_fc=ASH_FC, volcano_ok=vol_ok, volcano_flag=vol_flag,
     volcano_asof=((' and '.join(([] if SIGMET is None else ['Aviation ash warnings']) + ([] if VAAC is None else ['Tokyo VAAC'])) + f", {day(NOW)}, {clock_plain(NOW)}") if vol_ok else ''), volcano_km=VOLC_KM,
     sources=' '.join(src),
 )
