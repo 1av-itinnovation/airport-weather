@@ -56,6 +56,8 @@ not change an airport's level.
 - **Rain timeline:** plays the forecast rain for the next 24 hours, with pause and a slider.
   Each typhoon moves with it, to where RSMC Tokyo forecasts its centre at that hour; a small dashed
   ring stays at its last reported position.
+  The icon turns anticlockwise, faster for stronger cyclones, with a soft pulsing ring for a typhoon
+  or super typhoon. Movement stops when the device asks for reduced motion.
   Lightning marks come only from official thunderstorm warnings and airport forecasts.
 - **Marks:** purple rings for earthquakes, small purple dots for weaker ones, triangles for volcanoes,
   a brown area for an official ash cloud, a swirl for a tropical cyclone, a red L for a low pressure area.
