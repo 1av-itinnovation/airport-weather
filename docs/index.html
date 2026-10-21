@@ -2320,6 +2320,8 @@ html[data-theme="dark"] .newsvid{background:rgba(30,39,58,.97);color:#E6ECF5}htm
 .news li{display:flex;flex-direction:column;gap:4px}
 .news .nwp{align-self:flex-start;margin-left:93px;border:1px solid #C9D6E2;background:#fff;color:#005687;border-radius:999px;padding:3px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
 html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
+.news .nwm em.of{color:#fff;background:#005687}html[data-theme="dark"] .news .nwm em.of{color:#04314F;background:#9FD8F5}
+.news .nwi.off{background:linear-gradient(135deg,#005687,#0077C8)}
 </style>
 </head>
 <body class="glass">
@@ -2514,7 +2516,7 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
         <li><strong>Airport close-up.</strong> A small box on the map shows the runway at its true direction, an arrow for the wind, and rings at 5 km and 10 km.</li>
         <li><strong>Forecast for later today.</strong> What the official airport forecast expects in the hours ahead. If weather arrives that the forecast did not expect, it says so; go by the current report.</li>
         <li><strong>Rain in the next 12 hours.</strong> For each hour: the chance of rain, how heavy, and the amount. A lightning mark means the official forecast has a thunderstorm.</li>
-        <li><strong>In the news.</strong> Headlines from the last 24 hours from GMA News, ABS-CBN News, TV5 and CNN that name the airport's place and are about flights or a hazard there, newest first. Each is tagged "Flights or airport" or "Hazard in the area" and opens the full story on the publisher's site. Stories are picked by place and topic, so read one before acting on it. News never changes an alert level. The most critical story is at the top: flights or the airport first, then the event itself, then hazards in the area, newest first within each. When you select something, its most critical news video plays by itself, without sound, at the top of the details panel. It stops when you close the selection. Any other video can be played with "Play video here".</li>
+        <li><strong>Official updates and news.</strong> For the last 24 hours, newest first within each group: official updates first (PAGASA thunderstorm and rainfall advisories that name the airport's place), then stories about flights or the airport, then hazards in the area. Sources: PAGASA and PHIVOLCS, GMA News, ABS-CBN News, TV5, CNN, the Philippine News Agency, Inquirer, SunStar, Philstar, Rappler and Manila Bulletin, plus the YouTube channels of GMA, ABS-CBN, TV5, PAGASA and PHIVOLCS. Each item opens on the publisher's site. Items are picked by place and topic, so read one before acting on it. When you select something, its most critical video plays by itself, without sound, at the top of the details panel, and stops when you close the selection. News never changes an alert level.</li>
         <li><strong>Tomorrow and the week ahead.</strong> For planning. It is less certain the further ahead it looks.</li>
         <li><strong>About this reading.</strong> How far to trust it, when it was taken and who supplied it.</li>
       </ul>
@@ -2522,20 +2524,20 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
       <ul>
         <li><strong>On the map.</strong> Rings at 25, 50 and 100 km. Only the airports inside 100 km are shown, each with its distance.</li>
         <li><strong>In the details.</strong> Magnitude, exact time, depth, nearest airport, tsunami note and aftershocks. A Cross-check line says whether a second agency has confirmed it.</li>
-        <li><strong>In the news.</strong> Stories from the last 24 hours that name the place or give the same magnitude, published after it happened.</li>
+        <li><strong>Official updates and news.</strong> For the last 48 hours: stories and videos that name the place or give the same magnitude, published after it happened.</li>
         <li><strong>Small purple dots.</strong> Weaker earthquakes, shown for awareness. Tap one for its size, place and time. They never raise an alert.</li>
       </ul>
       <p class="subh">A volcano</p>
       <ul>
         <li><strong>On the map.</strong> A 150 km ring, and the airports inside it with their distances. A brown area is an official ash cloud.</li>
         <li><strong>Where the ash is heading.</strong> An arrow shows which way the ash is moving. Dashed outlines show where the Tokyo ash centre expects it about 6, 12 and 18 hours later, each with its time.</li>
-        <li><strong>In the news.</strong> Stories from the last 24 hours that name the volcano.</li>
+        <li><strong>Official updates and news.</strong> For the last 48 hours: the latest PHIVOLCS bulletin for the volcano first, then stories and videos that name it.</li>
         <li><strong>In the details.</strong> When the eruption started, the ash warning, the PHIVOLCS Alert Level and the airports nearby.</li>
       </ul>
       <p class="subh">A typhoon</p>
       <ul>
         <li><strong>On the map.</strong> How far its strong winds reach, an inner ring for storm-force winds when reported, and its forecast track for up to 5 days. The shaded cone widens because forecasts are less certain further ahead.</li>
-        <li><strong>In the news.</strong> Stories from the last 24 hours that use its international or PAGASA name.</li>
+        <li><strong>Official updates and news.</strong> For the last 48 hours: the PAGASA bulletin first while it is inside the PAR, then stories and videos that use its international or PAGASA name.</li>
         <li><strong>Airports.</strong> Only those within reach are shown, marked "now" or "within 24 h".</li>
         <li><strong>Name.</strong> Inside the Philippine Area of Responsibility a typhoon is called by its PAGASA name, with the international name after it, for example "Typhoon Pepito (Man-yi)". Outside it, the international name is used.</li>
         <li><strong>Class.</strong> The bar shows the PAGASA class by its strongest winds, from Tropical Depression to Super Typhoon.</li>
@@ -2589,7 +2591,7 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
       <div class="src"><b>Earthquakes</b><span class="t">PHIVOLCS first. Backups: USGS, then EMSC. Each earthquake of magnitude 4.5 or stronger is also checked against a second agency.</span></div>
       <div class="src"><b>Volcanoes</b><span class="t">Ash and eruptions: aviation ash warnings (aviationweather.gov) and the Tokyo Volcanic Ash Advisory Centre. Alert Levels: PHIVOLCS bulletins.</span></div>
       <div class="src"><b>Rain on the map</b><span class="t">MET Norway forecast, rebuilt every 3 hours.</span></div>
-      <div class="src"><b>News</b><span class="t">GMA News, ABS-CBN News, TV5 and CNN International, from their public news feeds. CNN Philippines closed in 2024. Headlines and links only; the stories stay on their sites.</span></div>
+      <div class="src"><b>News</b><span class="t">Official: PAGASA bulletins and regional advisories, PHIVOLCS volcano bulletins. Newsrooms: GMA News, ABS-CBN News, TV5, CNN International (CNN Philippines closed in 2024), Philippine News Agency, Inquirer, SunStar, Philstar, Rappler and Manila Bulletin, read from their feeds and a news search limited to these sites. Social media: their public YouTube channels. Headlines and links only; the stories stay on their sites.</span></div>
       <div class="src"><b>Runways</b><span class="t">OurAirports public database. For a few airports only the runway number is published, so the direction comes from that number.</span></div>
     </div>
     <div class="sec hs">
@@ -3788,14 +3790,15 @@ volcanoFocus = function () { volcanoFocusBase(); closeUp(); };
 function newsBlock(a) { return newsList(a.id, 'this airport to flights or a hazard'); }
 function hazNews(k, o) { return newsList(k + ':' + o.id, k === 'q' ? 'this earthquake' : k === 'v' ? 'this volcano' : 'this cyclone'); }      // matched by its own name or figures
 // Most critical first: about flights or the airport, then about the event itself, then a hazard in the area; newest first within each
-function newsRank(n) { return n.about === 'airport' ? 3 : n.about === 'hazard' ? 2 : 1; }
+function newsRank(n) { return n.about === 'official' ? 4 : n.about === 'airport' ? 3 : n.about === 'hazard' ? 2 : 1; }
 function newsOrder(x, y) { return (newsRank(y) - newsRank(x)) || (y.ms - x.ms); }
 function newsList(key, what) {
   if (!D || !D.news_src) return '';
+  var hrs = key.indexOf(':') > 0 ? (D.event_hours || D.news_hours || 24) : (D.news_hours || 24);
   var L = ((D.news || {})[key] || []).slice().sort(newsOrder), srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
-  var head = '<div class="nwh"><span class="k">In the news, last ' + (D.news_hours || 24) + ' hours</span><span class="nwc">' + (L.length ? L.length + (L.length === 1 ? ' story' : ' stories') : '') + '</span></div>';
-  if (!L.length) return '<div class="news">' + head + '<p class="nwe">' + (srcs.length ? 'No story from ' + srcs.join(', ').replace(/, ([^,]*)$/, ' or $1') + ' links ' + what + ' in that time.' : 'The news sources could not be reached at this check.') + '</p></div>';
-  var tag = function (n) { return n.about === 'airport' ? ['ap', 'Flights or airport'] : n.about === 'hazard' ? ['hz', 'About this event'] : ['ar', 'Hazard in the area']; };
+  var head = '<div class="nwh"><span class="k">Official updates and news, last ' + hrs + ' hours</span><span class="nwc">' + (L.length ? L.length + (L.length === 1 ? ' story' : ' stories') : '') + '</span></div>';
+  if (!L.length) return '<div class="news">' + head + '<p class="nwe">' + (srcs.length ? 'No official update, news story or video in that time links ' + what + '. Checked: ' + srcs.join(', ') + '.' : 'The news sources could not be reached at this check.') + '</p></div>';
+  var tag = function (n) { return n.about === 'official' ? ['of', 'Official'] : n.about === 'airport' ? ['ap', 'Flights or airport'] : n.about === 'hazard' ? ['hz', 'About this event'] : ['ar', 'Hazard in the area']; };
   return '<div class="news">' + head + '<ul>' + L.map(function (n) {
     var t = tag(n);
     return '<li><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
@@ -3848,7 +3851,7 @@ function bestVideo(ids, auto) {      // the most critical playable video: about 
   var best = null;
   ids.forEach(function (id) { ((D.news || {})[id] || []).forEach(function (n) {
     if (!n.yt || (auto && VID_SEEN[n.yt] && Date.now() - VID_SEEN[n.yt] < VID_AGAIN_MS)) return;
-    var rank = newsRank(n) * 1e13 + n.ms;
+    var rank = (newsRank(n) === 4 ? 3.5 : newsRank(n)) * 1e13 + n.ms;
     if (!best || rank > best.rank) best = { n: n, rank: rank, ap: id };
   }); });
   return best;
