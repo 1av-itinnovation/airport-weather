@@ -2333,20 +2333,23 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
 #pins .pin.t.st-STY button::before{border-color:rgba(198,40,40,.55);animation-duration:1.8s}
 @media (prefers-reduced-motion:reduce){#pins .pin.t svg,#pins .pin.t button::before{animation:none}}
 /* live flights */
-.fltlayer{pointer-events:none;z-index:0}
+.fltlayer{pointer-events:none;z-index:6}
 .fltlayer[hidden]{display:none}
 .fltlayer .flttrails{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.fltlayer .flttrails polyline{fill:none;stroke:#0077C8;stroke-width:calc(1.4px * var(--inv,1));stroke-opacity:.35;vector-effect:non-scaling-stroke;stroke-dasharray:3 3}
-.fltlayer .flttrails polyline.hot{stroke:#C62828;stroke-opacity:.6}
-.fltp{position:absolute;width:0;height:0;pointer-events:auto;transform:scale(var(--inv,1));z-index:5}
-.fltp svg{position:absolute;left:-10px;top:-10px;width:20px;height:20px;overflow:visible}
-.fltp svg path{fill:#0077C8;stroke:#fff;stroke-width:1.3;stroke-linejoin:round}
-.fltp .fltl{position:absolute;left:12px;top:-9px;white-space:nowrap;font:600 10.5px "Noto Sans",sans-serif;color:#0B4F7C;background:rgba(255,255,255,.85);border-radius:5px;padding:0 5px;display:none}
-.fltp:hover .fltl,.fltp:focus .fltl,.fltp.hot .fltl,#pins.all-labels ~ .fltlayer .fltp .fltl{display:block}
-.fltp:not(.hot){opacity:.7}
-.fltp.hot svg path{fill:#C62828}.fltp.hot .fltl{color:#B71C1C;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);font-size:11px}
-.fltp.stale{opacity:.35}.fltp.stale svg path{fill:#8B94A1}
-.fltp.gnd svg{transform:scale(.8)}
+.fltlayer .flttrails polyline{fill:none;stroke:#0077C8;stroke-width:calc(2px * var(--inv,1));stroke-opacity:.28;vector-effect:non-scaling-stroke;stroke-linecap:round}
+.fltlayer .flttrails polyline.hot{stroke:#D32F2F;stroke-opacity:.55}
+.fltp{position:absolute;width:0;height:0;pointer-events:auto;transform:scale(var(--inv,1));z-index:5;cursor:pointer}
+.fltp .fltb{position:absolute;left:-11px;top:-11px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(10,30,60,.35)}
+.fltp svg{position:absolute;left:-8px;top:-8px;width:16px;height:16px;overflow:visible}
+.fltp svg path{fill:#0077C8}
+.fltp .fltl{position:absolute;left:16px;top:-11px;white-space:nowrap;font:600 11px/1.5 "Noto Sans",sans-serif;color:#0B4F7C;background:#fff;border-radius:999px;padding:1px 9px 1px 8px;box-shadow:0 1px 5px rgba(10,30,60,.22);border-left:3px solid #0077C8;display:none}
+.fltp:hover .fltl,.fltp:focus .fltl,.fltp.hot .fltl,.fltp.pass .fltl,#pins.all-labels ~ .fltlayer .fltp .fltl{display:block}
+.fltp:not(.hot):not(.pass){opacity:.8}
+.fltp.hot .fltb{background:#D32F2F;box-shadow:0 0 0 3px rgba(211,47,47,.25),0 1px 4px rgba(10,30,60,.35);animation:fltPulse 1.8s ease-out infinite}
+.fltp.hot svg path{fill:#fff}.fltp.hot .fltl{color:#B71C1C;border-left-color:#D32F2F}
+@keyframes fltPulse{0%{box-shadow:0 0 0 0 rgba(211,47,47,.45),0 1px 4px rgba(10,30,60,.35)}100%{box-shadow:0 0 0 10px rgba(211,47,47,0),0 1px 4px rgba(10,30,60,.35)}}
+.fltp.stale{opacity:.4}.fltp.stale svg path{fill:#8B94A1}
+@media (prefers-reduced-motion:reduce){.fltp.hot .fltb{animation:none}}
 .fltstatus{font-size:11.5px;color:#56657F;margin:-2px 0 6px 24px}
 .fltin .flti{display:flex;align-items:center;gap:10px;background:#F4F7FA;border-radius:10px;padding:7px 10px}
 .fltin .flti.hot{background:#FDECEC}
@@ -2359,6 +2362,16 @@ html[data-theme="dark"] .fltp .fltl{background:rgba(30,39,58,.9);color:#9FD8F5}
 /* a Danger airport keeps its flashing red ring, but its name card shows only when it is selected, hovered or focused,
    or when "All airport names" is on, so the map stays clean */
 #pins:not(.all-labels) .pin.a.lv-danger:not(.sel):not(:hover):not(:focus-within) .lab{display:none}
+.fltp.pass .fltb{background:#EF8A00;box-shadow:0 0 0 3px rgba(239,138,0,.25),0 1px 4px rgba(10,30,60,.35)}.fltp.pass svg path{fill:#fff}.fltp.pass .fltl{color:#8A4B00;border-left-color:#EF8A00}
+.fltlayer .flttrails polyline.pass{stroke:#E07B00;stroke-opacity:.6}
+.fltin .flti.ash{background:#FFF1DE}.fltin .flti.ash .ic{color:#E07B00}.fltin .flti.ash .t i{color:#7A4A00}
+html[data-theme="dark"] .fltin .flti.ash{background:#3A2E1C}
+/* ash cloud: a soft volcanic-ash area instead of a flat grey disc */
+.ashlayer polygon{fill:rgba(141,110,99,.28);stroke:#6D4C41;stroke-width:calc(1.6px * var(--inv,1));stroke-dasharray:none;stroke-linejoin:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 6px rgba(109,76,65,.35))}
+#pins .ashtag:not(.cu){background:rgba(78,52,46,.92);border-radius:999px;padding:2px 10px 2px 8px;font-size:10.5px;letter-spacing:.05em;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+#pins .ashtag:not(.cu)::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#D7B8A8;margin-right:6px;vertical-align:1px;box-shadow:4px -3px 0 -1px #D7B8A8,8px 0 0 -2px #D7B8A8}
+#pins .ashtag:not(.cu){padding-left:8px}
+html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B8A8}
 </style>
 </head>
 <body class="glass">
@@ -2588,7 +2601,7 @@ html[data-theme="dark"] .fltp .fltl{background:rgba(30,39,58,.9);color:#9FD8F5}
       <ul>
         <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Pause it, or drag the slider to any hour.</li>
         <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. The typhoon icon turns anticlockwise, as typhoons do; the stronger the typhoon, the faster it turns, and a typhoon or super typhoon sends out a soft ring. A small dashed ring stays at its last reported position.</li>
-        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 10 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Planes on the ground, and planes landing or taking off near an airport, are left off so the airport's own status always shows. Hover or tap a plane for its height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
+        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 10 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. An amber plane is passing through an alert zone: within 25 km of an airport with a thunderstorm now, or inside an official volcanic ash area at or below the ash height. A plane that crossed ash is listed in the details of the airport it lands at, with a reminder to inspect it for ash. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Planes on the ground, and planes landing or taking off near an airport, are left off so the airport's own status always shows. Hover or tap a plane for its height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
         <li><strong>Colours.</strong> Blue is light rain, green moderate, yellow heavy and red very heavy. The key sits just above the timeline.</li>
         <li><strong>Lightning marks.</strong> These come only from official thunderstorm warnings and airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>A picture of the forecast.</strong> It plays no part in the alert levels. When the two differ, go by the alert level.</li>
@@ -4422,7 +4435,7 @@ function fltAhead(p, ms) {      // where the plane is ms after its last position
 }
 function fltLayer() {
   var L = $('fltLayer');
-  if (!L) { L = document.createElement('div'); L.id = 'fltLayer'; L.className = 'stage fltlayer'; L.innerHTML = '<svg class="flttrails" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>'; $('pins').parentNode.insertBefore(L, $('pins')); }      // under the map's own marks, so a plane never covers an airport's status
+  if (!L) { L = document.createElement('div'); L.id = 'fltLayer'; L.className = 'stage fltlayer'; L.innerHTML = '<svg class="flttrails" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>'; $('pins').parentNode.insertBefore(L, $('pins').nextSibling); }      // above the ash cloud and rings; planes landing or parked are hidden, so airport dots stay clear
   return L;
 }
 function fltKm(a, b, c, d) { var R = 6371, p1 = a * Math.PI / 180, p2 = c * Math.PI / 180, x = Math.sin((p2 - p1) / 2), y = Math.sin((d - b) * Math.PI / 360); return 2 * R * Math.asin(Math.sqrt(x * x + Math.cos(p1) * Math.cos(p2) * y * y)); }
@@ -4444,6 +4457,24 @@ function fltDest(p) {
     if (!best || score < best.score) best = { a: a, km: km, min: Math.max(1, Math.round(km / (p.gs * 1.852) * 60)), score: score };
   });
   return best;
+}
+// Alert zones a plane can pass through (amber): within FLT_TS_KM of an airport with a thunderstorm now, at any height
+// (thunderstorms reach high), or inside an official volcanic ash area at or below the ash height given in the warning
+// (any height when the warning gives none). A plane that crossed ash is remembered for FLT_ASH_KEEP_MS, so the
+// airport it lands at can be told to inspect it.
+var FLT_TS_KM = 25, FLT_ASH_KEEP_MS = 3 * 3600000, FLT_MARK = {};
+function fltInside(x, y, P) { var inn = false; for (var i = 0, j = P.length - 1; i < P.length; j = i++) { var xi = P[i][0], yi = P[i][1], xj = P[j][0], yj = P[j][1]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inn = !inn; } return inn; }
+function fltZone(p, at, xy) {
+  if (!D) return null;
+  var hit = null;
+  (D.ash || []).forEach(function (a) {
+    if (hit || !a.p || a.p.length < 3 || !fltInside(xy.x, xy.y, a.p)) return;
+    var v = volcanoById(a.v), m = v && /up to about ([\d,]+) m/.exec(String(v.ashline || '')), top = m ? +m[1].replace(/,/g, '') : null;
+    if (top == null || p.alt * 0.3048 <= top + 300) hit = { kind: 'ash', name: (v ? v.name : a.name || 'volcanic') + ' ash area', v: v ? v.name : (a.name || '') };
+  });
+  if (hit) return hit;
+  D.airports.forEach(function (a) { if (!hit && a.level === 'danger' && fltKm(at.lat, at.lon, a.lat, a.lon) <= FLT_TS_KM) hit = { kind: 'ts', name: 'thunderstorm at ' + a.name }; });
+  return hit;
 }
 function fltPoll() {
   clearTimeout(FLT.timer);
@@ -4495,20 +4526,21 @@ function fltDraw() {
     if (p.alt < 4000 && D && D.airports.some(function (a) { return fltKm(p.lat, p.lon, a.lat, a.lon) < 12; })) return;      // landing or just taken off: the airport dot shows instead
     var age = now - p.t, stale = age > FLT_STALE_MS, at = fltAhead(p, age), xy = fltXY(at.lat, at.lon);
     if (p.ease) { var k = Math.max(0, 1 - (now - p.ease) / 1500); xy.x += p.dx * k; xy.y += p.dy * k; if (!k) p.ease = 0; }
-    var dest = fltDest(p), hot = !!(dest && fltAlertAirport(dest.a));
+    var dest = fltDest(p), hot = !!(dest && fltAlertAirport(dest.a)), zone = fltZone(p, at, xy);
+    if (zone && zone.kind === 'ash') FLT_MARK[h] = { v: zone.v, ms: now };
     var el = L.querySelector('[data-h="' + h + '"]');
     if (!el) {
       el = document.createElement('div'); el.className = 'fltp'; el.setAttribute('data-h', h); el.setAttribute('tabindex', '0');
-      el.innerHTML = '<svg viewBox="-12 -12 24 24"><path d="M0-10 2-3 9 1 9 3 2 1 1 7 4 9 4 10 0 9-4 10-4 9-1 7-2 1-9 3-9 1-2-3z"/></svg><span class="fltl"></span>'; L.appendChild(el);
+      el.innerHTML = '<span class="fltb"></span><svg viewBox="-12 -12 24 24"><path d="M0 -11c.9 0 1.4 1 1.4 2.2V-4l8.6 5v2.2L1.4 .6V6l2.6 2v1.8L0 8.7l-4 1.1V8l2.6-2V.6L-10 3.2V1l8.6-5v-4.8C-1.4 -10 -.9 -11 0 -11z"/></svg><span class="fltl"></span>'; L.appendChild(el);
     }
     seen[h] = 1;
     el.style.left = xy.x.toFixed(3) + '%'; el.style.top = xy.y.toFixed(3) + '%';
     el.querySelector('svg').style.transform = 'rotate(' + (p.track || 0) + 'deg)';
-    el.className = 'fltp' + (hot ? ' hot' : '') + (stale ? ' stale' : '') + (p.ground ? ' gnd' : '');
-    var lab = p.code + (dest ? ' → ' + dest.a.name + ', about ' + dest.min + ' min' : '') + (stale ? ', last seen ' + Math.round(age / 60000) + ' min ago' : '');
-    el.querySelector('.fltl').textContent = hot || stale ? lab : p.code;
+    el.className = 'fltp' + (hot ? ' hot' : zone ? ' pass' : '') + (stale ? ' stale' : '') + (p.ground ? ' gnd' : '');
+    var lab = p.code + (zone ? (zone.kind === 'ash' ? ': in ' + zone.v + ' ash' : ': over the thunderstorm at ' + zone.name.replace('thunderstorm at ', '')) : '') + (dest ? (zone ? ';' : '') + ' → ' + dest.a.name + ', about ' + dest.min + ' min' : '') + (stale ? ', last seen ' + Math.round(age / 60000) + ' min ago' : '');
+    el.querySelector('.fltl').textContent = hot || zone || stale ? lab : p.code;
     el.title = lab + '. ' + (p.ground ? 'On the ground' : Math.round(p.alt).toLocaleString('en-US') + ' ft, ' + Math.round(p.gs * 1.852) + ' km/h') + (p.type ? '. ' + p.type : '') + (p.reg ? ' ' + p.reg : '') + '. Live position from adsb.lol.';
-    if ((p.trail || []).length > 1) svg += '<polyline class="' + (hot ? 'hot' : '') + '" points="' + p.trail.map(function (q) { var t = fltXY(q[1], q[2]); return t.x.toFixed(2) + ',' + t.y.toFixed(2); }).join(' ') + ' ' + xy.x.toFixed(2) + ',' + xy.y.toFixed(2) + '"/>';
+    if ((p.trail || []).length > 1) svg += '<polyline class="' + (hot ? 'hot' : zone ? 'pass' : '') + '" points="' + p.trail.map(function (q) { var t = fltXY(q[1], q[2]); return t.x.toFixed(2) + ',' + t.y.toFixed(2); }).join(' ') + ' ' + xy.x.toFixed(2) + ',' + xy.y.toFixed(2) + '"/>';
   });
   Array.prototype.forEach.call(L.querySelectorAll('.fltp'), function (e) { if (!seen[e.getAttribute('data-h')]) e.remove(); });
   var sv = L.querySelector('.flttrails'); if (sv && FLT.lastSvg !== svg) { sv.innerHTML = svg; FLT.lastSvg = svg; }
@@ -4530,10 +4562,11 @@ function fltInbound() {
   L.sort(function (x, y) { return x.d.min - y.d.min; });
   var hot = fltAlertAirport(a);
   box.innerHTML = '<div class="nwh"><span class="k">Cebu Pacific and Cebgo flights likely inbound, next hour</span><span class="nwc">' + (FLT.ok ? 'live' : '') + '</span></div>' +
-    (L.length ? L.map(function (r) { return '<div class="flti' + (hot ? ' hot' : '') + '"><span class="ic">✈</span><span class="t"><b>' + esc(r.p.code) + '</b> ' + (r.p.type ? '<em>' + esc(r.p.type) + '</em>' : '') + '<i>' + Math.round(r.p.alt).toLocaleString('en-US') + ' ft' + (hot ? ', arriving while the alert is in force' : '') + '</i></span><b class="m">about ' + r.d.min + ' min</b></div>'; }).join('') :
+    (L.length ? L.map(function (r) { return '<div class="flti' + (hot ? ' hot' : fltAsh(r.p.hex) ? ' ash' : '') + '"><span class="ic">✈</span><span class="t"><b>' + esc(r.p.code) + '</b> ' + (r.p.type ? '<em>' + esc(r.p.type) + '</em>' : '') + '<i>' + Math.round(r.p.alt).toLocaleString('en-US') + ' ft' + (hot ? ', arriving while the alert is in force' : '') + (fltAsh(r.p.hex) ? '. Flew through the ' + esc(fltAsh(r.p.hex).v) + ' ash area: inspect the aircraft for ash on arrival' : '') + '</i></span><b class="m">about ' + r.d.min + ' min</b></div>'; }).join('') :
       '<p class="nwe">' + (FLT.ok === false ? 'Flight data could not be reached.' : 'No Cebu Pacific or Cebgo flight is seen heading here in the next hour.') + '</p>') +
     '<p class="nwn">Estimated from each plane\'s position, heading and speed, not from the schedule. Coverage depends on volunteer receivers, so a flight can be missing.</p>';
 }
+function fltAsh(h) { var m = FLT_MARK[h]; return m && Date.now() - m.ms < FLT_ASH_KEEP_MS ? m : null; }
 function fltBlock(a) { return '<div class="news fltin" id="fltIn" data-a="' + esc(a.id) + '"></div>'; }
 (function fltInit() {
   var lp = $('lyrPop');
