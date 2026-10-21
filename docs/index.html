@@ -2297,7 +2297,7 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
 .news .nwt b{font-size:13px;line-height:1.35;font-weight:600}
 .news .nwm{font-size:11.5px;color:var(--muted,#5B7180)}
 .news .nwm em{font-style:normal;font-weight:600;margin-right:6px;padding:0 6px;border-radius:4px}
-.news .nwm em.ap{color:#005687;background:#D7ECF7}.news .nwm em.ar{color:#7A4A00;background:#FCEBD0}
+.news .nwm em.ap{color:#005687;background:#D7ECF7}.news .nwm em.hz{color:#5B2A86;background:#EDE3F7}.news .nwm em.ar{color:#7A4A00;background:#FCEBD0}
 .news .nwe,.news .nwn{margin:0;font-size:12px;color:var(--muted,#5B7180);line-height:1.4}
 html[data-theme="dark"] .news li a{background:#222B40}html[data-theme="dark"] .news li a:hover{background:#2A3550}
 html[data-theme="dark"] .news .nwm em.ap{color:#9FD8F5;background:#1D3A52}html[data-theme="dark"] .news .nwm em.ar{color:#F5C77A;background:#4A3418}
@@ -2319,6 +2319,7 @@ html[data-theme="dark"] .news .nwm em.ap{color:#9FD8F5;background:#1D3A52}html[d
 html[data-theme="dark"] .newsvid{background:rgba(30,39,58,.97);color:#E6ECF5}html[data-theme="dark"] .newsvid a{color:#9FD8F5}
 .news li{display:flex;flex-direction:column;gap:4px}
 .news .nwp{align-self:flex-start;margin-left:93px;border:1px solid #C9D6E2;background:#fff;color:#005687;border-radius:999px;padding:3px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
 </style>
 </head>
 <body class="glass">
@@ -2513,7 +2514,7 @@ html[data-theme="dark"] .newsvid{background:rgba(30,39,58,.97);color:#E6ECF5}htm
         <li><strong>Airport close-up.</strong> A small box on the map shows the runway at its true direction, an arrow for the wind, and rings at 5 km and 10 km.</li>
         <li><strong>Forecast for later today.</strong> What the official airport forecast expects in the hours ahead. If weather arrives that the forecast did not expect, it says so; go by the current report.</li>
         <li><strong>Rain in the next 12 hours.</strong> For each hour: the chance of rain, how heavy, and the amount. A lightning mark means the official forecast has a thunderstorm.</li>
-        <li><strong>In the news.</strong> Headlines from the last 24 hours from GMA News, ABS-CBN News and TV5 that name the airport's place and are about flights or a hazard there, newest first. Each is tagged "Flights or airport" or "Hazard in the area" and opens the full story on the publisher's site. Stories are picked by place and topic, so read one before acting on it. News never changes an alert level. When a story has its own video, "Play video here" plays it at the top of the details panel.</li>
+        <li><strong>In the news.</strong> Headlines from the last 24 hours from GMA News, ABS-CBN News, TV5 and CNN that name the airport's place and are about flights or a hazard there, newest first. Each is tagged "Flights or airport" or "Hazard in the area" and opens the full story on the publisher's site. Stories are picked by place and topic, so read one before acting on it. News never changes an alert level. The most critical story is at the top: flights or the airport first, then the event itself, then hazards in the area, newest first within each. When you select something, its most critical news video plays by itself, without sound, at the top of the details panel. It stops when you close the selection. Any other video can be played with "Play video here".</li>
         <li><strong>Tomorrow and the week ahead.</strong> For planning. It is less certain the further ahead it looks.</li>
         <li><strong>About this reading.</strong> How far to trust it, when it was taken and who supplied it.</li>
       </ul>
@@ -2521,17 +2522,20 @@ html[data-theme="dark"] .newsvid{background:rgba(30,39,58,.97);color:#E6ECF5}htm
       <ul>
         <li><strong>On the map.</strong> Rings at 25, 50 and 100 km. Only the airports inside 100 km are shown, each with its distance.</li>
         <li><strong>In the details.</strong> Magnitude, exact time, depth, nearest airport, tsunami note and aftershocks. A Cross-check line says whether a second agency has confirmed it.</li>
+        <li><strong>In the news.</strong> Stories from the last 24 hours that name the place or give the same magnitude, published after it happened.</li>
         <li><strong>Small purple dots.</strong> Weaker earthquakes, shown for awareness. Tap one for its size, place and time. They never raise an alert.</li>
       </ul>
       <p class="subh">A volcano</p>
       <ul>
         <li><strong>On the map.</strong> A 150 km ring, and the airports inside it with their distances. A brown area is an official ash cloud.</li>
         <li><strong>Where the ash is heading.</strong> An arrow shows which way the ash is moving. Dashed outlines show where the Tokyo ash centre expects it about 6, 12 and 18 hours later, each with its time.</li>
+        <li><strong>In the news.</strong> Stories from the last 24 hours that name the volcano.</li>
         <li><strong>In the details.</strong> When the eruption started, the ash warning, the PHIVOLCS Alert Level and the airports nearby.</li>
       </ul>
       <p class="subh">A typhoon</p>
       <ul>
         <li><strong>On the map.</strong> How far its strong winds reach, an inner ring for storm-force winds when reported, and its forecast track for up to 5 days. The shaded cone widens because forecasts are less certain further ahead.</li>
+        <li><strong>In the news.</strong> Stories from the last 24 hours that use its international or PAGASA name.</li>
         <li><strong>Airports.</strong> Only those within reach are shown, marked "now" or "within 24 h".</li>
         <li><strong>Name.</strong> Inside the Philippine Area of Responsibility a typhoon is called by its PAGASA name, with the international name after it, for example "Typhoon Pepito (Man-yi)". Outside it, the international name is used.</li>
         <li><strong>Class.</strong> The bar shows the PAGASA class by its strongest winds, from Tropical Depression to Super Typhoon.</li>
@@ -2565,7 +2569,7 @@ html[data-theme="dark"] .newsvid{background:rgba(30,39,58,.97);color:#E6ECF5}htm
         <li><strong>On screen.</strong> The newest alert is at the top. Each alert appears briefly under the title bar, then tucks into the alert button with a red count. Press the button to see them again. Press an alert to go to the place.</li>
         <li><strong>Teams and email.</strong> The same alerts are sent with a map, the key figures and what to do. They show what you would see here on selecting the same thing.</li>
         <li><strong>Sound.</strong> Press the bell for a soft chime on each new alert. It is quiet on purpose.</li>
-        <li><strong>Auto-show.</strong> When nobody is using the screen, the map visits each alert in turn: earthquakes, volcanoes, typhoons inside the Philippine Area of Responsibility, then Danger airports. If a news video from the last 24 hours is about a place on show, the most important one plays without sound at the top of the details panel, so the map and figures stay in view. It plays once every 2 hours at most. When it ends, the round carries on and the map returns to normal. Touching the screen pauses it. The label under the map turns it off.</li>
+        <li><strong>Auto-show.</strong> When nobody is using the screen, the map visits each alert in turn: earthquakes, volcanoes, typhoons inside the Philippine Area of Responsibility, then Danger airports. If a news video from the last 24 hours is about the event or a place on show, the most important one plays without sound at the top of the details panel, so the map and figures stay in view. It plays once every 2 hours at most. When it ends, the round carries on and the map returns to normal. Touching the screen pauses it. The label under the map turns it off.</li>
       </ul>
       <p class="subh">Staying up to date</p>
       <ul>
@@ -2585,7 +2589,7 @@ html[data-theme="dark"] .newsvid{background:rgba(30,39,58,.97);color:#E6ECF5}htm
       <div class="src"><b>Earthquakes</b><span class="t">PHIVOLCS first. Backups: USGS, then EMSC. Each earthquake of magnitude 4.5 or stronger is also checked against a second agency.</span></div>
       <div class="src"><b>Volcanoes</b><span class="t">Ash and eruptions: aviation ash warnings (aviationweather.gov) and the Tokyo Volcanic Ash Advisory Centre. Alert Levels: PHIVOLCS bulletins.</span></div>
       <div class="src"><b>Rain on the map</b><span class="t">MET Norway forecast, rebuilt every 3 hours.</span></div>
-      <div class="src"><b>News</b><span class="t">GMA News, ABS-CBN News and TV5, from their public news feeds. Headlines and links only; the stories stay on their sites.</span></div>
+      <div class="src"><b>News</b><span class="t">GMA News, ABS-CBN News, TV5 and CNN International, from their public news feeds. CNN Philippines closed in 2024. Headlines and links only; the stories stay on their sites.</span></div>
       <div class="src"><b>Runways</b><span class="t">OurAirports public database. For a few airports only the runway number is published, so the direction comes from that number.</span></div>
     </div>
     <div class="sec hs">
@@ -3134,11 +3138,13 @@ function applyState() {
       fold('qmag', 'Magnitude and depth', '', (q.magnote ? field('Magnitude', q.magnote) : '') + field('Depth', q.depth) + field('Time it happened', q.ms ? exactTime(q.ms) : q.when)) +
       fold('qtsu', 'Tsunami', '', field('Tsunami', q.tsu)) +
       fold('qaft', 'Aftershocks', q.nshock ? q.nshock + ' so far' : '', '<div class="f"><span class="k">Aftershocks</span><span class="v">' + esc(q.after) + '</span>' + ((q.slist || []).length ? '<div class="shocks">' + q.slist.map(function (r) { return '<div><b>M' + r[1].toFixed(1) + '</b><span>' + esc(r[0]) + '<em>' + esc(r[2]) + '</em></span></div>'; }).join('') + (q.nshock > q.slist.length ? '<div><span><em>and ' + (q.nshock - q.slist.length) + ' earlier.</em></span></div>' : '') + '</div>' : '') + '</div>') +
+      hazNews('q', q) +
       fold('about', 'About this reading', q.check ? (/^Confirmed/.test(q.check) ? 'Cross-checked' : 'One source so far') : '', field('Source', q.src)) + '</div>';
   } else if (vo) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(vo.title) + '</h3><span class="pill volcano">' + (vo.status === 'erupting' ? 'Eruption' : 'Volcano') + '</span></div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       todoBox(vo.status === 'quiet' || vo.status === 'unknown' ? '' : 'volcano', vo.todo) + (vo.eruptline ? field('Eruption started', vo.eruptline) : '') + field('Volcanic ash', vo.ashline) + ((vo.mv || vo.fcline) ? field('Where the ash is heading', [vo.mv ? 'Moving ' + vo.mv.word + (vo.mv.sp ? ' at about ' + vo.mv.sp + ' km/h' : '') + ', shown by the arrow on the map.' : '', vo.fcline || ''].filter(Boolean).join(' ')) : '') + field('Alert level', vo.levelline) +
       field('Airports within ' + (D.volcano_km || 150) + ' km', vo.near) +
+      hazNews('v', vo) +
       fold('about', 'About this reading', '', (vo.ms ? field('Ash warning issued', phDay(vo.ms) + ', ' + phTime(vo.ms) + ' Philippine time (' + agoText(vo.ms) + ').') : '') + field('Source', vo.src)) + '</div>';
   } else if (cy && cy.low) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(cy.name) + '</h3><span class="pill unconf">For information</span></div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
@@ -3153,6 +3159,7 @@ function applyState() {
       '<div class="dfacts"><div><span>Strongest winds</span><b>' + (cy.wind ? cy.wind + ' km/h' : 'Not reported') + '</b></div><div><span>Strong winds reach</span><b>' + (cy.gale ? 'about ' + (Math.round(cy.gale / 10) * 10) + ' km' : 'Not reported') + '</b></div><div><span>Nearest airport</span><b>' + (Math.round(cy.dist / 10) * 10).toLocaleString('en-US') + ' km</b></div></div>' +
       field('Where it is', cy.where) + ((cy.now || []).length ? field('Airports strong winds can reach now', cy.now.join(', ') + '.') : '') + ((cy.soon || []).length ? field('Airports that may be reached within 24 hours', cy.soon.join(', ') + '.') : '') +
       field('Winds', [cy.windline, cy.reachline].filter(Boolean).join(' ')) + (cy.fcline ? field('Forecast', cy.fcline) : '') + ((cy.track || []).length > 1 ? field('Forecast track (RSMC Tokyo)', cy.track.map(function (q) { return new Date(q.ms).toLocaleString('en-US', { timeZone: 'Asia/Manila', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric' }) + ': ' + (q.word || 'position only') + (q.wind ? ', ' + q.wind + ' km/h' : ''); }).join('. ') + '. The shaded cone on the map is where the centre is most likely to be; it widens because forecasts are less certain further ahead.') : '') + field('Cross-check', cy.cross) +
+      hazNews('t', cy) +
       fold('about', 'About this reading', cy.confirmed ? 'Cross-checked' : 'One source only', (cy.ms ? field('Reported', phDay(cy.ms) + ', ' + phTime(cy.ms) + ' Philippine time (' + agoText(cy.ms) + ').') : '') + field('Source', cy.src) +
         field('Official wind signals', 'PAGASA issues the official Tropical Cyclone Wind Signals. Confirm any decision against the PAGASA bulletin and CAAP and airline advisories.')) + '</div>';
   } else {
@@ -3723,7 +3730,7 @@ function closeUp() {
   var pins = $('pins'); if (!pins || !D) return;
   Array.prototype.forEach.call(pins.querySelectorAll('.cu'), function (e) { e.parentNode.removeChild(e); });
   Array.prototype.forEach.call(pins.querySelectorAll('.pin.a [data-km]'), function (p) { p.removeAttribute('data-km'); });
-  airportInset(); pins.classList.remove('ashmove');
+  airportInset(); pins.classList.remove('ashmove'); vidSelSync();
   var F = focusTarget(), o = F && F.o; if (!F) return;
   var ring = function (km, cls, text, up) {
     var hPct = km / 111 * 5.91775 * 2, wPct = hPct * 1506 / 1000 / Math.max(.5, Math.cos((o.lat || 12) * Math.PI / 180)) * Math.cos(12 * Math.PI / 180);
@@ -3778,16 +3785,23 @@ function closeUp() {
 var volcanoFocusBase = volcanoFocus;
 volcanoFocus = function () { volcanoFocusBase(); closeUp(); };
 /* ---------- news about the selected airport (last 24 hours) ---------- */
-function newsBlock(a) {
+function newsBlock(a) { return newsList(a.id, 'this airport to flights or a hazard'); }
+function hazNews(k, o) { return newsList(k + ':' + o.id, k === 'q' ? 'this earthquake' : k === 'v' ? 'this volcano' : 'this cyclone'); }      // matched by its own name or figures
+// Most critical first: about flights or the airport, then about the event itself, then a hazard in the area; newest first within each
+function newsRank(n) { return n.about === 'airport' ? 3 : n.about === 'hazard' ? 2 : 1; }
+function newsOrder(x, y) { return (newsRank(y) - newsRank(x)) || (y.ms - x.ms); }
+function newsList(key, what) {
   if (!D || !D.news_src) return '';
-  var L = ((D.news || {})[a.id] || []).slice().sort(function (x, y) { return y.ms - x.ms; }), srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
+  var L = ((D.news || {})[key] || []).slice().sort(newsOrder), srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
   var head = '<div class="nwh"><span class="k">In the news, last ' + (D.news_hours || 24) + ' hours</span><span class="nwc">' + (L.length ? L.length + (L.length === 1 ? ' story' : ' stories') : '') + '</span></div>';
-  if (!L.length) return '<div class="news">' + head + '<p class="nwe">' + (srcs.length ? 'No story from ' + srcs.join(', ').replace(/, ([^,]*)$/, ' or $1') + ' links this airport to flights or a hazard in that time.' : 'The news sources could not be reached at this check.') + '</p></div>';
+  if (!L.length) return '<div class="news">' + head + '<p class="nwe">' + (srcs.length ? 'No story from ' + srcs.join(', ').replace(/, ([^,]*)$/, ' or $1') + ' links ' + what + ' in that time.' : 'The news sources could not be reached at this check.') + '</p></div>';
+  var tag = function (n) { return n.about === 'airport' ? ['ap', 'Flights or airport'] : n.about === 'hazard' ? ['hz', 'About this event'] : ['ar', 'Hazard in the area']; };
   return '<div class="news">' + head + '<ul>' + L.map(function (n) {
+    var t = tag(n);
     return '<li><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
       (n.img ? '<span class="nwi"><img src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add(\'none\');this.remove()">' + (n.video ? '<i>Video</i>' : '') + '</span>' : '<span class="nwi none">' + (n.video ? '<i>Video</i>' : '') + '</span>') +
-      '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm"><em class="' + (n.about === 'airport' ? 'ap' : 'ar') + '">' + (n.about === 'airport' ? 'Flights or airport' : 'Hazard in the area') + '</em>' + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' + (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(a.id) + '">Play video here</button>' : '') + '</li>';
-  }).join('') + '</ul><p class="nwn">Headlines link to the publisher. Picked by place and topic, so check the story before acting. News never changes an alert level.</p></div>';
+      '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm"><em class="' + t[0] + '">' + t[1] + '</em>' + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' + (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(key) + '">Play video here</button>' : '') + '</li>';
+  }).join('') + '</ul><p class="nwn">Headlines link to the publisher. Picked by name and topic, so check the story before acting. News never changes an alert level.</p></div>';
 }
 /* ---------- the cyclone moves with the rain timeline ---------- */
 // While the rain forecast plays, each cyclone on the map is moved to where RSMC Tokyo forecasts its centre at that hour,
@@ -3828,13 +3842,13 @@ function airportsFor(item) {      // the airports a tour item is about, for find
   if (item.v) { var v = volcanoById(item.v); if (v) names = (v.hits || []).concat(String(v.near || '').split(/\), ?/).map(function (s) { return s.replace(/\s*\(.*$/, '').trim(); })); }
   if (item.q) { var q = quakeById(item.q); if (q) names = (q.hits || []).concat([String(q.near || '').split(',')[0].trim()]); }
   (D.airports || []).forEach(function (a) { if (names.indexOf(a.name) >= 0) ids.push(a.id); });
-  return ids;
+  return (item.t ? ['t:' + item.t] : item.v ? ['v:' + item.v] : item.q ? ['q:' + item.q] : []).concat(ids);      // the event's own news first, then its airports'
 }
 function bestVideo(ids, auto) {      // the most critical playable video: about flights or the airport first, then the newest
   var best = null;
   ids.forEach(function (id) { ((D.news || {})[id] || []).forEach(function (n) {
     if (!n.yt || (auto && VID_SEEN[n.yt] && Date.now() - VID_SEEN[n.yt] < VID_AGAIN_MS)) return;
-    var rank = (n.about === 'airport' ? 2 : 1) * 1e13 + n.ms;
+    var rank = newsRank(n) * 1e13 + n.ms;
     if (!best || rank > best.rank) best = { n: n, rank: rank, ap: id };
   }); });
   return best;
@@ -3849,7 +3863,7 @@ function vidBox() {
   return b;
 }
 function vidPlay(n, ap, auto, done) {
-  var b = vidBox(), a = byId(ap); vidClose(false);
+  var b = vidBox(), a = byId(ap) || vidPlace(ap); vidClose(false);
   VID.open = true; VID.tour = !!auto; VID.done = done || null; VID.id = n.yt; if (auto) VID_SEEN[n.yt] = Date.now();
   $('nvFrame').innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(n.yt) + '?autoplay=1&mute=' + (auto ? 1 : 0) + '&playsinline=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(location.origin) + '" title="' + esc(n.title) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
   $('nvSrc').textContent = (a ? a.name + ' · ' : '') + n.src + ' · ' + agoText(n.ms);
@@ -3859,6 +3873,10 @@ function vidPlay(n, ap, auto, done) {
   var f = b.querySelector('iframe');
   f.addEventListener('load', function () { try { f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'], id: 1, channel: 'widget' }), '*'); } catch (e) {} });
   clearTimeout(VID.timer); VID.timer = setTimeout(function () { vidEnd(); }, VID_MAX_MS);      // a safety limit in case the player never reports the end
+}
+function vidPlace(key) {      // a name for the video's header when it belongs to an earthquake, volcano or typhoon
+  var k = String(key || ''), id = k.slice(2), o = k[0] === 't' ? cycloneById(id) : k[0] === 'v' ? volcanoById(id) : k[0] === 'q' ? quakeById(id) : null;
+  return o ? { name: o.title || o.name } : null;
 }
 function vidEnd() {      // the video finished, failed, or ran past the limit
   if (!VID.open) return;
@@ -3879,6 +3897,21 @@ document.addEventListener('click', function (e) {
   e.preventDefault(); var ap = p.getAttribute('data-ap'), n = ((D.news || {})[ap] || []).filter(function (x) { return x.yt === p.getAttribute('data-play'); })[0];
   if (n) vidPlay(n, ap, false, null);
 });
+
+// Selecting an airport, earthquake, volcano or typhoon plays its most critical news video at once (without sound, as browsers
+// require), at the top of the details panel. Closing or changing the selection stops it. Auto-show plays its own.
+var VID_SEL = '';
+function vidSelSync() {
+  var key = S.sel ? 'a:' + S.sel : S.tk ? 't:' + S.tk : S.vk ? 'v:' + S.vk : S.qk ? 'q:' + S.qk : '';
+  if (key === VID_SEL) return;
+  VID_SEL = key;
+  if (TOUR.active) return;
+  if (VID.open) vidClose(false);
+  if (!key || !D) return;
+  var it = {}; it[key[0]] = key.slice(2);
+  var bv = bestVideo(airportsFor(it), false);
+  if (bv) vidPlay(bv.n, bv.ap, true, null);
+}
 function placeLabels() {
   if (!GLASS) return;
   var vp0 = $('vp'), vr = vp0.getBoundingClientRect(); if (!vr.width) return;
