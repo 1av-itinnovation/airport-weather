@@ -1,11 +1,11 @@
 <!doctype html>
-<!-- 1AV Airport Weather Monitoring. Copyright (c) 2026 1Aviation Groundhandling Services, Corp. All rights reserved. Created under 1AV IT Innovation by Jake V Borras. -->
+<!-- 1AV Disruption Management Dashboard. Copyright (c) 2026 1Aviation Groundhandling Services, Corp. All rights reserved. Created under 1AV IT Innovation by Jake V Borras. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Airport Weather Monitoring | 1Aviation</title>
+<title>Disruption Management Dashboard | 1Aviation</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%85%3C/text%3E%3C/svg%3E">
 <style>
 *{box-sizing:border-box}
@@ -2281,6 +2281,44 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
   #modal .box > .sec.hs:nth-of-type(n) > ul{columns:1}
   #modal .box > .sec.hs.lvls:nth-of-type(n),#modal .box > .sec.hs.srcs:nth-of-type(n){display:flex;flex-direction:column}
 }
+/* news */
+.news{display:flex;flex-direction:column;gap:6px}
+.news .nwh{display:flex;justify-content:space-between;align-items:baseline}
+.news .nwh .k{font-size:12px;color:var(--muted,#5B7180)}
+.news .nwc{font-size:12px;color:var(--muted,#5B7180)}
+.news ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.news li a{display:flex;gap:10px;align-items:flex-start;text-decoration:none;color:inherit;padding:7px;border-radius:10px;background:#F4F7FA}
+.news li a:hover,.news li a:focus-visible{background:#E8F1F7}
+.news .nwi{position:relative;flex:none;width:76px;height:52px;border-radius:7px;overflow:hidden;background:#DCE7EF}
+.news .nwi.none{background:linear-gradient(135deg,#CAE2E7,#DCE7EF)}
+.news .nwi img{width:100%;height:100%;object-fit:cover;display:block}
+.news .nwi i{position:absolute;left:4px;bottom:4px;font-style:normal;font-size:10px;font-weight:700;color:#fff;background:rgba(0,0,0,.65);border-radius:4px;padding:0 5px}
+.news .nwt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.news .nwt b{font-size:13px;line-height:1.35;font-weight:600}
+.news .nwm{font-size:11.5px;color:var(--muted,#5B7180)}
+.news .nwm em{font-style:normal;font-weight:600;margin-right:6px;padding:0 6px;border-radius:4px}
+.news .nwm em.ap{color:#005687;background:#D7ECF7}.news .nwm em.ar{color:#7A4A00;background:#FCEBD0}
+.news .nwe,.news .nwn{margin:0;font-size:12px;color:var(--muted,#5B7180);line-height:1.4}
+html[data-theme="dark"] .news li a{background:#222B40}html[data-theme="dark"] .news li a:hover{background:#2A3550}
+html[data-theme="dark"] .news .nwm em.ap{color:#9FD8F5;background:#1D3A52}html[data-theme="dark"] .news .nwm em.ar{color:#F5C77A;background:#4A3418}
+/* cyclone travelling with the rain timeline */
+#pins .pin.t.fcpos{opacity:.88}
+#pins .tghost{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px dashed #0B6E8A;background:rgba(255,255,255,.7);pointer-events:none;z-index:3;transform:scale(var(--inv,1))}
+#pins .tghost[hidden]{display:none}
+/* news video panel */
+.newsvid{position:relative;width:100%;box-sizing:border-box;margin:0 0 12px;background:#F4F7FA;border:1px solid #DCE5EE;border-radius:14px;padding:8px 8px 10px;color:#12263F}
+.newsvid[hidden]{display:none}
+.newsvid .nvh{display:flex;align-items:center;gap:8px;margin:0 2px 6px}
+.newsvid .nvh b{font-size:12px;background:#C62828;color:#fff;border-radius:4px;padding:1px 7px}
+.newsvid .nvh span{font-size:12px;color:#56657F;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.newsvid .nvx{border:none;background:#EEF2F6;border-radius:8px;width:28px;height:28px;font-size:18px;line-height:1;cursor:pointer;color:#3F5068}
+.newsvid .nvf{position:relative;aspect-ratio:16/9;border-radius:9px;overflow:hidden;background:#0B1226}
+.newsvid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.newsvid a{display:block;margin:7px 2px 0;font-size:13px;font-weight:600;line-height:1.35;color:#005687;text-decoration:none}
+.newsvid .nvn{margin:3px 2px 0;font-size:11.5px;color:#56657F}.newsvid .nvn:empty{display:none}
+html[data-theme="dark"] .newsvid{background:rgba(30,39,58,.97);color:#E6ECF5}html[data-theme="dark"] .newsvid a{color:#9FD8F5}
+.news li{display:flex;flex-direction:column;gap:4px}
+.news .nwp{align-self:flex-start;margin-left:93px;border:1px solid #C9D6E2;background:#fff;color:#005687;border-radius:999px;padding:3px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body class="glass">
@@ -2298,7 +2336,7 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
   <div class="brand">
     <img src="assets/logo-blue.png" alt="1Aviation logo">
     <div>
-      <h1>Airport Weather Monitoring</h1>
+      <h1>Disruption Management Dashboard</h1>
       <div class="checked"><span id="checked">Loading the latest data…</span><span class="nextup" id="nextUp"></span><span class="ckshort" id="ckShort"></span></div>
     </div>
   </div>
@@ -2436,7 +2474,7 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
   <button class="back" id="modalBack" aria-label="Close help"></button>
   <div class="box" role="dialog" aria-modal="true" aria-label="How this dashboard works">
     <div class="mh"><h2>How this dashboard works</h2><button class="btn" id="modalClose">Close</button></div>
-    <p>This dashboard watches the weather at the 36 Philippine airports served by Cebu Pacific and Cebgo, and the earthquakes, volcanoes and typhoons that can affect them. It shows which airports need attention, why, and what to do.</p>
+    <p>The Disruption Management Dashboard watches the weather at the 36 Philippine airports served by Cebu Pacific and Cebgo, and the earthquakes, volcanoes and typhoons that can affect them. It shows which airports need attention, why, and what to do.</p>
     <p>Every figure comes from an official or recognised public source, and each one names its source. Critical readings are checked against a second source before they are called confirmed.</p>
     <div class="sec hs lvls">
       <h3>1. The four alert levels</h3>
@@ -2475,6 +2513,7 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
         <li><strong>Airport close-up.</strong> A small box on the map shows the runway at its true direction, an arrow for the wind, and rings at 5 km and 10 km.</li>
         <li><strong>Forecast for later today.</strong> What the official airport forecast expects in the hours ahead. If weather arrives that the forecast did not expect, it says so; go by the current report.</li>
         <li><strong>Rain in the next 12 hours.</strong> For each hour: the chance of rain, how heavy, and the amount. A lightning mark means the official forecast has a thunderstorm.</li>
+        <li><strong>In the news.</strong> Headlines from the last 24 hours from GMA News, ABS-CBN News and TV5 that name the airport's place and are about flights or a hazard there, newest first. Each is tagged "Flights or airport" or "Hazard in the area" and opens the full story on the publisher's site. Stories are picked by place and topic, so read one before acting on it. News never changes an alert level. When a story has its own video, "Play video here" plays it at the top of the details panel.</li>
         <li><strong>Tomorrow and the week ahead.</strong> For planning. It is less certain the further ahead it looks.</li>
         <li><strong>About this reading.</strong> How far to trust it, when it was taken and who supplied it.</li>
       </ul>
@@ -2494,6 +2533,7 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
       <ul>
         <li><strong>On the map.</strong> How far its strong winds reach, an inner ring for storm-force winds when reported, and its forecast track for up to 5 days. The shaded cone widens because forecasts are less certain further ahead.</li>
         <li><strong>Airports.</strong> Only those within reach are shown, marked "now" or "within 24 h".</li>
+        <li><strong>Name.</strong> Inside the Philippine Area of Responsibility a typhoon is called by its PAGASA name, with the international name after it, for example "Typhoon Pepito (Man-yi)". Outside it, the international name is used.</li>
         <li><strong>Class.</strong> The bar shows the PAGASA class by its strongest winds, from Tropical Depression to Super Typhoon.</li>
         <li><strong>Confirmed or Not yet confirmed.</strong> Confirmed means at least two of three sources report it. A grey dashed swirl has one source so far; it is shown so nothing is hidden, but it raises no alert.</li>
         <li><strong>Low pressure area.</strong> A place where a typhoon can start. It is for information only and raises no alert. The list is not complete; PAGASA's outlook is the official one.</li>
@@ -2503,6 +2543,7 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
       <h3>4. Rain on the map</h3>
       <ul>
         <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Pause it, or drag the slider to any hour.</li>
+        <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. A small dashed ring stays at its last reported position.</li>
         <li><strong>Colours.</strong> Blue is light rain, green moderate, yellow heavy and red very heavy. The key sits just above the timeline.</li>
         <li><strong>Lightning marks.</strong> These come only from official thunderstorm warnings and airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>A picture of the forecast.</strong> It plays no part in the alert levels. When the two differ, go by the alert level.</li>
@@ -2521,10 +2562,10 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
       </ul>
       <p class="subh">How alerts reach you</p>
       <ul>
-        <li><strong>On screen.</strong> Each alert appears briefly under the title bar, then tucks into the alert button with a red count. Press the button to see them again. Press an alert to go to the place.</li>
+        <li><strong>On screen.</strong> The newest alert is at the top. Each alert appears briefly under the title bar, then tucks into the alert button with a red count. Press the button to see them again. Press an alert to go to the place.</li>
         <li><strong>Teams and email.</strong> The same alerts are sent with a map, the key figures and what to do. They show what you would see here on selecting the same thing.</li>
         <li><strong>Sound.</strong> Press the bell for a soft chime on each new alert. It is quiet on purpose.</li>
-        <li><strong>Auto-show.</strong> When nobody is using the screen, the map visits each alert in turn. Touching the screen pauses it. The label under the map turns it off.</li>
+        <li><strong>Auto-show.</strong> When nobody is using the screen, the map visits each alert in turn: earthquakes, volcanoes, typhoons inside the Philippine Area of Responsibility, then Danger airports. If a news video from the last 24 hours is about a place on show, the most important one plays without sound at the top of the details panel, so the map and figures stay in view. It plays once every 2 hours at most. When it ends, the round carries on and the map returns to normal. Touching the screen pauses it. The label under the map turns it off.</li>
       </ul>
       <p class="subh">Staying up to date</p>
       <ul>
@@ -2544,6 +2585,7 @@ html[data-theme="dark"] .ashlayer.fc polygon{stroke:#E0C3B5;fill:rgba(224,195,18
       <div class="src"><b>Earthquakes</b><span class="t">PHIVOLCS first. Backups: USGS, then EMSC. Each earthquake of magnitude 4.5 or stronger is also checked against a second agency.</span></div>
       <div class="src"><b>Volcanoes</b><span class="t">Ash and eruptions: aviation ash warnings (aviationweather.gov) and the Tokyo Volcanic Ash Advisory Centre. Alert Levels: PHIVOLCS bulletins.</span></div>
       <div class="src"><b>Rain on the map</b><span class="t">MET Norway forecast, rebuilt every 3 hours.</span></div>
+      <div class="src"><b>News</b><span class="t">GMA News, ABS-CBN News and TV5, from their public news feeds. Headlines and links only; the stories stay on their sites.</span></div>
       <div class="src"><b>Runways</b><span class="t">OurAirports public database. For a few airports only the runway number is published, so the direction comes from that number.</span></div>
     </div>
     <div class="sec hs">
@@ -2735,7 +2777,7 @@ function renderGlass() {
   var ic = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
   $('kpis').innerHTML = big('alerts', 'Show the airports needing attention today', 'Airports needing <br>attention today', att, n) + big('danger', 'Show the airports with a thunderstorm now', 'Thunderstorm at the <br>airport now', c.danger, n) + big('official', 'Show the airports with an official weather report', 'Airports with an official <br>weather report', off, n) + big('tmr', 'Show the bad weather forecast for tomorrow', 'Bad weather forecast <br>tomorrow', tm, n) +
     sm('quakes', ic('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'), 'Earthquake alerts', nq, nq) + sm('volcano', ic('<path d="M8.500 9L3 20h18l-5.500-11zM10.500 5.500c0-1.200.800-1.200.800-2.500M13.500 5.500c0-1.200.800-1.200.800-2.500"/>'), 'Volcano alerts', nv, nv) +
-    sm('typhoon', ic('<path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20H9"/>'), 'Typhoon', tyC.length > 1 ? tyC.length + ' active' : tyC.length ? esc(tyC[0].name || tyC[0].word.replace(/^Tropical /, '')) : ty ? 'Unconfirmed' : 'None', (D.ty_alerts || []).length > 0) + sm('', '<span class="dot"></span>', 'Live', '<span id="liveClock">' + liveNow() + '</span>', false);
+    sm('typhoon', ic('<path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20H9"/>'), 'Typhoon', tyC.length > 1 ? tyC.length + ' active' : tyC.length ? esc(tyC[0].dname || tyC[0].name || tyC[0].word.replace(/^Tropical /, '')) : ty ? 'Unconfirmed' : 'None', (D.ty_alerts || []).length > 0) + sm('', '<span class="dot"></span>', 'Live', '<span id="liveClock">' + liveNow() + '</span>', false);
   var tot = c.danger + c.warning + c.advisory + c.normal || 1, seg = [['danger', '#D82B2B'], ['warning', '#F5A623'], ['advisory', '#E8C21A'], ['normal', '#2E9B45']];
   $('statsBig').innerHTML = '<div class="nums">' + seg.map(function (x) { return '<button data-f="' + x[0] + '"' + (S.filter === x[0] ? ' class="on"' : '') + '><b>' + c[x[0]] + '</b><span>' + PILL[x[0]] + '</span></button>'; }).join('') + '</div>' +
     '<div class="sbar">' + seg.map(function (x) { return '<i style="width:' + (100 * c[x[0]] / tot) + '%;background:' + x[1] + '"></i>'; }).join('') + '</div>';
@@ -3081,7 +3123,7 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
   if (a) {
     d.innerHTML = '<div class="detail ap">' + sceneBanner(a) +
-      todoBox(a.level, a.todo) + nowFacts(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
+      todoBox(a.level, a.todo) + nowFacts(a) + field('Forecast for later today', a.next) + hoursStrip(a) + newsBlock(a) +
       fold('out', 'Tomorrow and the week ahead', '', field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days))) +
       fold('about', 'About this reading', a.est ? 'Estimate' : 'Official report', field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src)) + '</div>';
   } else if (q) {
@@ -3240,6 +3282,9 @@ function renderAlerts() {
       '<button class="go" data-a="' + esc(a.id) + '">Details</button></div>';
   });
   if (dg.length && !title) title = 'DANGER (' + dg.length + ')';
+  // newest at the top: each row by the time it started; a thunderstorm at an airport now counts as the latest report
+  h = h.split('<div class="al ').slice(1).map(function (p, i) { var m = /data-ago="(\d+)"/.exec(p); return { i: i, ms: m ? +m[1] : (/^danger/.test(p) ? (D.generated_ms || Date.now()) : 0), p: '<div class="al ' + p }; })
+    .sort(function (a, b) { return (b.ms - a.ms) || (a.i - b.i); }).map(function (x) { return x.p; }).join('');
   var fresh = ALERT_SEEN ? keys.filter(function (k) { return ALERT_SEEN.indexOf(k) < 0; }) : keys;
   bar.hidden = !h; bar.innerHTML = h;
   alertToast(keys.length, fresh.length > 0);
@@ -3363,9 +3408,9 @@ function quakeTourList() {
   return out;
 }
 function volcanoTourList() { var seen = {}, out = []; ((D && D.vol_alerts) || []).forEach(function (a) { var v = a.v && volcanoById(a.v); if (v && v.onmap && !seen[v.id]) { seen[v.id] = 1; out.push(v); } }); return out; }
-function tourList() { return quakeTourList().map(function (q) { return { q: q.id }; }).concat(volcanoTourList().map(function (v) { return { v: v.id }; })).concat(dangerList().map(function (a) { return { a: a.id }; })); }
+function tourList() { return quakeTourList().map(function (q) { return { q: q.id }; }).concat(volcanoTourList().map(function (v) { return { v: v.id }; })).concat(typhoonTourList().map(function (c) { return { t: c.id }; })).concat(dangerList().map(function (a) { return { a: a.id }; })); }
 function tourLabel() {
-  var bar = $('tourBar'), L = tourList(), n = L.length, nq = quakeTourList().length, nv = volcanoTourList().length, nd = n - nq - nv, cur = TOUR.active ? L[TOUR.idx] : null;
+  var bar = $('tourBar'), L = tourList(), n = L.length, nq = quakeTourList().length, nv = volcanoTourList().length, nt = typhoonTourList().length, nd = n - nq - nv - nt, cur = TOUR.active ? L[TOUR.idx] : null;
   bar.classList.toggle('volcano', !HOME.active && !!(cur ? cur.v : (!nq && nv)));
   bar.classList.toggle('quake', !HOME.active && !!(cur ? cur.q : nq));
   bar.classList.toggle('home', HOME.active); $('tourBtn').hidden = HOME.active;
@@ -3373,11 +3418,11 @@ function tourLabel() {
   if (!n) { bar.hidden = true; return; }
   bar.hidden = false; bar.classList.toggle('off', !TOUR.on); bar.classList.toggle('run', TOUR.on && TOUR.active);
   $('tourBtn').textContent = TOUR.on ? 'Turn off' : 'Turn on'; $('tourBtn').setAttribute('aria-pressed', TOUR.on ? 'true' : 'false');
-  var what = [nq ? nq + (nq === 1 ? ' earthquake' : ' earthquakes') : '', nv ? nv + (nv === 1 ? ' volcano' : ' volcanoes') : '', nd ? nd + (nd === 1 ? ' Danger airport' : ' Danger airports') : ''].filter(function (x) { return x; }).join(', ');
-  $('tourText').textContent = !TOUR.on ? 'Auto-show alerts is off' : (cur ? (cur.q ? 'Showing earthquake ' + (TOUR.idx + 1) + ' of ' + nq : cur.v ? 'Showing volcano ' + (TOUR.idx + 1 - nq) + ' of ' + nv : 'Showing Danger airport ' + (TOUR.idx + 1 - nq - nv) + ' of ' + nd) : 'Auto-show: ' + what);
+  var what = [nq ? nq + (nq === 1 ? ' earthquake' : ' earthquakes') : '', nv ? nv + (nv === 1 ? ' volcano' : ' volcanoes') : '', nt ? nt + (nt === 1 ? ' typhoon' : ' typhoons') : '', nd ? nd + (nd === 1 ? ' Danger airport' : ' Danger airports') : ''].filter(function (x) { return x; }).join(', ');
+  $('tourText').textContent = !TOUR.on ? 'Auto-show alerts is off' : (cur ? (cur.q ? 'Showing earthquake ' + (TOUR.idx + 1) + ' of ' + nq : cur.v ? 'Showing volcano ' + (TOUR.idx + 1 - nq) + ' of ' + nv : cur.t ? 'Showing typhoon ' + (TOUR.idx + 1 - nq - nv) + ' of ' + nt : 'Showing Danger airport ' + (TOUR.idx + 1 - nq - nv - nt) + ' of ' + nd) + (VID.open && VID.tour ? ', with news video' : '') : 'Auto-show: ' + what);
 }
 function tourStep() {
-  clearTimeout(TOUR.timer);
+  clearTimeout(TOUR.timer); if (VID.open && VID.tour && Date.now() - TOUR.lastUser >= TOUR_IDLE_MS) vidClose(false);
   if (HOME.pending || HOME.active) { TOUR.timer = setTimeout(tourStep, 1000); return; }     // wait for the nearest-airport step
   if (!D || !TOUR.on) { TOUR.active = false; TOUR.idx = -1; tourLabel(); return; }
   var blocked = document.hidden || modal.classList.contains('open') || WX.open || S.day !== 'today' || !(S.filter === 'alerts' || S.filter === 'danger');
@@ -3386,7 +3431,11 @@ function tourStep() {
   if (!list.length) { if (TOUR.active) { TOUR.active = false; clearSel(); } TOUR.idx = -1; tourLabel(); TOUR.timer = setTimeout(tourStep, 10000); return; }
   TOUR.idx++;
   if (TOUR.idx >= list.length) { TOUR.idx = -1; TOUR.active = false; clearSel(); tourLabel(); TOUR.timer = setTimeout(tourStep, TOUR_REST_MS); return; }
-  TOUR.active = true; if (list[TOUR.idx].q) selectQuake(list[TOUR.idx].q); else if (list[TOUR.idx].v) selectVolcano(list[TOUR.idx].v); else selectAirport(list[TOUR.idx].a); tourLabel(); TOUR.timer = setTimeout(tourStep, TOUR_SHOW_MS);
+  var it = list[TOUR.idx];
+  TOUR.active = true; if (it.q) selectQuake(it.q); else if (it.v) selectVolcano(it.v); else if (it.t) selectCyclone(it.t); else selectAirport(it.a); tourLabel();
+  var bv = bestVideo(airportsFor(it), true);      // the most critical news video about this place plays once, then the round carries on
+  if (bv) TOUR.timer = setTimeout(function () { if (!TOUR.active) return; vidPlay(bv.n, bv.ap, true, function () { TOUR.timer = setTimeout(tourStep, 1500); }); tourLabel(); }, 2500);
+  else TOUR.timer = setTimeout(tourStep, TOUR_SHOW_MS);
 }
 function tourUser(e) {
   if (e && e.target && e.target.closest && e.target.closest('#tourBar')) return;
@@ -3469,7 +3518,7 @@ var FOCUS_ICON = {
 function focusTarget() {
   if (S.vk) { var v = volcanoById(S.vk); if (v && v.onmap) return { k: 'v', o: v, km: D.volcano_km || 150, lab: (D.volcano_km || 150) + ' km from the volcano', full: v.title || v.name, short: v.name, sub: volcanoWord(v) }; }
   if (S.qk) { var q = quakeById(S.qk); if (q && q.onmap) return { k: 'q', o: q, km: QUAKE_KM, lab: QUAKE_KM + ' km from the earthquake', full: 'Magnitude ' + q.mag.toFixed(1), short: 'M' + q.mag.toFixed(1), sub: q.ms ? phTime(q.ms) + ', ' + agoText(q.ms) : 'Earthquake' }; }
-  if (S.tk) { var c = cycloneById(S.tk); if (c && !c.low && (c.onmap || c.show)) { var km = c.reach || c.gale || D.ty_near_km || 300; return { k: 't', o: c, km: km, lab: (c.gale ? 'Strong winds reach about ' : '') + (Math.round(km / 10) * 10) + ' km' + (c.gale ? '' : ' from the centre'), full: c.title, short: c.name || c.title, sub: c.confirmed ? (c.wind ? 'Winds ' + c.wind + ' km/h' : 'Strength not reported') : 'Not yet confirmed' }; } }
+  if (S.tk) { var c = cycloneById(S.tk); if (c && !c.low && (c.onmap || c.show)) { var km = c.reach || c.gale || D.ty_near_km || 300; return { k: 't', o: c, km: km, lab: (c.gale ? 'Strong winds reach about ' : '') + (Math.round(km / 10) * 10) + ' km' + (c.gale ? '' : ' from the centre'), full: c.title, short: c.dname || c.name || c.title, sub: c.confirmed ? (c.wind ? 'Winds ' + c.wind + ' km/h' : 'Strength not reported') : 'Not yet confirmed' }; } }
   return null;
 }
 function volcanoFocus() {
@@ -3728,6 +3777,108 @@ function closeUp() {
 }
 var volcanoFocusBase = volcanoFocus;
 volcanoFocus = function () { volcanoFocusBase(); closeUp(); };
+/* ---------- news about the selected airport (last 24 hours) ---------- */
+function newsBlock(a) {
+  if (!D || !D.news_src) return '';
+  var L = ((D.news || {})[a.id] || []).slice().sort(function (x, y) { return y.ms - x.ms; }), srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
+  var head = '<div class="nwh"><span class="k">In the news, last ' + (D.news_hours || 24) + ' hours</span><span class="nwc">' + (L.length ? L.length + (L.length === 1 ? ' story' : ' stories') : '') + '</span></div>';
+  if (!L.length) return '<div class="news">' + head + '<p class="nwe">' + (srcs.length ? 'No story from ' + srcs.join(', ').replace(/, ([^,]*)$/, ' or $1') + ' links this airport to flights or a hazard in that time.' : 'The news sources could not be reached at this check.') + '</p></div>';
+  return '<div class="news">' + head + '<ul>' + L.map(function (n) {
+    return '<li><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
+      (n.img ? '<span class="nwi"><img src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add(\'none\');this.remove()">' + (n.video ? '<i>Video</i>' : '') + '</span>' : '<span class="nwi none">' + (n.video ? '<i>Video</i>' : '') + '</span>') +
+      '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm"><em class="' + (n.about === 'airport' ? 'ap' : 'ar') + '">' + (n.about === 'airport' ? 'Flights or airport' : 'Hazard in the area') + '</em>' + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' + (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(a.id) + '">Play video here</button>' : '') + '</li>';
+  }).join('') + '</ul><p class="nwn">Headlines link to the publisher. Picked by place and topic, so check the story before acting. News never changes an alert level.</p></div>';
+}
+/* ---------- the cyclone moves with the rain timeline ---------- */
+// While the rain forecast plays, each cyclone on the map is moved to where RSMC Tokyo forecasts its centre at that hour,
+// so the swirl and the rain move together. A small hollow ring stays at its reported position.
+function cycloneAt(c, T) {
+  var P = [{ ms: c.ms || Date.now(), x: c.x, y: c.y }];
+  (c.track || []).forEach(function (q) { if (q.ms) P.push({ ms: q.ms, x: q.x, y: q.y }); });
+  if (P.length === 1 && c.fx != null && c.fy != null) P.push({ ms: P[0].ms + 86400000, x: c.fx, y: c.fy });
+  P.sort(function (p, q) { return p.ms - q.ms; });
+  if (T <= P[0].ms || P.length < 2) return { x: P[0].x, y: P[0].y };
+  for (var i = 1; i < P.length; i++) if (T <= P[i].ms) { var f = (T - P[i - 1].ms) / (P[i].ms - P[i - 1].ms); return { x: P[i - 1].x + (P[i].x - P[i - 1].x) * f, y: P[i - 1].y + (P[i].y - P[i - 1].y) * f }; }
+  return { x: P[P.length - 1].x, y: P[P.length - 1].y };
+}
+function cycloneSync(T) {
+  var pins = $('pins'); if (!pins || !D) return;
+  var live = R.show && R.n >= 6 && T != null;
+  Array.prototype.forEach.call(pins.querySelectorAll('.pin.t'), function (el) {
+    var c = cycloneById(el.getAttribute('data-t')); if (!c || c.low) return;
+    var p = live ? cycloneAt(c, T) : { x: c.x, y: c.y }, moved = Math.abs(p.x - c.x) + Math.abs(p.y - c.y) > 0.25;
+    el.style.left = p.x.toFixed(2) + '%'; el.style.top = p.y.toFixed(2) + '%'; el.classList.toggle('fcpos', moved);
+    var g = pins.querySelector('.tghost[data-g="' + c.id + '"]');
+    if (!g) { g = document.createElement('span'); g.className = 'tghost'; g.setAttribute('data-g', c.id); g.title = 'Reported position'; pins.appendChild(g); }
+    g.style.left = c.x.toFixed(2) + '%'; g.style.top = c.y.toFixed(2) + '%'; g.hidden = !moved || el.style.display === 'none';
+    var ring = S.tk === c.id ? pins.querySelector('.vrange.k-t:not(.cu)') : null;      // the selected cyclone's wind ring travels with it
+    if (ring) { ring.style.left = p.x.toFixed(2) + '%'; ring.style.top = p.y.toFixed(2) + '%'; }
+    Array.prototype.forEach.call(S.tk === c.id ? pins.querySelectorAll('.vrange.cu.storm') : [], function (r2) { r2.style.left = p.x.toFixed(2) + '%'; r2.style.top = p.y.toFixed(2) + '%'; });
+  });
+}
+/* ---------- news video: played during auto-show, or on request from an airport's news list ---------- */
+// A news video is played only through the publisher's own YouTube player, muted when it starts by itself (browsers allow
+// sound only after someone presses something). Each video plays by itself at most once every VID_AGAIN_MS.
+var VID = { open: false, tour: false, done: null, timer: null, id: '' }, VID_SEEN = {}, VID_MAX_MS = 150000, VID_AGAIN_MS = 2 * 3600000;
+function typhoonTourList() { return D ? cyclonesShown().filter(function (c) { return c.inpar && (c.onmap || c.show); }) : []; }
+function airportsFor(item) {      // the airports a tour item is about, for finding its news
+  if (item.a) return [item.a];
+  var names = [], ids = [];
+  if (item.t) { var c = cycloneById(item.t); if (c) names = (c.now || []).concat(c.soon || []); }
+  if (item.v) { var v = volcanoById(item.v); if (v) names = (v.hits || []).concat(String(v.near || '').split(/\), ?/).map(function (s) { return s.replace(/\s*\(.*$/, '').trim(); })); }
+  if (item.q) { var q = quakeById(item.q); if (q) names = (q.hits || []).concat([String(q.near || '').split(',')[0].trim()]); }
+  (D.airports || []).forEach(function (a) { if (names.indexOf(a.name) >= 0) ids.push(a.id); });
+  return ids;
+}
+function bestVideo(ids, auto) {      // the most critical playable video: about flights or the airport first, then the newest
+  var best = null;
+  ids.forEach(function (id) { ((D.news || {})[id] || []).forEach(function (n) {
+    if (!n.yt || (auto && VID_SEEN[n.yt] && Date.now() - VID_SEEN[n.yt] < VID_AGAIN_MS)) return;
+    var rank = (n.about === 'airport' ? 2 : 1) * 1e13 + n.ms;
+    if (!best || rank > best.rank) best = { n: n, rank: rank, ap: id };
+  }); });
+  return best;
+}
+function vidBox() {
+  var b = $('newsVid');
+  if (!b) {
+    b = document.createElement('div'); b.id = 'newsVid'; b.className = 'newsvid'; b.hidden = true;
+    b.innerHTML = '<div class="nvh"><b>News video</b><span id="nvSrc"></span><button class="nvx" id="nvClose" aria-label="Close the video" title="Close">×</button></div><div class="nvf" id="nvFrame"></div><a id="nvLink" target="_blank" rel="noopener noreferrer"></a><p class="nvn" id="nvNote"></p>';
+    var dt = $('detail'); dt.parentNode.insertBefore(b, dt); $('nvClose').addEventListener('click', function () { vidClose(true); });
+  }
+  return b;
+}
+function vidPlay(n, ap, auto, done) {
+  var b = vidBox(), a = byId(ap); vidClose(false);
+  VID.open = true; VID.tour = !!auto; VID.done = done || null; VID.id = n.yt; if (auto) VID_SEEN[n.yt] = Date.now();
+  $('nvFrame').innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(n.yt) + '?autoplay=1&mute=' + (auto ? 1 : 0) + '&playsinline=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(location.origin) + '" title="' + esc(n.title) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+  $('nvSrc').textContent = (a ? a.name + ' · ' : '') + n.src + ' · ' + agoText(n.ms);
+  $('nvLink').textContent = n.title; $('nvLink').href = n.link;
+  $('nvNote').textContent = auto ? 'Playing without sound because it started by itself. Press the video for sound.' : '';
+  b.hidden = false; if (!auto) try { b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+  var f = b.querySelector('iframe');
+  f.addEventListener('load', function () { try { f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'], id: 1, channel: 'widget' }), '*'); } catch (e) {} });
+  clearTimeout(VID.timer); VID.timer = setTimeout(function () { vidEnd(); }, VID_MAX_MS);      // a safety limit in case the player never reports the end
+}
+function vidEnd() {      // the video finished, failed, or ran past the limit
+  if (!VID.open) return;
+  var done = VID.done, tour = VID.tour, touched = Date.now() - TOUR.lastUser < TOUR_IDLE_MS;
+  if (tour && !touched) vidClose(false);      // someone who started watching keeps the video until they close it
+  VID.done = null; if (done) done();
+}
+function vidClose(user) { clearTimeout(VID.timer); VID.open = false; var b = $('newsVid'); if (b) { b.hidden = true; $('nvFrame').innerHTML = ''; } if (user && VID.done) { var d = VID.done; VID.done = null; d(); } }
+window.addEventListener('message', function (e) {
+  if (!VID.open || !/youtube(-nocookie)?\.com$/.test(String(e.origin).replace(/^https?:\/\/(www\.)?/, ''))) return;
+  var m; try { m = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+  if (!m) return;
+  var st = m.event === 'onStateChange' ? m.info : (m.event === 'infoDelivery' && m.info && m.info.playerState != null ? m.info.playerState : null);
+  if (st === 0 || m.event === 'onError') setTimeout(vidEnd, m.event === 'onError' ? 500 : 1500);      // 0 = ended
+});
+document.addEventListener('click', function (e) {
+  var p = e.target.closest && e.target.closest('[data-play]'); if (!p) return;
+  e.preventDefault(); var ap = p.getAttribute('data-ap'), n = ((D.news || {})[ap] || []).filter(function (x) { return x.yt === p.getAttribute('data-play'); })[0];
+  if (n) vidPlay(n, ap, false, null);
+});
 function placeLabels() {
   if (!GLASS) return;
   var vp0 = $('vp'), vr = vp0.getBoundingClientRect(); if (!vr.width) return;
@@ -4020,7 +4171,7 @@ function rainSetup() {
   rainDraw();
 }
 function rainDraw() {
-  if (!RAIN || R.n < 6) return;
+  if (!RAIN || R.n < 6 || !R.show) { cycloneSync(null); if (!RAIN || R.n < 6) return; }
   var g = RAIN.grid, P = RAIN.proj, k = Math.floor(R.pos), f = R.pos - k, A = RAIN.rain[R.i0 + k], B = RAIN.rain[Math.min(R.i0 + k + 1, RAIN.rain.length - 1)];
   var img = sctx.createImageData(g.cols, g.rows), d = img.data;
   for (var i = 0; i < A.length; i++) { var c = rainColor(A[i] + (B[i] - A[i]) * f); d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = c[3]; }
@@ -4054,6 +4205,7 @@ function rainDraw() {
     var ap = byId(t.id); if (!ap || !inRegion(ap) || !(levelShown(ap.level, true) || ap.id === S.sel)) return; seen[t.id] = 1;
     bolt(PX(ap.x) - 12 * inv, PY(ap.y) - 14 * inv, 18 * inv);
   });
+  cycloneSync(T);
   var hk = Math.round(R.pos);
   if (hk !== R.lab) {
     R.lab = hk; $('rainSlider').value = hk;
