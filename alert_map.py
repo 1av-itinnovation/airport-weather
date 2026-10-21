@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Airport Weather Monitoring: the small map picture shown in Teams and email alerts.
+Disruption Management Dashboard: the small map picture shown in Teams and email alerts.
 
 Draws a zoomed map around the airport, earthquake or volcano an alert is about, in the dashboard's
 style, and saves it under docs/alertmaps/ so the alert can show it. Only what the alert is about is

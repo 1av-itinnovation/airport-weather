@@ -1,4 +1,4 @@
-# 1AV Airport Weather Monitoring
+# 1AV Disruption Management Dashboard
 
 A view-only dashboard for the 36 Philippine airports served by Cebu Pacific and Cebgo. It watches the
 weather at each airport, and the earthquakes, volcanoes and typhoons that can affect them. It shows
@@ -45,7 +45,7 @@ not change an airport's level.
 | Region and Find an airport | Narrows to Luzon, Visayas or Mindanao, or jumps to one airport |
 | Layers | Turns rain, earthquakes, all volcanoes and all airport names on or off |
 | Hazards | Full lists of earthquakes, volcanoes, typhoons and low pressure areas |
-| Alert button | Shows active alerts with a count. New alerts appear briefly, then tuck away |
+| Alert button | Shows active alerts with a count, newest at the top. New alerts appear briefly, then tuck away |
 | Colours, sound, help | Auto, Day or Night colours; an optional soft chime; the Help guide |
 | Phone layout | Map, list and details become three tabs |
 
@@ -54,18 +54,23 @@ not change an airport's level.
 - **Usual view:** the Philippine Area of Responsibility (PAR), drawn as a dashed outline. Viewers can
   zoom out and drag further. Neighbouring countries are drawn for reference only.
 - **Rain timeline:** plays the forecast rain for the next 24 hours, with pause and a slider.
+  Each typhoon moves with it, to where RSMC Tokyo forecasts its centre at that hour; a small dashed
+  ring stays at its last reported position.
   Lightning marks come only from official thunderstorm warnings and airport forecasts.
 - **Marks:** purple rings for earthquakes, small purple dots for weaker ones, triangles for volcanoes,
   a brown area for an official ash cloud, a swirl for a tropical cyclone, a red L for a low pressure area.
 - **Returns to where you were:** closing a selection restores the previous zoom.
-- **Auto-show:** with nobody using the screen, the map visits each alert in turn.
+- **Auto-show:** with nobody using the screen, the map visits each alert in turn: earthquakes, volcanoes,
+  typhoons inside the PAR, then Danger airports. If a news video from the last 24 hours is about a place
+  on show, the most important one (flights or airport first, then newest) plays muted at the top of the
+  details panel (never over the map), at most once every 2 hours, and the round carries on when it ends.
 - **Windy map:** an optional, more detailed rain map from Windy.com.
 
 **Selecting something**
 
 | Selected | On the map | In the details |
 |---|---|---|
-| Airport | Close-up box: runway at its true direction, wind arrow, 5 km and 10 km rings | Banner, what to do, wind, gusts, visibility, lowest cloud, crosswind and headwind, forecast for later today, rain for the next 12 hours, tomorrow and the week ahead, source |
+| Airport | Close-up box: runway at its true direction, wind arrow, 5 km and 10 km rings | Banner, what to do, wind, gusts, visibility, lowest cloud, crosswind and headwind, forecast for later today, rain for the next 12 hours, news from the last 24 hours, tomorrow and the week ahead, source |
 | Earthquake | Rings at 25, 50 and 100 km. Airports inside 100 km with their distances | Magnitude, exact time, depth, nearest airport, tsunami note, aftershocks, cross-check |
 | Volcano | 150 km ring, ash cloud, direction arrow, forecast ash outlines with times, airport distances | Eruption time, ash warning, where the ash is heading, Alert Level, airports nearby |
 | Typhoon | Strong-wind ring, storm-force ring, forecast track and cone for up to 5 days. Airports marked "now" or "within 24 h" | Class, winds, position, airports within reach, cross-check |
@@ -79,6 +84,12 @@ Notes on the airport view:
 - **Crosswind and headwind.** Worked out from the reported wind direction and the stronger of wind or
   gusts, for the runway end facing the wind. A guide for ground staff only. Not shown when the wind is
   calm or variable, or for an Estimate.
+- **In the news.** Headlines from the last 24 hours from GMA News, ABS-CBN News and TV5, newest
+  first. A story is shown only if it names the airport's place and is about flights or a hazard
+  there; it is tagged "Flights or airport" or "Hazard in the area". Only the headline, a short summary,
+  the publisher's thumbnail and a link are kept; the story stays on the publisher's site. News never
+  changes an alert level. A story with its own YouTube video has a "Play video here" button; the video
+  plays in the publisher's YouTube player. The refresh opens at most 12 story pages to find their videos.
 - **Estimates.** Airports with no official report show wind, rain, cloud cover and temperature from a
   computer forecast, and are marked Estimate.
 
@@ -130,8 +141,10 @@ There is no server and no database.
 | Earthquakes | PHIVOLCS | USGS, then EMSC |
 | Volcanic ash and eruptions | Aviation ash warnings (SIGMET) | Tokyo Volcanic Ash Advisory Centre (VAAC) |
 | Volcano Alert Levels | PHIVOLCS bulletins | `volcano_levels.json`, entered by hand |
+| PAGASA typhoon names | PAGASA bulletin pages | `typhoon_names.json`, entered by hand |
 | Rain on the map | MET Norway | None |
 | Runways | OurAirports, stored in `runways.json` | None |
+| News | Public news feeds of GMA News, ABS-CBN News and TV5 | A Google News search limited to the same newsroom's site |
 
 When sources differ, the more reliable one is used, in this order: official airport report, official
 airport forecast, official area warning, Estimate.
@@ -180,6 +193,7 @@ cross-checked says so. It is never shown as confirmed.
 | Confirmed | Two of three sources: the same name within 1,000 km, or positions within 300 km |
 | Alert | A confirmed Tropical Storm or stronger whose strong winds (about 55 km/h or more) can reach an airport now, or at its forecast position 24 hours ahead |
 | Wind reach not reported | 300 km from the centre is used |
+| Name | Inside the PAR: the PAGASA name with the international name after it, for example "Typhoon Pepito (Man-yi)". Outside: the international name |
 | Basis | PAGASA wind signals and CAAP Memorandum Circular 013-2023. Wind signals are not published as data, so measured wind reach is the nearest equivalent. PAGASA's signal remains the official one |
 
 **Volcanoes**
@@ -196,7 +210,14 @@ The Safety office should confirm the typhoon rule and the 100 km and 150 km dist
 
 ## Alerts by Teams and email
 
-Only the most critical events are sent:
+Only the most critical events are sent. Every alert starts with its **alert level**, so readers
+know at once how serious it is. The subject line starts with the highest level in the message,
+for example `[DANGER] Disruption Management: ...`.
+
+| Alert level | Means | Used for |
+|---|---|---|
+| Danger | Act now | Thunderstorm at an airport; possible tsunami; M6.0 or stronger within 100 km of an airport; ash over an airport; typhoon winds that can reach an airport now |
+| Warning | Prepare | Any other earthquake alert; an eruption within 150 km; a raised volcano Alert Level; typhoon winds expected within 24 hours |
 
 | Alert | Sent when | Sent again |
 |---|---|---|
@@ -234,6 +255,7 @@ How it is sent:
 | `quake_watch.py` | The 5-minute check for earthquakes and ash warnings |
 | `runways.json` | Runway positions and directions for the 36 airports |
 | `volcano_levels.json` | Volcano Alert Levels entered by hand, used when PHIVOLCS cannot be read |
+| `typhoon_names.json` | PAGASA local names entered by hand, used when the PAGASA bulletin cannot be read |
 | `notify_state.json` | Record of alerts already sent. Do not delete it |
 | `docs/index.html` | The dashboard page |
 | `docs/data.json`, `docs/rain.json` | The data the page reads. Written by the refresh |
@@ -242,7 +264,7 @@ How it is sent:
 | `.github/workflows/` | The schedules: `refresh.yml` and `quake-watch.yml` |
 
 The run log of each refresh shows what every reader found. Lines start with a label such as
-`TYPHOON:`, `VAAC:` or `VOLCANO:`.
+`TYPHOON:`, `VAAC:`, `VOLCANO:` or `NEWS:`.
 
 ## Settings
 
@@ -260,6 +282,11 @@ The main values can be changed at the top of the files.
 | `SEND_VOLCANO_LEVEL` | `notify.py` | Off | Alerts for Alert Level 3 or higher |
 | `SEND_HEADSUP`, `SEND_BRIEFING` | `notify.py` | Off | Advance notices and twice-daily briefings |
 | `WATCH_MAG` | `quake_watch.py` | 4.5 | Smallest earthquake the 5-minute check reacts to |
+| `NEWS_SOURCES` | `build.py` | GMA, ABS-CBN, TV5 | Newsrooms read for airport news, each with its feed addresses |
+| `NEWS_PLACES` | `build.py` | One per airport | The place names that link a story to an airport |
+| `NEWS_HOURS`, `NEWS_MAX` | `build.py` | 24, 8 | How far back news goes, and how many stories per airport |
+| `NEWS_PAGE_FETCH` | `build.py` | 12 | Story pages opened per refresh to find a story's video |
+| `VID_MAX_MS`, `VID_AGAIN_MS` | `docs/index.html` | 150 s, 2 h | Longest auto-played video, and how soon the same video can play again |
 
 ## What it cannot do
 
@@ -275,12 +302,15 @@ The main values can be changed at the top of the files.
   Confirm typhoon decisions against PAGASA and CAAP advisories.
 - Low pressure areas come from one source and the list is not complete. PAGASA's outlook is the official one.
 - Crosswind figures are a guide for ground staff. Flight crews and the tower use their own.
+- News is picked by place and topic words, so an unrelated story can slip in or a relevant one be missed.
+  Read the story before acting on it.
 
 ## Data credits
 
 Data belongs to its publishers: PAGASA, the US Aviation Weather Center and NOAA, MET Norway,
 Open-Meteo, the Japan Meteorological Agency (RSMC Tokyo and Tokyo VAAC), GDACS, the Joint Typhoon
-Warning Center, PHIVOLCS, USGS, EMSC and OurAirports. The optional detailed rain map is by Windy.com.
+Warning Center, PHIVOLCS, USGS, EMSC and OurAirports. Headlines belong to GMA News, ABS-CBN News
+and TV5, and link to their sites. The optional detailed rain map is by Windy.com.
 
 ## Copyright
 

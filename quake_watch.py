@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Airport Weather Monitoring: fast earthquake and volcanic ash watch.
+Disruption Management Dashboard: fast earthquake and volcanic ash watch.
 
 The full data refresh runs about every 20 minutes. This small check runs in between: every minute from the Live Alert
 Watch (live_watch.py), and every few minutes on its own as a fallback.

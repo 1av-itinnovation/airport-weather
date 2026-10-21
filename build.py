@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-1AV Airport Weather Monitoring - data builder.
+1AV Disruption Management Dashboard - data builder.
 
 Copyright (c) 2026 1Aviation Groundhandling Services, Corp. All rights reserved.
 Created under 1AV IT Innovation by Jake V Borras.
@@ -1175,6 +1175,35 @@ else:
 #   Expected in 24 hours  : an airport is inside that area at the 24-hour forecast position.
 #   TY_NEAR_KM            : used only when the reach is not given.
 TY_NEAR_KM = 300
+PAGASA_TC_PAGES = ['https://www.pagasa.dost.gov.ph/tropical-cyclone/severe-weather-bulletin', 'https://www.pagasa.dost.gov.ph/tropical-cyclone/tropical-cyclone-advisory',
+                   'https://bagong.pagasa.dost.gov.ph/tropical-cyclone/severe-weather-bulletin']
+TY_NAMES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'typhoon_names.json')
+def _pagasa_names():
+    """PAGASA local names of the cyclones it is tracking. Returns ({INTERNATIONAL NAME: 'Local'}, [local names with no
+    international name]). Read from the PAGASA bulletin pages, which write for example 'Super Typhoon PEPITO (MAN-YI)';
+    names typed into typhoon_names.json ({"MAN-YI": "Pepito"}) are used as well, and win if the two differ."""
+    out = {}; local_only = []
+    cls = r'(?i:SUPER TYPHOON|SEVERE TROPICAL STORM|TROPICAL STORM|TROPICAL DEPRESSION|TYPHOON)'
+    for u in PAGASA_TC_PAGES:
+        page = fetch(u, tries=1, text=True, timeout=20, insecure_ok=True)
+        if not page: print(f'TYPHOON: PAGASA page not reached: {u}', file=sys.stderr); continue
+        txt = html.unescape(re.sub(r'<[^>]+>', ' ', page)); txt = ' '.join(txt.split())
+        n0 = len(out) + len(local_only)
+        for m in re.finditer(cls + r'\s+["\u201c\u2018\']?([A-Z][A-Za-z]{2,})["\u201d\u2019\']?\s*([({]\s*([A-Z][A-Z\- ]{2,}?)\s*[)}])?', txt):
+            loc = m.group(1).capitalize()
+            if loc.upper() in ('BULLETIN', 'ADVISORY', 'IN', 'OUTSIDE', 'INSIDE', 'WARNING', 'SIGNAL', 'WIND'): continue
+            if m.group(3): out[re.sub(r'[^A-Z]', '', m.group(3).upper())] = loc
+            elif loc not in local_only: local_only.append(loc)
+        print(f'TYPHOON: PAGASA page read: {u} ({len(out) + len(local_only) - n0} names found)', file=sys.stderr)
+        if out or local_only: break
+    try:
+        for k, v in (json.load(open(TY_NAMES_FILE, encoding='utf-8')).get('names') or {}).items():
+            if k and v and not k.startswith('_'): out[re.sub(r'[^A-Z]', '', k.upper())] = str(v).strip().capitalize()
+    except FileNotFoundError: pass
+    except Exception as e: print('TYPHOON: typhoon_names.json could not be read:', e, file=sys.stderr)
+    local_only = [n for n in local_only if n not in out.values()]
+    if out or local_only: print(f"TYPHOON: PAGASA names: {', '.join(f'{k} = {v}' for k, v in out.items())}{'; local only: ' + ', '.join(local_only) if local_only else ''}", file=sys.stderr)
+    return out, local_only
 def _past(name, x, y):
     """Where this cyclone has been, from the dashboard's own earlier checks (kept for 7 days): [[ms, x, y], ...]."""
     out = []
@@ -1218,6 +1247,16 @@ try:
         if 'gdacs' not in c['src']: c['src'].append('gdacs')
         c['gd'] = g
     _label = {'sigmet': 'aviation storm warnings', 'jma': 'RSMC Tokyo', 'gdacs': 'GDACS'}
+    # PAGASA gives every cyclone inside the PAR a local name. It is read from the PAGASA bulletin pages, with names typed into
+    # typhoon_names.json as the backup. Unnamed tropical depressions get the PAGASA name only when exactly one of each exists.
+    _pnames, _plocal_only = _pagasa_names()
+    _unnamed_in = [c for c in _c if c['inpar'] and (not c['name'] or c['name'] == 'Unnamed')]
+    for c in _c:
+        c['local'] = ''
+        if c['inpar']:
+            c['local'] = _pnames.get(re.sub(r'[^A-Z]', '', (c['name'] or '').upper()), '')
+            if not c['local'] and len(_unnamed_in) == 1 and c is _unnamed_in[0] and len(_plocal_only) == 1: c['local'] = _plocal_only[0]
+        if c['inpar'] or c['local']: print(f"TYPHOON: {c['name'] or 'unnamed'} inside the PAR: PAGASA name {c['local'] or 'not found'}", file=sys.stderr)
     for c in _c:
         j = c['jma']; g = c['gd']
         if j and 'sigmet' not in c['src']:        # no aviation warning: take position and movement from RSMC Tokyo
@@ -1237,7 +1276,9 @@ try:
         now_ap = sorted(r['name'] for r in rows if strong and hav(c['la'], c['lo'], r['lat'], r['lon']) <= reach)
         exp_ap = sorted(r['name'] for r in rows if strong and fc and r['name'] not in now_ap and hav(fc[0], fc[1], r['lat'], r['lon']) <= reach)
         confirmed = len(c['src']) >= 2
-        title = (word + ' ' + c['name']) if c['name'] and c['name'] != 'Unnamed' else word
+        _intl = c['name'] if c['name'] and c['name'] != 'Unnamed' else ''
+        # inside the PAR the PAGASA name is used, with the international name after it, as PAGASA writes it; outside, the international name
+        title = (word + ' ' + c['local'] + (f" ({_intl})" if _intl else '')) if c['local'] else ((word + ' ' + _intl) if _intl else word)
         pos = f"about {km(c['dist'])} km {c['side']} of {c['near']}"
         move = ((f"moving {c['mv']}" + (f" at {c['sp']} km/h" if c['sp'] else '')) if c['mv'] else ('almost stationary' if (j or {}).get('still') else ''))
         windline = (f"Maximum winds about {wind} km/h near the centre" + (f", gusts to {j['gust']} km/h" if j and j.get('gust') else '') + ('.' if not est else ' (estimated from GDACS; RSMC Tokyo gave no figure).')) if wind else 'Strength not reported at this check.'
@@ -1257,7 +1298,7 @@ try:
         if not confirmed and (now_ap or exp_ap): todo = f"Not yet confirmed: only one source is reporting {title}, so no alert has been sent. If it is confirmed, strong winds could reach {', '.join(now_ap or exp_ap)}. Check the PAGASA bulletin before acting."
         x_ = P['cx'][0] * c['lo'] + P['cx'][1]; y_ = P['cy'][0] * c['la'] + P['cy'][1]
         cid = 't' + re.sub(r'[^a-z0-9]', '', c['name'].lower() or 'x') + str(len(CYCLONES))
-        CYCLONES.append(dict(id=cid, name=c['name'], title=title, stage=code, word=word, confirmed=confirmed, inpar=c['inpar'], lat=c['la'], lon=c['lo'], x=x_, y=y_, show=(-139 <= x_ <= 380 and -80 <= y_ <= 116), near=(-150 <= x_ <= 250 and -18 <= y_ <= 116), onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100),
+        CYCLONES.append(dict(id=cid, name=c['name'], local=c['local'], dname=(c['local'] or c['name']), title=title, stage=code, word=word, confirmed=confirmed, inpar=c['inpar'], lat=c['la'], lon=c['lo'], x=x_, y=y_, show=(-139 <= x_ <= 380 and -80 <= y_ <= 116), near=(-150 <= x_ <= 250 and -18 <= y_ <= 116), onmap=(0 <= x_ <= 100 and 0 <= y_ <= 100),
             wind=wind, gale=(gale if strong else None), reach=(reach if strong else None), fx=(P['cx'][0] * fc[1] + P['cx'][1] if fc else None), fy=(P['cy'][0] * fc[0] + P['cy'][1] if fc else None),
             storm=((j or {}).get('storm') if strong else None), now=now_ap, soon=exp_ap, dist=c['dist'], chg=c['chg'], trend=c['trend'],
             where=f"{title} is {pos}" + (f", {move}" if move else '') + (f" and {c['chg']}" if c['chg'] else '') + '.' + (f" It is {c['trend']}." if c['trend'] else ''),
@@ -1743,6 +1784,122 @@ src.append(f"Volcanoes: ash clouds and eruptions are from official aviation ash 
 
 KEEP=('obs','id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc','week')
 QKEEP=('check','hits','ms','lat','lon','magnote','shocks','slist','nshock','id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
+for _c2 in CYCLONES:      # the summary line uses the PAGASA name for a cyclone inside the PAR
+    if _c2.get('local') and _c2.get('name'): ty_banner = re.sub(r'\b' + re.escape(_c2['name']) + r'\b', _c2['local'], ty_banner, flags=re.I)
+
+# ---------------- News about each airport (last 24 hours) ----------------
+# Headlines from the newsrooms listed in NEWS_SOURCES, filtered to stories that name an airport's place AND are about
+# flights or a hazard there. Only the headline, a one-line summary, the publisher's own thumbnail and a link to the full
+# story are kept; the story itself stays on the publisher's site. For each newsroom the first feed that answers is used,
+# with a Google News search limited to that newsroom's site as the backup. Lines starting NEWS: in the run log show
+# which feed was read and how many stories matched. It never affects an alert level.
+NEWS_HOURS = 24; NEWS_MAX = 8
+NEWS_PAGE_FETCH = 12      # at most this many story pages are opened per refresh, only to find the story's own YouTube video
+YT_RE = re.compile(r'(?:youtube(?:-nocookie)?\.com/(?:embed/|watch\?v=|shorts/)|youtu\.be/)([A-Za-z0-9_-]{11})')
+def _story_video(page):
+    """The YouTube video a story page is built around: its og:video or twitter:player tag first, then the first embedded
+    player. Links to a channel or a 'latest videos' strip are not players, so they are not picked up."""
+    for pat in (r'<meta[^>]+(?:property|name)="(?:og:video(?::url|:secure_url)?|twitter:player)"[^>]+content="([^"]+)"', r'<meta[^>]+content="([^"]+)"[^>]+(?:property|name)="(?:og:video(?::url|:secure_url)?|twitter:player)"', r'<iframe[^>]+src="([^"]+)"'):
+        for m in re.finditer(pat, page, re.I):
+            y = YT_RE.search(html.unescape(m.group(1)))
+            if y: return y.group(1)
+    return ''
+NEWS_SOURCES = [
+    ('GMA News', 'gmanetwork.com', ['https://data.gmanetwork.com/gno/rss/news/feed.xml', 'https://data.gmanetwork.com/gno/rss/news/nation/feed.xml',
+                                    'https://data.gmanetwork.com/gno/rss/news/regions/feed.xml']),
+    ('ABS-CBN News', 'abs-cbn.com', ['https://www.abs-cbn.com/rss/news', 'https://news.abs-cbn.com/rss/news', 'https://news.abs-cbn.com/rss/latest-news']),
+    ('TV5 / News5', 'news5.com.ph', ['https://www.news5.com.ph/feed', 'https://news.tv5.com.ph/feed', 'https://interaksyon.philstar.com/feed/']),
+]
+NEWS_PLACES = {
+    'bacolod': r'Bacolod|Silay|Negros Occidental', 'boholpanglao': r'Bohol|Panglao|Tagbilaran', 'busuangacoron': r'Coron|Busuanga',
+    'butuan': r'Butuan|Agusan', 'cagayandeoro': r'Cagayan de Oro|Laguindingan|Misamis Oriental|\bCDO\b', 'calbayog': r'Calbayog|\bSamar\b',
+    'camiguin': r'Camiguin', 'caticlanboracay': r'Caticlan|Boracay', 'cauayan': r'Cauayan|\bIsabela\b', 'cebumactan': r'Mactan|Lapu-?Lapu|\bCebu\b',
+    'clark': r'\bClark\b|Pampanga|Angeles City', 'davao': r'\bDavao\b', 'dipolog': r'Dipolog|Zamboanga del Norte', 'dumaguete': r'Dumaguete|Negros Oriental',
+    'elnido': r'El Nido', 'generalsantos': r'General Santos|GenSan|South Cotabato', 'iloilo': r'Iloilo', 'kalibo': r'Kalibo|\bAklan\b',
+    'laoag': r'Laoag|Ilocos Norte', 'legazpibicol': r'Legazpi|Daraga|\bAlbay\b|Bicol International', 'manilanaia': r'\bNAIA\b|Ninoy Aquino|\bPasay\b',
+    'masbate': r'Masbate', 'naga': r'\bNaga\b|Camarines Sur', 'ozamiz': r'Ozamiz|Misamis Occidental', 'pagadian': r'Pagadian|Zamboanga del Sur',
+    'puertoprincesa': r'Puerto Princesa', 'roxas': r'Roxas City|\bCapiz\b', 'sanjosemindoro': r'San Jose,? Occidental Mindoro|Occidental Mindoro',
+    'sanvicente': r'San Vicente,? Palawan|Port Barton', 'siargao': r'Siargao|Surigao del Norte', 'surigao': r'\bSurigao\b', 'tacloban': r'Tacloban|\bLeyte\b',
+    'tawitawi': r'Tawi-?Tawi|Bongao|Sanga-?Sanga', 'tuguegarao': r'Tuguegarao|\bCagayan\b(?! de Oro| Valley)', 'virac': r'Virac|Catanduanes',
+    'zamboanga': r'Zamboanga City|\bZamboanga\b(?! del| Sibugay)',
+}
+NEWS_AIR = re.compile(r'\bairports?\b|\bflights?\b|\bflight cancell?ations?\b|\bcancell?ed\b|\bdelay(?:s|ed)?\b|\bdivert|\brunway|\bCAAP\b|\bMIAA\b|Cebu Pacific|\bCebgo\b|Philippine Airlines|\bAirAsia\b|stranded passengers|passengers stranded|\bterminal\b', re.I)
+NEWS_HAZ = re.compile(r'typhoon|tropical (?:storm|depression|cyclone)|wind signal|signal no\.?|\bLPA\b|low pressure|\bbagyo\b|flood|heavy rain|thunderstorm|\bstorm\b|earthquake|\bquake\b|magnitude|tsunami|erupt|ashfall|volcan|Phivolcs|PAGASA|landslide|state of calamity|evacuat|power (?:outage|interruption)|blackout|class(?:es)? suspended|suspension of classes', re.I)
+def _news_items(xml_text):
+    """Stories from an RSS or Atom feed: title, link, time, summary, picture and whether it is a video."""
+    out = []
+    for blk in re.findall(r'<(?:item|entry)\b.*?</(?:item|entry)>', xml_text, re.S | re.I):
+        def tag(n):
+            m = re.search(r'<' + n + r'\b[^>]*>(.*?)</' + n + r'>', blk, re.S | re.I)
+            return html.unescape(re.sub(r'<!\[CDATA\[(.*?)\]\]>', r'\1', m.group(1), flags=re.S)).strip() if m else ''
+        title = re.sub(r'<[^>]+>', '', tag('title')).strip(); link = tag('link')
+        if not link:
+            m = re.search(r'<link[^>]+href="([^"]+)"', blk); link = m.group(1) if m else ''
+        when = tag('pubDate') or tag('published') or tag('updated') or tag('dc:date')
+        try:
+            import email.utils as _eu
+            t = _eu.parsedate_to_datetime(when) if re.search(r'[A-Za-z]{3},? \d', when) else dt.datetime.fromisoformat(when.replace('Z', '+00:00'))
+            if t.tzinfo is None: t = t.replace(tzinfo=dt.timezone.utc)
+        except Exception: continue
+        desc_raw = tag('description') or tag('summary') or tag('content:encoded') or tag('content')
+        img = ''
+        for pat in (r'<media:thumbnail[^>]+url="([^"]+)"', r'<media:content[^>]+url="([^"]+\.(?:jpe?g|png|webp)[^"]*)"', r'<enclosure[^>]+url="([^"]+\.(?:jpe?g|png|webp)[^"]*)"', r'<media:content[^>]+medium="image"[^>]+url="([^"]+)"'):
+            m = re.search(pat, blk, re.I)
+            if m: img = html.unescape(m.group(1)); break
+        if not img:
+            m = re.search(r'<img[^>]+src="([^"]+)"', desc_raw, re.I); img = html.unescape(m.group(1)) if m else ''
+        desc = ' '.join(re.sub(r'<[^>]+>', ' ', desc_raw).split())
+        video = bool(re.search(r'/video|/videos/|youtube\.com|youtu\.be', link, re.I) or re.search(r'medium="video"|type="video', blk, re.I) or re.match(r'(WATCH|VIDEO)\b', title, re.I))
+        y = re.search(r'<iframe[^>]+src="[^"]*?' + YT_RE.pattern, blk, re.I)
+        if title and link.startswith('http'): out.append(dict(title=title, link=link, t=t, desc=desc, img=img if img.startswith('https://') else '', video=video, yt=(y.group(1) if y else '')))
+    return out
+NEWS = {}; NEWS_SRC = []
+try:
+    _stories = []
+    for _name, _site, _urls in NEWS_SOURCES:
+        got = None
+        for _u in _urls + [f'https://news.google.com/rss/search?q=site:{_site}+when:1d&hl=en-PH&gl=PH&ceid=PH:en']:
+            body = fetch(_u, tries=1, text=True, timeout=12)
+            items = _news_items(body) if body else []
+            if items: got = (_u, items); break
+            print(f'NEWS: {_name}: nothing read from {_u}', file=sys.stderr)
+        if not got: NEWS_SRC.append(dict(name=_name, ok=False)); continue
+        _u, items = got; recent = [x for x in items if (NOW - x['t']).total_seconds() <= NEWS_HOURS * 3600]
+        backup = 'news.google.com' in _u
+        print(f'NEWS: {_name}: read {_u} ({len(items)} stories, {len(recent)} in the last {NEWS_HOURS} hours)' + (' [backup]' if backup else ''), file=sys.stderr)
+        NEWS_SRC.append(dict(name=_name, ok=True, backup=backup))
+        for x in recent: x['src'] = _name; _stories.append(x)
+    _seen = set()
+    for x in sorted(_stories, key=lambda x: x['t'], reverse=True):
+        key = re.sub(r'[^a-z0-9]', '', x['title'].lower())[:70]
+        if key in _seen: continue
+        _seen.add(key)
+        text = x['title'] + ' ' + x['desc']; placetext = re.sub(r'Cebu Pacific|Cebu-based', ' ', text, flags=re.I)
+        air = bool(NEWS_AIR.search(text)); haz = bool(NEWS_HAZ.search(text))
+        if not (air or haz): continue
+        for aid, pat in NEWS_PLACES.items():
+            if not re.search(pat, placetext, re.I): continue
+            L = NEWS.setdefault(aid, [])
+            if len(L) < NEWS_MAX:
+                L.append(dict(yt=x['yt'], title=x['title'], link=x['link'], ms=int(x['t'].timestamp() * 1000), src=x['src'], img=x['img'], video=x['video'],
+                              about=('airport' if air else 'area'), desc=(x['desc'][:180].rsplit(' ', 1)[0] + '...' if len(x['desc']) > 180 else x['desc'])))
+    # find each matched story's own video: reuse what the last refresh found, then open a few new story pages
+    try: _prev = {n['link']: n.get('yt', '') for L_ in (json.load(open(OUT, encoding='utf-8')).get('news') or {}).values() for n in L_}
+    except Exception: _prev = {}
+    _opened = 0; _found = {}
+    for L_ in NEWS.values():
+        for n in L_:
+            if n['yt'] or 'news.google.com' in n['link']: continue
+            if n['link'] in _found: n['yt'] = _found[n['link']]
+            elif n['link'] in _prev: n['yt'] = _prev[n['link']]
+            elif _opened < NEWS_PAGE_FETCH:
+                _opened += 1; page = fetch(n['link'], tries=1, text=True, timeout=12) or ''
+                n['yt'] = _story_video(page); _found[n['link']] = n['yt']
+            if n['yt']: n['video'] = True
+    print(f"NEWS: {sum(len(v) for v in NEWS.values())} stories matched {len(NEWS)} airports; {sum(1 for L_ in NEWS.values() for n in L_ if n['yt'])} with a playable video ({_opened} story pages opened)", file=sys.stderr)
+except Exception as _e:
+    print('NEWS ERROR', _e, file=sys.stderr); NEWS = {}
+
 data=dict(
     generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000), recent=RECENT,
     checked=' '.join(parts), problems=PROBLEMS,
@@ -1755,7 +1912,7 @@ data=dict(
     quakes_small=QUAKES_SMALL, cyclones=CYCLONES, ty_alerts=TY_ALERTS, ty_near_km=TY_NEAR_KM, lows=LOWS, lows_ok=LOWS_OK,
     quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],ms=a['ms'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), week_ms=WEEK_MS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
-    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], ash=ASH_AREAS, ash_fc=ASH_FC, volcano_ok=vol_ok, volcano_flag=vol_flag,
+    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], news=NEWS, news_src=NEWS_SRC, news_hours=NEWS_HOURS, ash=ASH_AREAS, ash_fc=ASH_FC, volcano_ok=vol_ok, volcano_flag=vol_flag,
     volcano_asof=((' and '.join(([] if SIGMET is None else ['Aviation ash warnings']) + ([] if VAAC is None else ['Tokyo VAAC'])) + f", {day(NOW)}, {clock_plain(NOW)}") if vol_ok else ''), volcano_km=VOLC_KM,
     sources=' '.join(src),
 )

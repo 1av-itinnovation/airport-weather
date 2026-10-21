@@ -1,0 +1,4 @@
+{
+  "_about": "PAGASA local names, typed in by hand when the PAGASA bulletin cannot be read automatically. Key: the international name. Value: the PAGASA name. Example: \"MAN-YI\": \"Pepito\". Remove a name when the cyclone has left the Philippine Area of Responsibility.",
+  "names": {}
+}
