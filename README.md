@@ -86,9 +86,10 @@ Notes on the airport view:
 - **Crosswind and headwind.** Worked out from the reported wind direction and the stronger of wind or
   gusts, for the runway end facing the wind. A guide for ground staff only. Not shown when the wind is
   calm or variable, or for an Estimate.
-- **Official updates and news.** Each airport, earthquake, volcano and typhoon has a list, most critical first:
-  official updates, then stories about flights or the airport, then the event itself, then hazards in the area;
-  newest first within each. Airports look back 24 hours, events 48 hours.
+- **Official updates and news.** Each airport, earthquake, volcano and typhoon has a list, newest first.
+  Only items whose headline names the selected airport's place, or the selected event, are shown.
+  Airports look back 24 hours, events 48 hours. When the same story comes from several sources, the earliest
+  publishing time is used, because some feeds re-stamp a story each time it is edited.
   - *Official:* the latest PHIVOLCS bulletin of a volcano; the PAGASA tropical cyclone bulletin while a cyclone
     is inside the PAR; PAGASA regional thunderstorm and rainfall advisories that name an airport's place.
   - *Newsrooms:* the feeds of GMA News, ABS-CBN News, TV5, CNN International, the Philippine News Agency,
@@ -97,8 +98,9 @@ Notes on the airport view:
   - *Social media:* the public YouTube channels of GMA, ABS-CBN, TV5, PAGASA and PHIVOLCS. Facebook, X and
     TikTok are not read: they need an account and an approved developer key, and reading their pages
     otherwise breaks their terms. The same videos are usually on YouTube.
-  - *Matching:* an airport story names its place and is about flights or a hazard; an event story names the
-    volcano or typhoon (international or PAGASA name), or for an earthquake the place or the magnitude.
+  - *Matching:* the headline must name the airport's place, the volcano, or the typhoon (international or PAGASA
+    name); for an earthquake the headline must be about an earthquake, with the place or the magnitude.
+    Airport stories must also be about flights or a hazard.
     Stories about investigations, courts or budgets are skipped unless they are about flights.
   - *Video:* selecting something plays its most critical video at once, muted, at the top of the details
     panel; closing the selection stops it. Auto-show does the same. Only YouTube videos can play here.

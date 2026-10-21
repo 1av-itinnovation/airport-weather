@@ -1806,7 +1806,7 @@ for _c2 in CYCLONES:      # the summary line uses the PAGASA name for a cyclone 
 # To keep requests light, everything is read at most every NEWS_EVERY_MIN minutes; refreshes in between reuse the last result.
 # Lines starting NEWS: in the run log show what each source gave.
 NEWS_HOURS = 24; EVENT_HOURS = 48; NEWS_MAX = 8; NEWS_EVERY_MIN = 30
-NEWS_VERSION = 2      # raise this when the news sources change, so the next refresh reads them at once instead of reusing
+NEWS_VERSION = 3      # raise this when the news sources change, so the next refresh reads them at once instead of reusing
 NEWS_PAGE_FETCH = 12      # at most this many story pages are opened per read, only to find the story's own YouTube video
 YT_RE = re.compile(r'(?:youtube(?:-nocookie)?\.com/(?:embed/|watch\?v=|shorts/)|youtu\.be/)([A-Za-z0-9_-]{11})')
 def _story_video(page):
@@ -1972,12 +1972,17 @@ try:
         for x in _yt_channel(_name, _cid, _hs): _stories.append(x); _yn += 1
     NEWS_SRC.append(dict(name='YouTube channels', ok=_yn > 0))
     # one copy of each story, within the longest window
-    _seen = set(); _kept = []
-    for x in sorted(_stories, key=lambda x: x['t'], reverse=True):
-        if (NOW - x['t']).total_seconds() > EVENT_HOURS * 3600: continue
+    # one copy of each story. Some feeds stamp a story again each time it is edited, so the earliest time any source
+    # gives is kept as its publishing time; the copy with a picture or a video is preferred.
+    _by = {}
+    for x in _stories:
         key = re.sub(r'[^a-z0-9]', '', x['title'].lower())[:70]
-        if key in _seen: continue
-        _seen.add(key); _kept.append(x)
+        y = _by.get(key)
+        if not y: _by[key] = dict(x); continue
+        t0 = min(y['t'], x['t'])
+        if (x.get('yt') and not y.get('yt')) or (x.get('img') and not y.get('img') and not y.get('yt')): y.update(x)
+        y['t'] = t0
+    _kept = sorted([x for x in _by.values() if (NOW - x['t']).total_seconds() <= EVENT_HOURS * 3600], key=lambda x: x['t'], reverse=True)
     print(f'NEWS: {len(_kept)} different stories in the last {EVENT_HOURS} hours', file=sys.stderr)
     # airports: the place is named and the story is about flights or a hazard, within NEWS_HOURS
     for x in _kept:
@@ -1989,7 +1994,7 @@ try:
         for aid, pat in NEWS_PLACES.items():
             # a story about flights may name the place anywhere; a general hazard story must name it in the headline,
             # so a long summary listing many provinces does not attach one story to many airports
-            if re.search(pat, placetext if air else placetitle, re.I):
+            if re.search(pat, placetitle, re.I):
                 L = NEWS.setdefault(aid, [])
                 if len(L) < NEWS_MAX: L.append(_item(x, 'airport' if air else 'area'))
     # events, matched by their own name or figures, within EVENT_HOURS
@@ -1998,7 +2003,7 @@ try:
     TY_W = re.compile(r'typhoon|tropical (?:storm|depression|cyclone)|\bstorm\b|\bbagyo\b|signal|PAGASA|landfall', re.I)
     for v in _vols:
         nm = {'Kanlaon': r'K[ae]nlaon|Canlaon', 'Hibok-Hibok': r'Hibok-?Hibok'}.get(v['name'], re.escape(v['name']))
-        L = [_item(x, 'hazard') for x in _kept if re.search(r'\b(' + nm + r')\b', x['title'] + ' ' + x['desc'], re.I) and VOLC_W.search(x['title'] + ' ' + x['desc']) and not (NEWS_NOT.search(x['title']) and not VOLC_W.search(x['title']))][:NEWS_MAX]
+        L = [_item(x, 'hazard') for x in _kept if re.search(r'\b(' + nm + r')\b', x['title'], re.I) and VOLC_W.search(x['title'] + ' ' + x['desc'][:300]) and not (NEWS_NOT.search(x['title']) and not VOLC_W.search(x['title']))][:NEWS_MAX]
         if L: NEWS['v:' + v['id']] = L
     for q in quakes:
         if not q.get('ms') or (NOW.timestamp() * 1000 - q['ms']) > EVENT_HOURS * 3600000: continue
@@ -2007,12 +2012,13 @@ try:
         magtxt = f"{q['mag']:.1f}"; L = []
         for x in _kept:
             t_ = x['title'] + ' ' + x['desc']
-            if x['t'].timestamp() * 1000 < q['ms'] - 600000 or not QUAKE_W.search(t_): continue
+            if x['t'].timestamp() * 1000 < q['ms'] - 600000 or not QUAKE_W.search(x['title']): continue      # the headline itself must be about an earthquake
+            t_ = x['title'] + ' ' + x['desc'][:300]
             if re.search(r'(?<![\d.])' + re.escape(magtxt) + r'(?![\d])', t_) or any(re.search(r'\b' + re.escape(w) + r'\b', t_, re.I) for w in words): L.append(_item(x, 'hazard'))
         if L: NEWS['q:' + q['id']] = L[:NEWS_MAX]
     for c in _cys:
         nms = [n for n in (c.get('name'), c.get('local')) if n and n != 'Unnamed']
-        L = [_item(x, 'hazard') for x in _kept if any(re.search(r'\b' + re.escape(n) + r'\b', x['title'] + ' ' + x['desc'], re.I) for n in nms) and TY_W.search(x['title'] + ' ' + x['desc'])][:NEWS_MAX]
+        L = [_item(x, 'hazard') for x in _kept if any(re.search(r'\b' + re.escape(n) + r'\b', x['title'], re.I) for n in nms) and TY_W.search(x['title'] + ' ' + x['desc'][:300])][:NEWS_MAX]
         if L: NEWS['t:' + c['id']] = L
     # 1. official updates, pinned at the top of each list
     def _pin(key, item): NEWS.setdefault(key, []).insert(0, item)
