@@ -2343,7 +2343,7 @@ html[data-theme="dark"] .news .nwm em.hz{color:#D9C2F2;background:#3A2A52}
 .fltp svg{position:absolute;left:-8px;top:-8px;width:16px;height:16px;overflow:visible}
 .fltp svg path{fill:#0077C8}
 .fltp .fltl{position:absolute;left:16px;top:-11px;white-space:nowrap;font:600 11px/1.5 "Noto Sans",sans-serif;color:#0B4F7C;background:#fff;border-radius:999px;padding:1px 9px 1px 8px;box-shadow:0 1px 5px rgba(10,30,60,.22);border-left:3px solid #0077C8;display:none}
-.fltp:hover .fltl,.fltp:focus .fltl,.fltp.hot .fltl,.fltp.pass .fltl,#pins.all-labels ~ .fltlayer .fltp .fltl{display:block}
+.fltp:hover .fltl,.fltp:focus-visible .fltl{display:block}
 .fltp:not(.hot):not(.pass){opacity:.8}
 .fltp.hot .fltb{background:#D32F2F;box-shadow:0 0 0 3px rgba(211,47,47,.25),0 1px 4px rgba(10,30,60,.35);animation:fltPulse 1.8s ease-out infinite}
 .fltp.hot svg path{fill:#fff}.fltp.hot .fltl{color:#B71C1C;border-left-color:#D32F2F}
@@ -2372,6 +2372,10 @@ html[data-theme="dark"] .fltin .flti.ash{background:#3A2E1C}
 #pins .ashtag:not(.cu)::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#D7B8A8;margin-right:6px;vertical-align:1px;box-shadow:4px -3px 0 -1px #D7B8A8,8px 0 0 -2px #D7B8A8}
 #pins .ashtag:not(.cu){padding-left:8px}
 html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B8A8}
+.lyr .fltsub{padding-left:24px;font-size:12.5px}
+.fltp.fsel .fltb{outline:3px solid #005687;outline-offset:2px}
+.pill.flt{color:#fff;background:#0077C8}.pill.flt.hot{background:#D32F2F}.pill.flt.pass{background:#EF8A00}
+.fltdet .dtodo b{display:block}
 </style>
 </head>
 <body class="glass">
@@ -2601,7 +2605,7 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
       <ul>
         <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Pause it, or drag the slider to any hour.</li>
         <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. The typhoon icon turns anticlockwise, as typhoons do; the stronger the typhoon, the faster it turns, and a typhoon or super typhoon sends out a soft ring. A small dashed ring stays at its last reported position.</li>
-        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 10 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. An amber plane is passing through an alert zone: within 25 km of an airport with a thunderstorm now, or inside an official volcanic ash area at or below the ash height. A plane that crossed ash is listed in the details of the airport it lands at, with a reminder to inspect it for ash. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Planes on the ground, and planes landing or taking off near an airport, are left off so the airport's own status always shows. Hover or tap a plane for its height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
+        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 10 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. An amber plane is passing through an alert zone: within 25 km of an airport with a thunderstorm now, or inside an official volcanic ash area at or below the ash height. A plane that crossed ash is listed in the details of the airport it lands at, with a reminder to inspect it for ash. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Planes on the ground, and planes landing or taking off near an airport, are left off so the airport's own status always shows. By default only the flights an alert affects are shown; tick "Show all flights" under Layers to see the whole fleet. Point at a plane for its flight number and destination, or click it to open its details on the right, like an airport: why it is marked, likely destination and arrival, height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
         <li><strong>Colours.</strong> Blue is light rain, green moderate, yellow heavy and red very heavy. The key sits just above the timeline.</li>
         <li><strong>Lightning marks.</strong> These come only from official thunderstorm warnings and airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
         <li><strong>A picture of the forecast.</strong> It plays no part in the alert levels. When the two differ, go by the alert level.</li>
@@ -2840,10 +2844,10 @@ function renderGlass() {
   var tot = c.danger + c.warning + c.advisory + c.normal || 1, seg = [['danger', '#D82B2B'], ['warning', '#F5A623'], ['advisory', '#E8C21A'], ['normal', '#2E9B45']];
   $('statsBig').innerHTML = '<div class="nums">' + seg.map(function (x) { return '<button data-f="' + x[0] + '"' + (S.filter === x[0] ? ' class="on"' : '') + '><b>' + c[x[0]] + '</b><span>' + PILL[x[0]] + '</span></button>'; }).join('') + '</div>' +
     '<div class="sbar">' + seg.map(function (x) { return '<i style="width:' + (100 * c[x[0]] / tot) + '%;background:' + x[1] + '"></i>'; }).join('') + '</div>';
-  document.querySelector('.app').classList.toggle('has-pick', !!(S.sel || S.qk || S.vk || S.tk));
+  document.querySelector('.app').classList.toggle('has-pick', !!(S.sel || S.qk || S.vk || S.tk || (typeof FLT !== 'undefined' && FLT.card && FLT.planes[FLT.card])));
   var cf = $('clearFilter'); if (cf) cf.hidden = (S.day === 'today' && S.filter === 'alerts');
-  $('paneDetails').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk || S.tk));
-  $('cols').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk || S.tk) && S.tab === 'details');
+  $('paneDetails').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk || S.tk || (typeof FLT !== 'undefined' && FLT.card && FLT.planes[FLT.card])));
+  $('cols').classList.toggle('has-sel', !!(S.sel || S.qk || S.vk || S.tk || (typeof FLT !== 'undefined' && FLT.card && FLT.planes[FLT.card])) && S.tab === 'details');
   volcanoFocus();
   setTimeout(placeSoon, 0);
   var key = S.sel || S.qk || S.vk || S.tk || '';
@@ -3218,12 +3222,12 @@ function applyState() {
       fold('about', 'About this reading', cy.confirmed ? 'Cross-checked' : 'One source only', (cy.ms ? field('Reported', phDay(cy.ms) + ', ' + phTime(cy.ms) + ' Philippine time (' + agoText(cy.ms) + ').') : '') + field('Source', cy.src) +
         field('Official wind signals', 'PAGASA issues the official Tropical Cyclone Wind Signals. Confirm any decision against the PAGASA bulletin and CAAP and airline advisories.')) + '</div>';
   } else {
-    d.innerHTML = '<div class="hint">Select an airport, earthquake, volcano or typhoon to see its details here.</div>';
+    d.innerHTML = (typeof FLT !== 'undefined' && FLT.card && FLT.planes[FLT.card]) ? fltDetail() : '<div class="hint">Select an airport, earthquake, volcano, typhoon or plane to see its details here.</div>';
   }
   var flagged = /^Earthquake flag/.test(D.flag || '');
   $('qDot').hidden = !flagged;
   $('vDot').hidden = !((D.vol_alerts || []).length);
-  $('summary').innerHTML = (a || q || vo) ? '' :
+  $('summary').innerHTML = (a || q || vo || (!cy && typeof FLT !== 'undefined' && FLT.card && FLT.planes[FLT.card])) ? '' :
     '<button class="sum" data-go="quakes"><span class="k">Earthquakes</span>' + (((D.eq_alerts || []).length || flagged) ? '<span class="v">' + ((D.eq_alerts || [])[0] ? shortAlert(D.eq_alerts[0]) + (D.eq_alerts.length > 1 ? ' <span class="calm">+' + (D.eq_alerts.length - 1) + ' more</span>' : '') : esc(D.flag)) + '</span>' : '<span class="v calm">No alert</span>') + '</button>' +
     (D.volcano_flag ? '<button class="sum" data-go="volcano"><span class="k">Volcanoes</span>' + ((D.vol_alerts || []).length ? '<span class="v">' + shortVolcano(D.vol_alerts[0]) + (D.vol_alerts.length > 1 ? ' <span class="calm">+' + (D.vol_alerts.length - 1) + ' more</span>' : '') + '</span>' : '<span class="v calm">No alert</span>') + '</button>' : '') +
     '<button class="sum" data-go="typhoon"><span class="k">Typhoon</span>' + (/^No typhoon/i.test(D.ty_banner || '') ? '<span class="v calm">None in the area</span>' : '<span class="v">' + esc(D.ty_banner) + '</span>') + '</button>';
@@ -3237,7 +3241,7 @@ function applyState() {
   var hzb = document.querySelector('.stabs button[data-tab="hazards"]'); if (hzb) hzb.classList.toggle('on', hzTab);
   Array.prototype.forEach.call(document.querySelectorAll('.ptabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === S.pane); });
   Array.prototype.forEach.call(document.querySelectorAll('.col'), function (el) { el.classList.toggle('show', el.getAttribute('data-pane') === S.pane); });
-  var sb = $('selBar'); sb.classList.toggle('has', !!(a || q || vo || cy));
+  var fsel = !(a || q || vo || cy) && typeof FLT !== 'undefined' && FLT.card && FLT.planes[FLT.card]; var sb = $('selBar'); sb.classList.toggle('has', !!(a || q || vo || cy || fsel)); if (fsel) { $('selName').textContent = FLT.planes[FLT.card].code; $('selPill').innerHTML = ''; }
   if (a) { $('selName').textContent = a.name; $('selPill').innerHTML = pill(a.level); } else if (q) { $('selName').textContent = q.title; $('selPill').innerHTML = ''; } else if (vo) { $('selName').textContent = vo.title; $('selPill').innerHTML = ''; } else if (cy) { $('selName').textContent = cy.low ? cy.name : cy.title; $('selPill').innerHTML = cy.low ? '<span class="pill unconf">For information</span>' : '<span class="pill ' + (cy.confirmed ? 'typhoon' : 'unconf') + '">' + (cy.confirmed ? 'Confirmed' : 'Not yet confirmed') + '</span>'; }
   renderGlass();
   fit();
@@ -4050,7 +4054,7 @@ document.addEventListener('click', function (e) {
   if (!GLASS || !(S.sel || S.qk || S.vk || S.tk)) return;
   var t = e.target; if (!t || !t.closest || !document.contains(t)) return;
   if (!WIDE.matches && !t.closest('#vp')) return;      // on a phone, only a tap on an empty part of the map lets go of the selection
-  if (t.closest('.col.side, .pin button, .alert, #alertBar, #alertBtn, #kpis, header.top, .zoom, .lyrbtn, .lyr, .tour, .mapfoot, .modal, .notice, [data-q], [data-v], [data-a], [data-t], select, a')) return;
+  if (t.closest('.fltp, #fltCard, .col.side, .pin button, .alert, #alertBar, #alertBtn, #kpis, header.top, .zoom, .lyrbtn, .lyr, .tour, .mapfoot, .modal, .notice, [data-q], [data-v], [data-a], [data-t], select, a')) return;
   clearSel();
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && GLASS && (S.sel || S.qk || S.vk || S.tk) && !modal.classList.contains('open') && !WX.open) clearSel(); });
@@ -4425,7 +4429,8 @@ document.addEventListener('visibilitychange', function () { if (!document.hidden
 var FLT_RELAY = 'https://weathered-rain-9afbdmd-flights.1avithelpdesk.workers.dev/';      // the flights relay (Cloudflare Worker) address; when set, the page asks it instead of adsb.lol directly
 var FLT_EVERY_MS = 10000, FLT_STALE_MS = 60000, FLT_DROP_MS = 300000, FLT_TRAIL_MS = 600000;
 var FLT_AREAS = [[17.5, 121.2], [13.2, 122.5], [10.2, 123.8], [7.4, 124.8], [9.6, 118.6]];      // circles of 250 nautical miles that cover the country
-var FLT = { on: true, timer: null, planes: {}, ok: null, last: 0, err: '', n: 0, raf: 0 };
+var FLT_ALL = false; try { FLT_ALL = localStorage.getItem('awm-flights-all') === 'on'; } catch (e) {}      // show every flight, not only those an alert affects
+var FLT = { card: '', on: true, timer: null, planes: {}, ok: null, last: 0, err: '', n: 0, raf: 0 };
 try { FLT.on = localStorage.getItem('awm-flights') !== 'off'; } catch (e) {}
 function fltCode(cs) { cs = String(cs || '').trim().toUpperCase(); var m = /^(CEB|SRQ)(\d+[A-Z]?)$/.exec(cs); return m ? (m[1] === 'CEB' ? '5J ' : 'DG ') + m[2] : ''; }
 function fltXY(lat, lon) { return { x: 8.69278161 * lon - 1008.33883896, y: -5.91775171 * lat + 125.45788502 }; }
@@ -4528,6 +4533,8 @@ function fltDraw() {
     if (p.ease) { var k = Math.max(0, 1 - (now - p.ease) / 1500); xy.x += p.dx * k; xy.y += p.dy * k; if (!k) p.ease = 0; }
     var dest = fltDest(p), hot = !!(dest && fltAlertAirport(dest.a)), zone = fltZone(p, at, xy);
     if (zone && zone.kind === 'ash') FLT_MARK[h] = { v: zone.v, ms: now };
+    if (!FLT_ALL && !hot && !zone && FLT.card !== h) return;      // by default only the flights an alert affects are drawn
+    p._d = dest; p._hot = hot; p._z = zone;
     var el = L.querySelector('[data-h="' + h + '"]');
     if (!el) {
       el = document.createElement('div'); el.className = 'fltp'; el.setAttribute('data-h', h); el.setAttribute('tabindex', '0');
@@ -4536,21 +4543,54 @@ function fltDraw() {
     seen[h] = 1;
     el.style.left = xy.x.toFixed(3) + '%'; el.style.top = xy.y.toFixed(3) + '%';
     el.querySelector('svg').style.transform = 'rotate(' + (p.track || 0) + 'deg)';
-    el.className = 'fltp' + (hot ? ' hot' : zone ? ' pass' : '') + (stale ? ' stale' : '') + (p.ground ? ' gnd' : '');
+    el.className = 'fltp' + (FLT.card === h ? ' fsel' : '') + (hot ? ' hot' : zone ? ' pass' : '') + (stale ? ' stale' : '') + (p.ground ? ' gnd' : '');
     var lab = p.code + (zone ? (zone.kind === 'ash' ? ': in ' + zone.v + ' ash' : ': over the thunderstorm at ' + zone.name.replace('thunderstorm at ', '')) : '') + (dest ? (zone ? ';' : '') + ' → ' + dest.a.name + ', about ' + dest.min + ' min' : '') + (stale ? ', last seen ' + Math.round(age / 60000) + ' min ago' : '');
-    el.querySelector('.fltl').textContent = hot || zone || stale ? lab : p.code;
+    el.querySelector('.fltl').textContent = lab;
     el.title = lab + '. ' + (p.ground ? 'On the ground' : Math.round(p.alt).toLocaleString('en-US') + ' ft, ' + Math.round(p.gs * 1.852) + ' km/h') + (p.type ? '. ' + p.type : '') + (p.reg ? ' ' + p.reg : '') + '. Live position from adsb.lol.';
     if ((p.trail || []).length > 1) svg += '<polyline class="' + (hot ? 'hot' : zone ? 'pass' : '') + '" points="' + p.trail.map(function (q) { var t = fltXY(q[1], q[2]); return t.x.toFixed(2) + ',' + t.y.toFixed(2); }).join(' ') + ' ' + xy.x.toFixed(2) + ',' + xy.y.toFixed(2) + '"/>';
   });
   Array.prototype.forEach.call(L.querySelectorAll('.fltp'), function (e) { if (!seen[e.getAttribute('data-h')]) e.remove(); });
+  fltCardPos();
   var sv = L.querySelector('.flttrails'); if (sv && FLT.lastSvg !== svg) { sv.innerHTML = svg; FLT.lastSvg = svg; }
 }
+// Clicking a plane selects it like an airport or a typhoon: its details open in the panel on the right
+function fltDetail() {
+  var h = FLT.card, p = FLT.planes[h]; if (!p) return '';
+  var d = p._d, z = p._z, ash = fltAsh(h), now = Date.now(), why = [];
+  if (p._hot && d) why.push(d.a.name + ' has an alert: ' + (d.a.level === 'danger' ? 'thunderstorm at the airport now' : cyclonesShown().some(function (c) { return (c.now || []).indexOf(d.a.name) >= 0; }) ? 'typhoon winds' : 'volcanic ash') + '.');
+  if (z) why.push(z.kind === 'ash' ? 'Passing through the ' + z.v + ' ash area: the station should inspect the aircraft for ash on arrival.' : 'Passing over the thunderstorm at ' + z.name.replace('thunderstorm at ', '') + '.');
+  if (ash && !(z && z.kind === 'ash')) why.push('Flew through the ' + ash.v + ' ash area: the station should inspect the aircraft for ash on arrival.');
+  var cell = function (k, v) { return '<div><span>' + k + '</span><b>' + esc(v) + '</b></div>'; };
+  var tone = p._hot ? 'hot' : z ? 'pass' : 'ok';
+  return '<div class="detail fltdet"><div class="hd"><div class="ttl"><h3>' + esc(p.code) + '</h3><span class="pill flt ' + tone + '">' + (p._hot ? 'Heading into an alert' : z ? 'In an alert zone' : 'Cebu Pacific and Cebgo') + '</span></div>' +
+    '<button class="btn xbtn" data-fclose="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+    (why.length ? '<div class="dtodo ' + (p._hot ? 'danger' : 'warning') + '"><b>Why it is marked</b>' + why.map(esc).join(' ') + '</div>' : '') +
+    '<div class="dfacts">' + cell('Likely heading to', d ? d.a.name : 'Not clear yet') + cell('Arrival', d ? 'about ' + d.min + ' min' : '\u2014') + cell('Height', p.ground ? 'On the ground' : Math.round(p.alt).toLocaleString('en-US') + ' ft') + '</div>' +
+    '<div class="drows">' + cell('Climbing or descending', p.rate < -300 ? 'Descending' : p.rate > 300 ? 'Climbing' : 'Level') + cell('Speed', Math.round(p.gs * 1.852) + ' km/h') +
+    (p.type ? cell('Aircraft', p.type + (p.reg ? ', ' + p.reg : '')) : '') + cell('Last position', Math.max(0, Math.round((now - p.t) / 1000)) + ' seconds ago') + '</div>' +
+    '<p class="nwn">Destination and arrival are estimated from the plane\'s position, heading and speed, not from the schedule. Positions come from adsb.lol, a network of volunteer receivers, so coverage can have gaps.</p></div>';
+}
+function fltCardPos() {
+  var d = $('detail'); if (!d || !FLT.card) return;
+  if (!FLT.planes[FLT.card] || S.sel || S.qk || S.vk || S.tk) { FLT.card = ''; return; }
+  if (Date.now() - (FLT.cardT || 0) > 1000) { FLT.cardT = Date.now(); d.innerHTML = fltDetail(); }
+}
+document.addEventListener('click', function (e) {
+  var t = e.target, pl = t.closest && t.closest('.fltp');
+  if (pl) {
+    e.stopPropagation();
+    if (S.sel || S.qk || S.vk || S.tk) { S.sel = ''; S.qk = ''; S.vk = ''; S.tk = ''; }
+    FLT.card = pl.getAttribute('data-h'); FLT.cardT = 0; S.pane = 'side'; S.tab = 'details'; applyState(); return;
+  }
+  if (FLT.card && (t.closest('[data-fclose]') || (t.closest('#vp') && !t.closest('.zoom, .lyrbtn, .lyr, .tour')))) { FLT.card = ''; applyState(); }
+}, true);
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && FLT.card) { FLT.card = ''; applyState(); } });
 function fltStatus() {
   var s = $('fltStatus'); if (!s) return;
   if (!FLT.on) { s.textContent = ''; return; }
   var fly = Object.keys(FLT.planes).filter(function (h) { var p = FLT.planes[h]; return !p.ground && (p.gs || 0) >= 40; }).length;
   var ago = FLT.last ? Math.max(0, Math.round((Date.now() - FLT.last) / 1000)) : 0;
-  s.textContent = FLT.ok === null ? 'Looking for flights...' : FLT.ok ? fly + ' flying, ' + (FLT.n - fly) + ' on the ground. Updated ' + (ago < 2 ? 'just now' : ago + ' s ago') + ', live from adsb.lol' : 'Flight data could not be reached (' + FLT.err + ')';
+  s.textContent = FLT.ok === null ? 'Looking for flights...' : FLT.ok ? (FLT_ALL ? '' : document.querySelectorAll('.fltp').length + ' affected by alerts shown; ') + fly + ' flying, ' + (FLT.n - fly) + ' on the ground. Updated ' + (ago < 2 ? 'just now' : ago + ' s ago') + ', live from adsb.lol' : 'Flight data could not be reached (' + FLT.err + ')';
 }
 // The airport's details list the flights likely heading there in the next hour
 function fltInbound() {
@@ -4573,8 +4613,10 @@ function fltBlock(a) { return '<div class="news fltin" id="fltIn" data-a="' + es
   if (lp && !$('lyFlights')) {
     var lab = document.createElement('label'); lab.innerHTML = '<input type="checkbox" id="lyFlights">Cebu Pacific and Cebgo flights (live)';
     var nm = $('lyNames'); (nm ? nm.parentNode : lp.firstChild).insertAdjacentElement('afterend', lab);
+    var lab2 = document.createElement('label'); lab2.className = 'fltsub'; lab2.innerHTML = '<input type="checkbox" id="lyFlightsAll">Show all flights, not only those affected'; lab.insertAdjacentElement('afterend', lab2); lab = lab2;
     var st = document.createElement('div'); st.id = 'fltStatus'; st.className = 'fltstatus'; lab.insertAdjacentElement('afterend', st);
-    $('lyFlights').checked = FLT.on;
+    $('lyFlights').checked = FLT.on; $('lyFlightsAll').checked = FLT_ALL;
+    $('lyFlightsAll').addEventListener('change', function () { FLT_ALL = this.checked; try { localStorage.setItem('awm-flights-all', FLT_ALL ? 'on' : 'off'); } catch (e) {} fltStatus(); });
     $('lyFlights').addEventListener('change', function () { FLT.on = this.checked; try { localStorage.setItem('awm-flights', FLT.on ? 'on' : 'off'); } catch (e) {} fltStatus(); fltInbound(); if (FLT.on) fltPoll(); else clearTimeout(FLT.timer); });
   }
   fltLayer(); fltPoll(); fltDraw();
