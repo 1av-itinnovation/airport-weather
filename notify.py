@@ -243,11 +243,58 @@ def card(colour, tag, title, rows, action, pic='', level=''):
             + (f'<div style="margin-top:12px;background:#F3F8FA;border-radius:5px;padding:10px 12px;{FONT};font-size:13.5px;line-height:1.5;color:{INK}"><strong>What to do.</strong> {esc(action)}</div>' if action else '')
             + '</td></tr></table>')
 
+RAIN_HOURS = 6
+_HPIC = {'c': '\u2600\ufe0f', 'p': '\u26c5', 'o': '\u2601\ufe0f', 'l': '\U0001F326\ufe0f', 'r': '\U0001F327\ufe0f', 'h': '\U0001F327\ufe0f'}
+def _rain_hours(d, a):
+    """The next RAIN_HOURS hours for an airport, as the dashboard's 'Rain in the next hours' strip shows them:
+    (label, picture, chance of rain %, how heavy, amount in mm, thunderstorm possible)."""
+    H = [h for h in (a.get('hours') or []) if isinstance(h, list) and len(h) >= 5]
+    if len(H) < 3: return []
+    now = dt.datetime.now(dt.timezone.utc).timestamp() * 1000
+    H = [h for h in H if h[0] + 3600000 > now][:RAIN_HOURS]
+    ts = [t for t in ((d.get('thunder') or {}).get('airports') or []) if t.get('id') == a.get('id')]
+    out = []
+    for i, h in enumerate(H):
+        mm = float(h[2] or 0); th = any(t['a'] < h[0] + 3600000 and h[0] < t['b'] for t in ts) or (i == 0 and a.get('level') == 'danger')
+        word, col = (('Heavy', '#C62828') if mm >= 7.6 else ('Moderate', '#F57C00') if mm >= 2.5 else ('Light', '#0288D1') if mm >= 0.2 else ('Dry', '#8A99A6'))
+        lab = 'Now' if i == 0 and h[0] <= now else pht(h[0]).strftime('%I %p').lstrip('0')
+        out.append(dict(t=lab, pic='\u26c8\ufe0f' if th else _HPIC.get(str(h[4])[:1], '\u2601\ufe0f'), ch=(h[5] if len(h) > 5 and isinstance(h[5], (int, float)) else None),
+                        word=word, col=col, mm=('%.1f mm' % mm if mm >= 0.1 else '0 mm'), th=th))
+    return out
+def rain_strip_html(d, a):
+    R = _rain_hours(d, a)
+    if not R: return ''
+    w = int(100 / len(R))
+    cell = lambda x: (f'<td align="center" width="{w}%" style="width:{w}%;padding:8px 2px;border-left:1px solid #E6EEF1;{FONT};vertical-align:top">'
+                      f'<div style="font-size:12px;font-weight:600;color:{INK if x["t"] != "Now" else BLUE}">{esc(x["t"])}</div>'
+                      f'<div style="font-size:20px;line-height:26px">{x["pic"]}</div>'
+                      + (f'<div style="font-size:14px;font-weight:700;color:{INK}">{x["ch"]}%</div>' if x['ch'] is not None else '') +
+                      f'<div style="font-size:11.5px;font-weight:600;color:{x["col"]};margin-top:2px">{x["word"]}</div>'
+                      f'<div style="font-size:11px;color:{MUTED}">{x["mm"]}</div></td>')
+    return (f'<tr><td colspan="2" style="padding:10px 0 6px;border-top:1px solid #E6EEF1">'
+            f'<div style="{FONT};font-size:12px;color:{MUTED};margin-bottom:6px">Rain in the next {len(R)} hours</div>'
+            f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;border:1px solid #E6EEF1;border-radius:8px;border-collapse:separate"><tr>{"".join(cell(x) for x in R)}</tr></table>'
+            f'<div style="{FONT};font-size:11px;color:{MUTED};margin-top:5px">% = chance of rain. Dry, Light, Moderate (2.5 mm+), Heavy (7.6 mm+).' + (' \u26c8\ufe0f = thunderstorm possible (official airport forecast).' if any(x['th'] for x in R) else '') + '</div></td></tr>')
+def rain_strip_card(d, a):
+    R = _rain_hours(d, a)
+    if not R: return []
+    def col(x):
+        items = [{'type': 'TextBlock', 'text': x['t'], 'horizontalAlignment': 'Center', 'size': 'Small', 'weight': 'Bolder', 'color': 'Accent' if x['t'] == 'Now' else 'Default', 'spacing': 'None'},
+                 {'type': 'TextBlock', 'text': x['pic'], 'horizontalAlignment': 'Center', 'size': 'Large', 'spacing': 'None'}]
+        if x['ch'] is not None: items.append({'type': 'TextBlock', 'text': f"{x['ch']}%", 'horizontalAlignment': 'Center', 'weight': 'Bolder', 'spacing': 'None'})
+        items += [{'type': 'TextBlock', 'text': x['word'], 'horizontalAlignment': 'Center', 'size': 'Small', 'weight': 'Bolder', 'spacing': 'None',
+                   'color': {'Heavy': 'Attention', 'Moderate': 'Warning', 'Light': 'Accent'}.get(x['word'], 'Default'), 'isSubtle': x['word'] == 'Dry'},
+                  {'type': 'TextBlock', 'text': x['mm'], 'horizontalAlignment': 'Center', 'size': 'Small', 'isSubtle': True, 'spacing': 'None'}]
+        return {'type': 'Column', 'width': 'stretch', 'items': items}
+    return [{'type': 'TextBlock', 'text': f'Rain in the next {len(R)} hours', 'size': 'Small', 'isSubtle': True, 'spacing': 'Medium', 'wrap': True},
+            {'type': 'Container', 'style': 'emphasis', 'spacing': 'Small', 'items': [{'type': 'ColumnSet', 'columns': [col(x) for x in R]}]},
+            {'type': 'TextBlock', 'text': '% = chance of rain. Moderate is 2.5 mm or more an hour, Heavy 7.6 mm or more.' + (' \u26c8\ufe0f = thunderstorm possible.' if any(x['th'] for x in R) else ''), 'size': 'Small', 'isSubtle': True, 'wrap': True, 'spacing': 'Small'}]
+
 def _danger_pairs(a):
     """Rows for a thunderstorm alert: what the airport reports now, the figures behind it, and the forecast."""
     o = a.get('obs') or {}
     return [('Right now', a.get('now')), ('Wind', o.get('windline')), ('Visibility', o.get('visline')), ('Lowest cloud', o.get('cloudline')), ('Crosswind', o.get('xline')),
-            ('Forecast for later today', a.get('next')), ('Updated', a.get('upd')), ('Source', a.get('src'))]
+            ('Source', a.get('src'))]
 
 def _quake_airports(d, q, km=100):
     """Every airport within 100 km of the earthquake with its distance, nearest first (the same distances the map shows)."""
@@ -284,9 +331,9 @@ def build_email(d, new_q, new_d):
             subj.append(title); text.append(a['text'] + '\n')
         cards.append(card(DARKRED if tsu else PURPLE, 'Possible tsunami' if tsu else 'Earthquake', title, rows, action, map_url('quake', q, stamp), level=alert_level('quake', a, q)))
     for a in new_d:
-        rows = [row(k, val) for k, val in _danger_pairs(a)]
+        rows = [row(k, val) for k, val in _danger_pairs(a) if k != 'Source'] + [rain_strip_html(d, a)] + [row('Source', a.get('src'))]
         cards.append(card(RED, 'Thunderstorm', 'Thunderstorm at the airport: ' + a['name'], rows, a.get('todo'), map_url('danger', a, stamp), level='Danger'))
-        text.append(f"ALERT LEVEL: DANGER. THUNDERSTORM AT THE AIRPORT: {a['name']}\n" + '\n'.join(f'{k}: {val}' for k, val in _danger_pairs(a) if val and k != 'Source') + f"\nWhat to do: {a.get('todo')}\n")
+        text.append(f"ALERT LEVEL: DANGER. THUNDERSTORM AT THE AIRPORT: {a['name']}\n" + '\n'.join(f'{k}: {val}' for k, val in _danger_pairs(a) if val and k != 'Source') + ('\nRain in the next hours: ' + ', '.join(f"{x['t']} {x['word'].lower()}" + (f" ({x['ch']}%)" if x['ch'] is not None else '') for x in _rain_hours(d, a)) if _rain_hours(d, a) else '') + f"\nWhat to do: {a.get('todo')}\n")
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         cards.append(card(VOLC, VOLC_TAG[a['kind']], title, [row(k, val) for k, val in pairs], action, map_url('volcano', v, stamp), level=alert_level('volcano', a, v)))
@@ -371,7 +418,7 @@ def teams_card(d, new_q, new_d, test=False):
             {'type': 'Column', 'width': '120px', 'items': [tb(label, size='Small', isSubtle=True)]},
             {'type': 'Column', 'width': 'stretch', 'items': [tb(value)]}]}
     stamp = d.get('generated_ms', '')
-    def block(colour, fallback, tag, title, pairs, action, pic='', what='', level=''):
+    def block(colour, fallback, tag, title, pairs, action, pic='', what='', level='', extra=None):
         # The tag is plain text in Teams' own colours, not a picture. Teams (the phone app especially) can show a stale or
         # mismatched picture, and a wrong tag on a safety alert is worse than a plainer one.
         tone = {'Danger': 'Attention', 'Possible tsunami': 'Attention', 'Volcanic ash': 'Warning', 'Eruption': 'Warning', 'Volcano': 'Warning', 'Earthquake': 'Accent', 'Typhoon': 'Accent'}.get(tag.split(':')[0], fallback)
@@ -380,6 +427,7 @@ def teams_card(d, new_q, new_d, test=False):
         if pic: items += [{'type': 'Image', 'url': pic, 'size': 'Stretch', 'altText': 'Map: ' + (what or title), 'spacing': 'Small'},
                           tb('Map: ' + (what or title), size='Small', isSubtle=True, spacing='None')]      # names what the picture should show
         items += [line(k, v) for k, v in pairs if v]
+        if extra: items += extra
         if action: items.append({'type': 'Container', 'style': 'emphasis', 'spacing': 'Medium', 'items': [tb('**What to do.** ' + action)]})
         return {'type': 'Container', 'spacing': 'Large', 'separator': True, 'items': items}
     checked = as_of(d)
@@ -405,7 +453,7 @@ def teams_card(d, new_q, new_d, test=False):
         else:
             body.append(block(colour, 'Attention' if tsu else 'Accent', tag, 'Earthquake alert', [('Details', a.get('text'))], '', level=alert_level('quake', a)))
     for a in new_d:
-        body.append(block('red', 'Attention', 'Thunderstorm', 'Thunderstorm at the airport: ' + a['name'], _danger_pairs(a), a.get('todo'), map_url('danger', a, stamp), level='Danger'))
+        body.append(block('red', 'Attention', 'Thunderstorm', 'Thunderstorm at the airport: ' + a['name'], _danger_pairs(a), a.get('todo'), map_url('danger', a, stamp), level='Danger', extra=rain_strip_card(d, a)))
     for a, v in NEW_V:
         title, pairs, action = _volcano_parts(a, v)
         body.append(block('volcano', 'Attention', VOLC_TAG[a['kind']], title, pairs, action, map_url('volcano', v, stamp), (v or {}).get('title', ''), level=alert_level('volcano', a, v)))
