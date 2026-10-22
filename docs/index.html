@@ -2376,6 +2376,15 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
 .fltp.fsel .fltb{outline:3px solid #005687;outline-offset:2px}
 .pill.flt{color:#fff;background:#0077C8}.pill.flt.hot{background:#D32F2F}.pill.flt.pass{background:#EF8A00}
 .fltdet .dtodo b{display:block}
+.newsvid .nvc{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:6px;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.65));opacity:0;transition:opacity .2s;z-index:2}
+.newsvid .nvf:hover .nvc,.newsvid .nvc:focus-within,.newsvid .nvc.paused{opacity:1}
+.newsvid .nvc .sp{flex:1}
+.newsvid .nvc button{width:34px;height:34px;border:none;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.newsvid .nvc button:hover{background:rgba(255,255,255,.32)}
+.newsvid .nvc svg{width:18px;height:18px;fill:#fff;stroke:#fff;stroke-width:0}
+.newsvid .nvc [data-v=sound] svg path.x,.newsvid .nvc [data-v=sound] svg path.w,.newsvid .nvc [data-v=full] svg path{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.newsvid .nvc [data-v=sound] .x{display:none}.newsvid .nvc.muted [data-v=sound] .x{display:inline}.newsvid .nvc.muted [data-v=sound] .w{display:none}
+@media (hover:none){.newsvid .nvc{opacity:1}}
 </style>
 </head>
 <body class="glass">
@@ -2570,7 +2579,7 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
         <li><strong>Airport close-up.</strong> A small box on the map shows the runway at its true direction, an arrow for the wind, and rings at 5 km and 10 km.</li>
         <li><strong>Forecast for later today.</strong> What the official airport forecast expects in the hours ahead. If weather arrives that the forecast did not expect, it says so; go by the current report.</li>
         <li><strong>Rain in the next 12 hours.</strong> For each hour: the chance of rain, how heavy, and the amount. A lightning mark means the official forecast has a thunderstorm.</li>
-        <li><strong>Official updates and news.</strong> From the last 24 hours, newest first. Only items whose headline names the airport's place are shown, so every item is about that airport or its area. Each is tagged: Official (PAGASA thunderstorm and rainfall advisories), Flights or airport, or Hazard in the area. Sources: PAGASA and PHIVOLCS, GMA News, ABS-CBN News, TV5, CNN, Inquirer, SunStar, Philstar, Rappler, Manila Bulletin and the Philippine News Agency, plus the YouTube channels of GMA, ABS-CBN, PAGASA and PHIVOLCS. Each item opens on the publisher's site; read it before acting on it. When you select something, the most critical video plays by itself, without sound, at the top of the details panel, and stops when you close the selection. News never changes an alert level.</li>
+        <li><strong>Official updates and news.</strong> From the last 24 hours, newest first. Only items whose headline names the airport's place are shown, so every item is about that airport or its area. Each is tagged: Official (PAGASA thunderstorm and rainfall advisories), Flights or airport, or Hazard in the area. Sources: PAGASA and PHIVOLCS, GMA News, ABS-CBN News, TV5, CNN, Inquirer, SunStar, Philstar, Rappler, Manila Bulletin and the Philippine News Agency, plus the YouTube channels of GMA, ABS-CBN, PAGASA and PHIVOLCS. Each item opens on the publisher's site; read it before acting on it. When you select something, the most critical video plays by itself, without sound, at the top of the details panel, and stops when you close the selection. Its controls (pause, sound, full screen) appear when you point at the video. News never changes an alert level.</li>
         <li><strong>Flights likely inbound.</strong> Cebu Pacific and Cebgo flights that seem to be heading to this airport in the next hour, with the estimated minutes to arrival. They are red when the airport has an alert. The estimate uses each plane's position, heading and speed, not the schedule.</li>
         <li><strong>Tomorrow and the week ahead.</strong> For planning. It is less certain the further ahead it looks.</li>
         <li><strong>About this reading.</strong> How far to trust it, when it was taken and who supplied it.</li>
@@ -3926,15 +3935,29 @@ function vidBox() {
 function vidPlay(n, ap, auto, done) {
   var b = vidBox(), a = byId(ap) || vidPlace(ap); vidClose(false);
   VID.open = true; VID.tour = !!auto; VID.done = done || null; VID.id = n.yt; if (auto) VID_SEEN[n.yt] = Date.now();
-  $('nvFrame').innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(n.yt) + '?autoplay=1&mute=' + (auto ? 1 : 0) + '&playsinline=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(location.origin) + '" title="' + esc(n.title) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+  $('nvFrame').innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(n.yt) + '?autoplay=1&mute=' + (auto ? 1 : 0) + '&controls=0&disablekb=1&iv_load_policy=3&cc_load_policy=0&fs=0&playsinline=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(location.origin) + '" title="' + esc(n.title) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
   $('nvSrc').textContent = (a ? a.name + ' · ' : '') + n.src + ' · ' + agoText(n.ms);
   $('nvLink').textContent = n.title; $('nvLink').href = n.link;
-  $('nvNote').textContent = auto ? 'Playing without sound because it started by itself. Press the video for sound.' : '';
+  $('nvNote').textContent = auto ? 'Playing without sound because it started by itself. Point at the video and press the speaker for sound.' : '';
+  // YouTube's own controls are turned off; a small control bar of our own appears only while the pointer is over the video
+  var ctl = document.createElement('div'); ctl.className = 'nvc';
+  ctl.innerHTML = '<button data-v="play" aria-label="Pause" title="Pause"><svg viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg></button>' +
+    '<button data-v="sound" aria-label="Sound on" title="Sound on"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="x" d="M16 9l5 6M21 9l-5 6"/><path class="w" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg></button>' +
+    '<span class="sp"></span><button data-v="full" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>';
+  $('nvFrame').appendChild(ctl); VID.paused = false; VID.muted = !!auto; ctl.classList.toggle('muted', VID.muted);
   b.hidden = false; if (!auto) try { b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
   var f = b.querySelector('iframe');
   f.addEventListener('load', function () { try { f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'], id: 1, channel: 'widget' }), '*'); } catch (e) {} });
   clearTimeout(VID.timer); VID.timer = setTimeout(function () { vidEnd(); }, VID_MAX_MS);      // a safety limit in case the player never reports the end
 }
+function vidCmd(func) { var f = $('nvFrame') && $('nvFrame').querySelector('iframe'); try { f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: [] }), '*'); } catch (e) {} }
+document.addEventListener('click', function (e) {
+  var bt = e.target.closest && e.target.closest('.nvc button'); if (!bt) return;
+  var c = bt.parentNode, k = bt.getAttribute('data-v');
+  if (k === 'play') { VID.paused = !VID.paused; vidCmd(VID.paused ? 'pauseVideo' : 'playVideo'); c.classList.toggle('paused', VID.paused); bt.title = VID.paused ? 'Play' : 'Pause'; bt.innerHTML = VID.paused ? '<svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>'; if (VID.paused) clearTimeout(VID.timer); }
+  if (k === 'sound') { VID.muted = !VID.muted; vidCmd(VID.muted ? 'mute' : 'unMute'); if (!VID.muted) vidCmd('setVolume'); c.classList.toggle('muted', VID.muted); bt.title = VID.muted ? 'Sound on' : 'Sound off'; var nt = $('nvNote'); if (nt) nt.textContent = ''; }
+  if (k === 'full') { var f = $('nvFrame'); if (document.fullscreenElement) document.exitFullscreen(); else if (f.requestFullscreen) f.requestFullscreen(); }
+});
 function vidPlace(key) {      // a name for the video's header when it belongs to an earthquake, volcano or typhoon
   var k = String(key || ''), id = k.slice(2), o = k[0] === 't' ? cycloneById(id) : k[0] === 'v' ? volcanoById(id) : k[0] === 'q' ? quakeById(id) : null;
   return o ? { name: o.title || o.name } : null;
