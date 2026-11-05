@@ -2415,6 +2415,58 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
   .glass .app .cols.has-sel .col.list{grid-column:2;grid-row:2}
   .glass .app .cols.has-sel .col.side{position:relative;inset:auto;width:auto;grid-column:3;grid-row:2;z-index:1}
 }
+/* ---- news by impact ---- */
+.news .nwf{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 4px}
+.news .nwfb{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line,#C9D6E2);background:transparent;color:inherit;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.news .nwfb b{font-weight:700;font-variant-numeric:tabular-nums;opacity:.75}
+.news .nwfb i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.news .nwfb.on{background:#12303F;color:#fff;border-color:#12303F}
+.news .nwfb:disabled{opacity:.45;cursor:default}
+.news .i-reported i,.news .nwg.i-reported .nwgh i{background:#C62828}.news .i-possible i,.news .nwg.i-possible .nwgh i{background:#E07B00}.news .i-awareness i,.news .nwg.i-awareness .nwgh i{background:#7A8C98}
+.news .nwg{display:flex;flex-direction:column;gap:6px;padding-left:10px;border-left:3px solid #7A8C98}
+.news .nwg.i-reported{border-left-color:#C62828}.news .nwg.i-possible{border-left-color:#E07B00}.news .nwg.up{border-left-color:#0077C8}
+.news .nwgh{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--ink,#12303F);flex-wrap:wrap}
+.news .nwgh i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.news .nwgh b{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted,#5B7180)}
+.news .nwgh em{font-style:normal;font-weight:400;color:var(--muted,#5B7180);font-size:12px}
+.news .nwm em.tp{color:#12303F;background:#E7EEF3}
+.news .nwm em.nat{color:#004F7A;background:#D9EEF9}
+.news .nwm em.imp.i-reported{color:#fff;background:#C62828}.news .nwm em.imp.i-possible{color:#5A3300;background:#FFE2B8}.news .nwm em.imp.i-awareness{color:#3F5563;background:#E7EEF3}
+.news .upl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.news li.ev .evr{display:flex;gap:10px;align-items:flex-start;text-decoration:none;color:inherit;padding:7px;border-radius:10px;background:#EEF6FB}
+.news li.ev .evd{display:flex;align-items:center;justify-content:center;text-align:center;background:#005687;color:#fff;font-size:12px;line-height:1.2;padding:4px}
+.news .nwm em.ev{color:#fff;background:#0077C8}
+.news .upn{font-size:12.5px;line-height:1.4}
+html[data-theme="dark"] .news li.ev .evr{background:#1D2B44}
+.news .upl .upn{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.news .upl .upd{flex:none;width:76px;font-size:12px;font-weight:700;color:#005687;line-height:1.35}
+.news .upl .upt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.news .upl .upt b{font-size:13px;font-weight:600;line-height:1.35}.news .upl .upt b a{color:inherit}
+.news .upl .upn{font-size:12.5px;line-height:1.4;color:var(--ink,#12303F)}
+html[data-theme="dark"] .news .nwfb.on{background:#E6ECF5;color:#12263F;border-color:#E6ECF5}
+html[data-theme="dark"] .news .nwm em.tp{color:#DCE5EE;background:#2A3550}html[data-theme="dark"] .news .nwm em.nat{color:#9FD8F5;background:#1D3A52}
+html[data-theme="dark"] .news .upl li{background:#222B40}html[data-theme="dark"] .news .upl .upd{color:#9FD8F5}html[data-theme="dark"] .news .nwgh{color:#E6ECF5}
+html[data-theme="dark"] .news .nwm em.imp.i-possible{color:#FFE2B8;background:#4A3418}html[data-theme="dark"] .news .nwm em.imp.i-awareness{color:#DCE5EE;background:#2A3550}
+#modal .box > .sec.hs.lvls:nth-of-type(n){display:block}
+#modal .lvgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:4px 0 12px}
+#modal .lvc{border:1px solid var(--line,#DCE5EE);border-top:4px solid #9DB0BC;border-radius:12px;padding:12px 14px 14px;background:var(--panel,#fff)}
+#modal .lvc.normal{border-top-color:#2E7D32}#modal .lvc.advisory{border-top-color:#E0AE00}#modal .lvc.warning{border-top-color:#F57C00}#modal .lvc.danger{border-top-color:#C62828}
+#modal .lvc .lvh{margin-bottom:10px}
+#modal .lvc dl{margin:0;display:flex;flex-direction:column;gap:2px}
+#modal .lvc dt{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted,#5B7180);margin-top:6px}
+#modal .lvc dt:first-child{margin-top:0}
+#modal .lvc dd{margin:0;font-size:13.5px;line-height:1.45;color:var(--ink,#12303F)}
+#modal .lvc.danger dd:last-child{font-weight:600}
+@media (max-width:1100px){#modal .lvgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){#modal .lvgrid{grid-template-columns:1fr}}
+html[data-theme="dark"] #modal .lvc{background:rgba(255,255,255,.03);border-color:#2B394C}
+html[data-theme="dark"] #modal .lvc.normal{border-top-color:#43A047}html[data-theme="dark"] #modal .lvc.advisory{border-top-color:#E0AE00}html[data-theme="dark"] #modal .lvc.warning{border-top-color:#FB8C00}html[data-theme="dark"] #modal .lvc.danger{border-top-color:#EF5350}
+html[data-theme="dark"] #modal .lvc dd{color:#E6ECF5}
+.modal .hmore>summary{cursor:pointer;list-style:none}.modal .hmore>summary::-webkit-details-marker{display:none}
+.modal .hmore>summary h3{display:inline-flex;align-items:center;gap:8px;margin:0}.modal .hmore>summary h3::after{content:"Show";font-size:12px;font-weight:600;color:#0060A7;border:1px solid #C9D6E2;border-radius:999px;padding:1px 10px}
+.modal .hmore[open]>summary h3::after{content:"Hide"}.modal .hmore[open]>summary{margin-bottom:10px}
+#modal .box > .sec.hs.one:nth-of-type(n) > ul,#modal .box > .sec.hs.one:nth-of-type(n) > p{max-width:860px}
+.modal .sec ul{margin:6px 0 0;padding-left:18px}.modal .sec li{margin:4px 0;line-height:1.5}
 .app .col.side .detail .hd{flex-wrap:nowrap}.app .col.side .detail .hd .ttl{min-width:0;flex:1 1 auto}.app .col.side .detail .hd .xbtn{flex:none}
 @media (max-width:900px){.app .col.list{overflow-y:auto}.app .col.list>#list{max-height:none;flex:none;overflow:visible}.newspanel{flex:none;min-height:0}.newspanel #newsBody{overflow:visible}}
 </style>
@@ -2443,7 +2495,7 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
     <button class="themebtn alertbtn" id="alertBtn" hidden aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.500l9.500 16.500h-19zM12 10v4.500M12 17.300v.2"/></svg><b>0</b></button>
     <button class="themebtn" id="themeBtn" aria-label="Colour theme"></button>
     <button class="sndbtn" id="sndBtn" aria-pressed="false" aria-label="Sound alerts are off" title="Sound alerts: off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.500 2-6.500zM10 19.500a2.200 2.200 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/><path class="off" d="M4 4l16 16" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"/></svg></button>
-    <button class="helpbtn" id="helpBtn" aria-label="How this dashboard works" title="How this dashboard works"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.300 9.200a2.800 2.800 0 0 1 5.400 1c0 1.900-2.700 2.400-2.700 4M12 17.200h.010"/></svg></button>
+    <button class="helpbtn" id="helpBtn" aria-label="How to use this dashboard" title="How to use this dashboard"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.300 9.200a2.800 2.800 0 0 1 5.400 1c0 1.900-2.700 2.400-2.700 4M12 17.200h.010"/></svg></button>
   </div>
 </header>
 
@@ -2574,182 +2626,101 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
 
 <div class="modal" id="modal">
   <button class="back" id="modalBack" aria-label="Close help"></button>
-  <div class="box" role="dialog" aria-modal="true" aria-label="How this dashboard works">
-    <div class="mh"><h2>How this dashboard works</h2><button class="btn" id="modalClose">Close</button></div>
-    <p>The Disruption Management Dashboard watches the weather at the 36 Philippine airports served by Cebu Pacific and Cebgo, and the earthquakes, volcanoes and typhoons that can affect them. It shows which airports need attention, why, and what to do.</p>
-    <p>Every figure comes from an official or recognised public source, and each one names its source. Critical readings are checked against a second source before they are called confirmed.</p>
+  <div class="box" role="dialog" aria-modal="true" aria-label="How to use this dashboard">
+    <div class="mh"><h2>How to use this dashboard</h2><button class="btn" id="modalClose">Close</button></div>
+    <p>This dashboard shows which of the 36 Cebu Pacific and Cebgo airports may be affected by weather, earthquakes, volcanoes, typhoons, strikes or holidays, and what to do about it. It updates by itself.</p>
+
     <div class="sec hs lvls">
-      <h3>1. The four alert levels</h3>
-      <div class="lv"><span class="c"><span class="pill normal">Normal</span></span><span class="t">No bad weather expected today. No action needed.</span></div>
-      <div class="lv"><span class="c"><span class="pill advisory">Advisory</span></span><span class="t">Bad weather is expected later today. Plan around it.</span></div>
-      <div class="lv"><span class="c"><span class="pill warning">Warning</span></span><span class="t">Bad weather is expected within 1 hour, or is already happening. Be ready to pause ramp work.</span></div>
-      <div class="lv"><span class="c"><span class="pill danger">Danger</span></span><span class="t">A thunderstorm is at the airport right now. Work at the ramp with extra care. Safety comes first.</span></div>
-      <p>Levels describe the weather only. Earthquakes, volcanoes and typhoons raise their own alerts and do not change an airport's level.</p>
+      <h3>1. What the colours mean</h3>
+      <div class="lvgrid" role="list" aria-label="Alert levels">
+        <div class="lvc normal">
+          <div class="lvh"><span class="pill normal">Normal</span></div>
+          <dl><dt>What it means</dt><dd>No bad weather expected today.</dd><dt>What to do</dt><dd>No action needed.</dd></dl>
+        </div>
+        <div class="lvc advisory">
+          <div class="lvh"><span class="pill advisory">Advisory</span></div>
+          <dl><dt>What it means</dt><dd>Bad weather expected later today.</dd><dt>What to do</dt><dd>Plan ramp work around it.</dd></dl>
+        </div>
+        <div class="lvc warning">
+          <div class="lvh"><span class="pill warning">Warning</span></div>
+          <dl><dt>What it means</dt><dd>Bad weather within 1 hour, or already happening.</dd><dt>What to do</dt><dd>Be ready to pause ramp work.</dd></dl>
+        </div>
+        <div class="lvc danger">
+          <div class="lvh"><span class="pill danger">Danger</span></div>
+          <dl><dt>What it means</dt><dd>Thunderstorm at the airport now.</dd><dt>What to do</dt><dd>Work at the ramp with extra care. Safety comes first.</dd></dl>
+        </div>
+      </div>
+      <p>The colour is for the weather only. Typhoons, earthquakes and volcanoes have their own alerts.</p>
     </div>
-    <div class="sec hs">
-      <h3>2. Finding your way around</h3>
+
+    <div class="sec hs one">
+      <h3>2. Everyday use</h3>
       <ul>
-        <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing red dot is a thunderstorm now; its name shows when you point at it or select it, so the map stays clear. A dashed outline is an Estimate.</li>
-        <li><strong>Other marks on the map.</strong> Purple rings are earthquakes. Triangles are volcanoes. A swirl is a tropical cyclone. A red circle with an L is a low pressure area.</li>
-        <li><strong>Airport list.</strong> The airports at the chosen level, with what to expect and when. Press a row to open it. Under "Needs attention", an airport that a confirmed typhoon's strong winds can reach is listed with a Typhoon now or Typhoon 24 h mark, even when its weather is normal.</li>
-        <li><strong>News.</strong> Under the airport list: official updates and news stories for whatever is selected: an airport, a typhoon, a volcano or an earthquake. With nothing selected, it follows the airport list as it stands, so choosing a region, a tile or Tomorrow changes the news too. A video shows as a picture and plays, with sound, when you press it. On a short screen the news folds to one line so the airport list keeps its room; press Show news to open it.</li>
-        <li><strong>Tiles.</strong> The counts at each level and the key figures. Press one to filter the map and the list. Press it again, or "Clear filter", to go back.</li>
-        <li><strong>Today and Tomorrow.</strong> Switch between today's alerts and tomorrow's forecast.</li>
-        <li><strong>Region and Find an airport.</strong> Narrow to Luzon, Visayas or Mindanao, or jump straight to one airport.</li>
-        <li><strong>Moving the map.</strong> Zoom with the + and − buttons, the mouse wheel, a pinch or a double-tap. Drag to move. The round arrow returns to the usual view.</li>
-        <li><strong>The usual view.</strong> It shows the Philippine Area of Responsibility, the area PAGASA watches for typhoons, as a dashed outline. You can zoom out further. Neighbouring countries are drawn for reference only.</li>
-        <li><strong>Layers.</strong> Turn rain, earthquakes, all volcanoes and all airport names on or off. The choice is remembered on that device.</li>
-        <li><strong>Hazards.</strong> The full lists of earthquakes, volcanoes and typhoons. A section opens by itself when it has an alert.</li>
-        <li><strong>Top right buttons.</strong> The triangle shows active alerts. The next button changes the colours (Auto, Day, Night). The bell turns the alert sound on or off. The question mark opens this guide.</li>
-        <li><strong>On a phone.</strong> The map, the airport list and the details become three tabs.</li>
-      </ul>
-    </div>
-    <div class="sec hs">
-      <h3>3. What you see when you select something</h3>
-      <p>Select any mark on the map to open its details. Press the X, the Esc key or an empty part of the map to close it. The map then returns to how you had it.</p>
-      <p class="subh">An airport</p>
-      <ul>
-        <li><strong>Banner.</strong> A small drawing that shows the main condition at a glance: clear, rain, poor visibility, strong wind, thunderstorm, volcanic ash, earthquake nearby or typhoon. It is the same drawing for every airport, not a picture of the real one. When several conditions apply, the most serious is shown.</li>
-        <li><strong>What to do.</strong> The action that goes with the level.</li>
-        <li><strong>Figures.</strong> Wind, gusts, visibility and the lowest cloud layer from the official airport report. An Estimate shows wind, rain, cloud cover and temperature instead.</li>
-        <li><strong>Crosswind and headwind.</strong> Crosswind blows across the runway. Headwind blows along it, towards a landing aircraft. Both use the stronger of the wind or gust speed. They are a guide for ground staff only; flight crews and the tower use their own figures.</li>
-        <li><strong>Airport close-up.</strong> A small box on the map shows the runway at its true direction, an arrow for the wind, and rings at 5 km and 10 km.</li>
-        <li><strong>Forecast for later today.</strong> What the official airport forecast expects in the hours ahead. If weather arrives that the forecast did not expect, it says so; go by the current report.</li>
-        <li><strong>Rain in the next 12 hours.</strong> For each hour: the chance of rain, how heavy, and the amount. A lightning mark means the official forecast has a thunderstorm.</li>
-        <li><strong>Official updates and news.</strong> From the last 24 hours, newest first. Only items whose headline names the airport's place are shown, so every item is about that airport or its area. Each is tagged: Official (PAGASA thunderstorm and rainfall advisories), Flights or airport, or Hazard in the area. Sources: PAGASA and PHIVOLCS, GMA News, ABS-CBN News, TV5, CNN, Inquirer, SunStar, Philstar, Rappler, Manila Bulletin and the Philippine News Agency, plus the YouTube channels of GMA, ABS-CBN, PAGASA and PHIVOLCS. Each item opens on the publisher's site; read it before acting on it. When you select something, the most critical video plays by itself, without sound, at the top of the details panel, and stops when you close the selection. Its controls (pause, sound, full screen) appear when you point at the video. News never changes an alert level.</li>
-        <li><strong>Flights likely inbound.</strong> Cebu Pacific and Cebgo flights that seem to be heading to this airport in the next hour, with the estimated minutes to arrival. They are red when the airport has an alert. The estimate uses each plane's position, heading and speed, not the schedule.</li>
-        <li><strong>Tomorrow and the week ahead.</strong> For planning. It is less certain the further ahead it looks.</li>
-        <li><strong>About this reading.</strong> How far to trust it, when it was taken and who supplied it.</li>
-      </ul>
-      <p class="subh">An earthquake</p>
-      <ul>
-        <li><strong>On the map.</strong> Rings at 25, 50 and 100 km. Only the airports inside 100 km are shown, each with its distance.</li>
-        <li><strong>In the details.</strong> Magnitude, exact time, depth, nearest airport, tsunami note and aftershocks. A Cross-check line says whether a second agency has confirmed it.</li>
-        <li><strong>Official updates and news.</strong> From the last 48 hours, newest first: stories whose headline is about an earthquake and that name the place or give the same magnitude, published after it happened.</li>
-        <li><strong>Small purple dots.</strong> Weaker earthquakes, shown for awareness. Tap one for its size, place and time. They never raise an alert.</li>
-      </ul>
-      <p class="subh">A volcano</p>
-      <ul>
-        <li><strong>On the map.</strong> A 150 km ring, and the airports inside it with their distances. A brown area is an official ash cloud.</li>
-        <li><strong>Where the ash is heading.</strong> An arrow shows which way the ash is moving. Dashed outlines show where the Tokyo ash centre expects it about 6, 12 and 18 hours later, each with its time.</li>
-        <li><strong>Official updates and news.</strong> From the last 48 hours, newest first: the latest PHIVOLCS bulletin, and stories and videos whose headline names the volcano.</li>
-        <li><strong>In the details.</strong> When the eruption started, the ash warning, the PHIVOLCS Alert Level and the airports nearby.</li>
-      </ul>
-      <p class="subh">A typhoon</p>
-      <ul>
-        <li><strong>On the map.</strong> How far its strong winds reach, an inner ring for storm-force winds when reported, and its forecast track for up to 5 days. The shaded cone widens because forecasts are less certain further ahead.</li>
-        <li><strong>Official updates and news.</strong> From the last 48 hours, newest first: the PAGASA bulletin while it is inside the PAR, and stories and videos whose headline uses its international or PAGASA name.</li>
-        <li><strong>Airports.</strong> Only those within reach are shown, marked "now" or "within 24 h".</li>
-        <li><strong>Name.</strong> Inside the Philippine Area of Responsibility a typhoon is called by its PAGASA name, with the international name after it, for example "Typhoon Pepito (Man-yi)". Outside it, the international name is used.</li>
-        <li><strong>Class.</strong> The bar shows the PAGASA class by its strongest winds, from Tropical Depression to Super Typhoon.</li>
-        <li><strong>Confirmed or Not yet confirmed.</strong> Confirmed means at least two of three sources report it. A grey dashed swirl has one source so far; it is shown so nothing is hidden, but it raises no alert.</li>
-        <li><strong>Low pressure area.</strong> A place where a typhoon can start. It is for information only and raises no alert. The list is not complete; PAGASA's outlook is the official one.</li>
+        <li><strong>Start with "Needs attention today".</strong> These are the airports to watch. An airport in reach of a typhoon is listed here too, with a Typhoon mark.</li>
+        <li><strong>Press an airport</strong> on the map or in the list to see what is happening, what is expected, and what to do.</li>
+        <li><strong>Narrow it down</strong> with Today or Tomorrow, the region menu, or Find airport.</li>
+        <li><strong>The triangle button</strong> at the top shows every active alert. Press an alert to go to it.</li>
+        <li><strong>Close</strong> a selection with the X, or press an empty part of the map.</li>
       </ul>
     </div>
-    <div class="sec hs">
-      <h3>4. Rain on the map</h3>
+
+    <div class="sec hs one">
+      <h3>3. Reading the map</h3>
       <ul>
-        <li><strong>Rain timeline.</strong> The map plays the forecast rain for the next 24 hours by itself. Pause it, or drag the slider to any hour.</li>
-        <li><strong>Typhoons move with the rain.</strong> While the timeline plays, each typhoon moves to where RSMC Tokyo forecasts its centre at that hour. The typhoon icon turns anticlockwise, as typhoons do; the stronger the typhoon, the faster it turns, and a typhoon or super typhoon sends out a soft ring. A small dashed ring stays at its last reported position.</li>
-        <li><strong>Live flights.</strong> Small planes show Cebu Pacific (5J) and Cebgo (DG) aircraft, live, moving smoothly between position updates every 10 seconds, with a short trail behind. A red plane is heading to an airport with an alert and carries its flight number and estimated arrival. An amber plane is passing through an alert zone: within 25 km of an airport with a thunderstorm now, or inside an official volcanic ash area at or below the ash height. A plane that crossed ash is listed in the details of the airport it lands at, with a reminder to inspect it for ash. A grey plane has not been heard for a minute and has stopped; it is removed after 5 minutes. Planes on the ground, and planes landing or taking off near an airport, are left off so the airport's own status always shows. By default only the flights an alert affects are shown, and while an airport, typhoon, volcano or earthquake is selected, only the flights it affects stay on the map; tick "Show all flights" under Layers to see the whole fleet. Point at a plane for its flight number and destination, or click it to open its details on the right, like an airport: why it is marked, likely destination and arrival, height, speed and aircraft. Positions come from adsb.lol, a free network of volunteer receivers, so planes far from a receiver can be missing. Turn it off under Layers.</li>
-        <li><strong>Colours.</strong> Blue is light rain, green moderate, yellow heavy and red very heavy. The key sits just above the timeline.</li>
-        <li><strong>Lightning marks.</strong> These come only from official thunderstorm warnings and airport forecasts. Rain with no lightning mark does not mean no thunder.</li>
-        <li><strong>A picture of the forecast.</strong> It plays no part in the alert levels. When the two differ, go by the alert level.</li>
-        <li><strong>Windy map.</strong> A more detailed rain map from Windy.com. It is a different forecast, so it can differ.</li>
+        <li><strong>Dots</strong> are airports, coloured by their level. A flashing dot is a thunderstorm now. A dashed outline means the reading is an estimate.</li>
+        <li><strong>Purple rings</strong> are earthquakes. <strong>Triangles</strong> are volcanoes. <strong>A swirl</strong> is a typhoon, with its expected path.</li>
+        <li><strong>Blue to red shading</strong> is the rain forecast for the next 24 hours. It plays by itself; use the slider to pick an hour.</li>
+        <li><strong>Layers</strong> turns the rain, earthquakes and names on or off. Zoom with + and &minus;, or pinch.</li>
       </ul>
     </div>
-    <div class="sec hs">
-      <h3>5. Alerts</h3>
-      <p class="subh">What raises an alert</p>
+
+    <div class="sec hs one">
+      <h3>4. When other alerts appear</h3>
       <ul>
-        <li><strong>Thunderstorm.</strong> An official airport report says a thunderstorm is at the airport now.</li>
-        <li><strong>Earthquake.</strong> Magnitude 4.5 or stronger within 100 km of an airport, or 6.0 or stronger anywhere in the Philippine area, in the last 24 hours.</li>
-        <li><strong>Possible tsunami.</strong> Magnitude 6.5 or stronger and no deeper than 70 km, or flagged by USGS. It is a prompt to check PHIVOLCS, not an official tsunami warning.</li>
-        <li><strong>Volcano.</strong> An official ash area covers an airport, or an eruption is reported within 150 km of one.</li>
-        <li><strong>Typhoon.</strong> A confirmed Tropical Storm or stronger whose strong winds can reach an airport now or within 24 hours.</li>
+        <li><strong>Typhoon:</strong> a confirmed storm whose strong winds can reach an airport now or within 24 hours.</li>
+        <li><strong>Earthquake:</strong> magnitude 4.5 or stronger within 100 km of an airport, or 6.0 or stronger anywhere in the Philippines.</li>
+        <li><strong>Volcano:</strong> ash over an airport, or an eruption within 150 km of one.</li>
       </ul>
-      <p class="subh">How alerts reach you</p>
+      <p>The same alerts are sent to Teams and by email.</p>
+    </div>
+
+    <div class="sec hs one">
+      <h3>5. News, strikes and holidays</h3>
+      <p>Under the airport list. It shows news for whatever you select, or for the airports in the list.</p>
       <ul>
-        <li><strong>On screen.</strong> The newest alert is at the top. Each alert appears briefly under the title bar, then tucks into the alert button with a red count. Press the button to see them again. Press an alert to go to the place.</li>
-        <li><strong>Teams and email.</strong> The same alerts are sent with a map, the key figures and what to do. They show what you would see here on selecting the same thing.</li>
-        <li><strong>Sound.</strong> Press the bell for a soft chime on each new alert. It is quiet on purpose.</li>
-        <li><strong>Auto-show.</strong> When nobody is using the screen, the map visits each alert in turn: earthquakes, volcanoes, typhoons inside the Philippine Area of Responsibility, then Danger airports. If a news video from the last 24 hours is about the event or a place on show, the most important one plays without sound at the top of the details panel, so the map and figures stay in view. It plays once every 2 hours at most. When it ends, the round carries on and the map returns to normal. Touching the screen pauses it. The label under the map turns it off.</li>
+        <li><strong>Disruption reported:</strong> something has already stopped, such as cancelled flights or a strike under way.</li>
+        <li><strong>Disruption possible:</strong> something may slow work, such as a planned strike, a road closure, heavy traffic or a holiday rush.</li>
+        <li><strong>For awareness:</strong> worth knowing; nothing has stopped.</li>
       </ul>
-      <p class="subh">Staying up to date</p>
+      <p>Always open the story before acting. News never changes an airport's colour.</p>
+    </div>
+
+    <div class="sec hs one">
+      <h3>6. Is the information current?</h3>
       <ul>
-        <li><strong>Updates.</strong> Data is collected about every 20 minutes. Earthquakes and ash warnings are checked every 5 minutes. An open page updates by itself; there is no need to reload.</li>
-        <li><strong>The times at the top.</strong> "Last updated" is when data was last collected. "Next update" is an estimate.</li>
-        <li><strong>Yellow notice.</strong> Appears when a backup source is in use, or the data is more than 60 minutes old.</li>
+        <li>The top of the screen shows when the data was last updated. It refreshes about every 20 minutes; there is no need to reload.</li>
+        <li><strong>A red "Data is ... old" message</strong> means the updates have stopped. Do not rely on the screen until it clears.</li>
+        <li><strong>A yellow note</strong> means a backup source is in use. The data is still usable.</li>
       </ul>
     </div>
-    <div class="sec hs srcs">
-      <h3>6. Where the data comes from</h3>
-      <p>Each kind of data has a first-choice source and, where one exists, a backup. If the first choice cannot be reached, the backup takes over by itself and a yellow notice says so.</p>
-      <div class="src"><b>Airport weather</b><span class="t">Official reports and forecasts issued by PAGASA for Philippine airports, read from aviationweather.gov. Backup: the NOAA data server, which carries the same reports.</span></div>
-      <div class="src"><b>Estimates</b><span class="t">For airports with no official report: a computer forecast for that location from MET Norway. Backup: Open-Meteo. An Estimate shows rain and wind only.</span></div>
-      <div class="src"><b>Rain chance and the week ahead</b><span class="t">Open-Meteo. For planning only; it never affects an alert level.</span></div>
-      <div class="src"><b>Typhoons</b><span class="t">Three sources, compared at every check: aviation storm warnings (aviationweather.gov), RSMC Tokyo of the Japan Meteorological Agency, the official typhoon centre for this region, and GDACS, the United Nations and European Union alert system.</span></div>
-      <div class="src"><b>Low pressure areas</b><span class="t">Joint Typhoon Warning Center. One source, for information only.</span></div>
-      <div class="src"><b>Earthquakes</b><span class="t">PHIVOLCS first. Backups: USGS, then EMSC. Each earthquake of magnitude 4.5 or stronger is also checked against a second agency.</span></div>
-      <div class="src"><b>Volcanoes</b><span class="t">Ash and eruptions: aviation ash warnings (aviationweather.gov) and the Tokyo Volcanic Ash Advisory Centre. Alert Levels: PHIVOLCS bulletins.</span></div>
-      <div class="src"><b>Rain on the map</b><span class="t">MET Norway forecast, rebuilt every 3 hours.</span></div>
-      <div class="src"><b>News</b><span class="t">Official: PAGASA bulletins and regional advisories, PHIVOLCS volcano bulletins. Newsrooms: GMA News, ABS-CBN News, TV5, CNN International (CNN Philippines closed in 2024), Philippine News Agency, Inquirer, SunStar, Philstar, Rappler and Manila Bulletin, read from their feeds and a news search limited to these sites. Social media: their public YouTube channels. Headlines and links only; the stories stay on their sites.</span></div>
-      <div class="src"><b>Live flights</b><span class="t">adsb.lol, an open network of volunteer ADS-B receivers (open data, ODbL licence). Only Cebu Pacific and Cebgo aircraft are shown. Read through the company relay every 10 seconds while the layer is on.</span></div>
-      <div class="src"><b>Runways</b><span class="t">OurAirports public database. For a few airports only the runway number is published, so the direction comes from that number.</span></div>
+
+    <div class="sec hs one">
+      <h3>7. Please remember</h3>
+      <p>This dashboard supports decisions. It does not replace PAGASA, PHIVOLCS and CAAP bulletins, or the judgement of staff at the airport. It does not detect lightning.</p>
     </div>
-    <div class="sec hs">
-      <h3>7. How readings are checked</h3>
-      <ul>
-        <li><strong>Airport weather.</strong> The official report is the authority. Danger is raised only from it, never from an Estimate. A report older than 90 minutes lowers the confidence shown.</li>
-        <li><strong>Earthquakes.</strong> Shown as soon as the first agency reports, because minutes matter. The Cross-check line then says whether a second agency agrees.</li>
-        <li><strong>Volcanoes.</strong> Shown as soon as either official source reports. The details say whether the second has confirmed it.</li>
-        <li><strong>Typhoons.</strong> An alert is raised only after two of the three sources agree.</li>
-        <li><strong>When sources differ.</strong> The more reliable one is used, in this order: official airport report, official airport forecast, official area warning, then Estimate.</li>
-        <li><strong>When a source is down.</strong> The reading says so in plain words. It is never shown as confirmed.</li>
-      </ul>
-    </div>
-    <div class="sec hs">
-      <h3>8. The rules in figures</h3>
-      <ul>
-        <li><strong>Bad weather</strong> means a thunderstorm, rain or rain showers, or strong winds. In an Estimate: 2.5 mm or more of rain in an hour, or winds of 39 km/h or more.</li>
-        <li><strong>Rain.</strong> Light is under 2.5 mm in an hour. Moderate is 2.5 mm or more. Heavy is 7.6 mm or more.</li>
-        <li><strong>"Possible at times"</strong> means the weather may come and go. "Expected" means the forecast is firm.</li>
-        <li><strong>Area warnings.</strong> An airport inside an official thunderstorm or cyclone warning area is raised to Warning.</li>
-        <li><strong>Earthquakes shown.</strong> Rings: magnitude 4.5 or stronger, past 7 days. Dots: 3.0 to 4.4, past 3 days. A faded ring is more than 24 hours old.</li>
-        <li><strong>Aftershocks.</strong> Smaller earthquakes within 100 km and 72 hours of a main earthquake of 5.0 or stronger are grouped with it.</li>
-        <li><strong>Why magnitudes differ.</strong> Each agency measures in its own way, and first figures are often revised. The dashboard follows the revisions.</li>
-        <li><strong>Typhoon classes</strong> (PAGASA, winds in km/h): Tropical Depression up to 61, Tropical Storm 62 to 88, Severe Tropical Storm 89 to 117, Typhoon 118 to 184, Super Typhoon 185 or more.</li>
-        <li><strong>Typhoon strong winds</strong> are about 55 km/h or more, as measured by RSMC Tokyo. When the reach is not reported, 300 km from the centre is used. A Tropical Depression raises no alert.</li>
-        <li><strong>Basis for the typhoon rule.</strong> PAGASA wind signals and CAAP Memorandum Circular 013-2023. Wind signals are not published as data, so the measured wind reach is used as the nearest equivalent. PAGASA's signal remains the official one.</li>
-        <li><strong>Volcano distance.</strong> 150 km. No official standard exists; this covers about half of past airport disruptions worldwide (US Geological Survey study).</li>
-        <li><strong>Volcano Alert Level</strong> (PHIVOLCS, 0 to 5). Level 3 or higher within 150 km of an airport is flagged here. Ash can affect flights at any level, so ash warnings are checked separately.</li>
-        <li><strong>Ash forecast.</strong> The dashed outlines are for planning. They raise no alert and can change with each new advisory.</li>
-        <li><strong>Distances</strong> are rounded to the nearest 5 km.</li>
-      </ul>
-    </div>
-    <div class="sec help-data">
-      <h3>9. About the data on screen now</h3>
+
+    <details class="sec help-data hmore">
+      <summary><h3>Where the data comes from</h3></summary>
+      <p>Airport weather: official PAGASA airport reports and forecasts. Typhoons: Japan Meteorological Agency, aviation storm warnings and GDACS. Earthquakes: PHIVOLCS, with USGS and EMSC as backups. Volcanoes: PHIVOLCS and the Tokyo ash advisory centre. Rain forecast: MET Norway. News: PAGASA, PHIVOLCS, national and local newsrooms, and the transport and airport authorities. Holidays: a public holiday calendar and the team's events file.</p>
       <div class="help-data-grid">
         <div class="help-data-copy">
           <p id="hChecked"></p>
           <p id="hRain"></p>
-          <p>The boxes show which source supplied each kind of data at this check. Backups that are not in use are tested every 6 hours.</p>
         </div>
         <div class="srcgrid" id="srcGrid"></div>
       </div>
       <div class="small srcnotes" id="sources"></div>
-    </div>
-    <div class="sec hs one">
-      <h3>10. What it cannot do</h3>
-      <ul>
-        <li>It supports decisions. It does not replace official bulletins, official tsunami warnings, or the judgement of staff at the airport.</li>
-        <li>It does not detect lightning. Thunderstorm information comes from official reports, forecasts and warnings.</li>
-        <li>An Estimate shows rain and wind only. It cannot confirm a thunderstorm.</li>
-        <li>Earthquakes cannot be predicted, and no source is instant. Agencies usually publish 5 to 20 minutes after the event.</li>
-        <li>Forecasts for tomorrow and beyond are less certain than today.</li>
-        <li>PAGASA typhoon bulletins and wind signals are not published as data, so they are not read directly. Confirm typhoon decisions against PAGASA and CAAP advisories.</li>
-      </ul>
-    </div>
+    </details>
     <div class="about">
       <img src="assets/logo.png" alt="1Aviation logo">
       <div>
@@ -3895,25 +3866,69 @@ function closeUp() {
 var volcanoFocusBase = volcanoFocus;
 volcanoFocus = function () { volcanoFocusBase(); closeUp(); };
 /* ---------- news about the selected airport (last 24 hours) ---------- */
-function newsBlock(a) { return newsList(a.id, 'this airport to flights or a hazard'); }
+function newsBlock(a) { return newsView([a.id, 'ph'], 'this airport', { up: upcomingFor([a.id]) }); }
 function hazNews(k, o) { return newsList(k + ':' + o.id, k === 'q' ? 'this earthquake' : k === 'v' ? 'this volcano' : 'this cyclone'); }      // matched by its own name or figures
 // How critical a story is, for choosing the video that plays by itself: official, then flights or the airport, then the event, then the area
 function newsRank(n) { return n.about === 'official' ? 4 : n.about === 'airport' ? 3 : n.about === 'hazard' ? 2 : 1; }
 function newsOrder(x, y) { return y.ms - x.ms; }      // the list runs newest to oldest; newsRank only decides which video plays by itself
-function newsList(key, what) {
-  if (!D || !D.news_src) return '';
-  var hrs = key.indexOf(':') > 0 ? (D.event_hours || D.news_hours || 24) : (D.news_hours || 24);
-  var L = ((D.news || {})[key] || []).slice().sort(newsOrder), srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
-  var head = '<div class="nwh"><span class="k">Official updates and news, last ' + hrs + ' hours</span><span class="nwc">' + (L.length ? L.length + (L.length === 1 ? ' story' : ' stories') : '') + '</span></div>';
-  if (!L.length) return '<div class="news">' + head + '<p class="nwe">' + (srcs.length ? 'No official update, news story or video in that time links ' + what + '. Checked: ' + srcs.join(', ') + '.' : 'The news sources could not be reached at this check.') + '</p></div>';
-  var tag = function (n) { return n.about === 'official' ? ['of', 'Official'] : n.about === 'airport' ? ['ap', 'Flights or airport'] : n.about === 'hazard' ? ['hz', 'About this event'] : ['ar', 'Hazard in the area']; };
-  return '<div class="news">' + head + '<ul>' + L.map(function (n) {
-    var t = tag(n);
-    return '<li><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
-      (n.img ? '<span class="nwi"><img src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add(\'none\');this.remove()">' + (n.video ? '<i>Video</i>' : '') + '</span>' : '<span class="nwi none">' + (n.video ? '<i>Video</i>' : '') + '</span>') +
-      '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm"><em class="' + t[0] + '">' + t[1] + '</em>' + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' + (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(key) + '">Play video here</button>' : '') + '</li>';
-  }).join('') + '</ul><p class="nwn">Headlines link to the publisher. Picked by name and topic, so check the story before acting. News never changes an alert level.</p></div>';
+/* News, sorted by how much it may affect operations. The categories come from plain keyword rules in build.py
+   (Disruption reported, Disruption possible, For awareness), with a topic for each story. Nationwide stories (key "ph")
+   are shown with every airport. Holidays and planned events for the next days sit at the top of their group. News never changes an alert level. */
+var IMPACTS = [['reported', 'Disruption reported', 'Something has already stopped or closed'], ['possible', 'Disruption possible', 'May slow or stop work; plan for it'], ['awareness', 'For awareness', 'Worth knowing; nothing has stopped']];
+var TOPIC_WORDS = { flights: 'Flights and airport', typhoon: 'Typhoon', volcano: 'Volcano', quake: 'Earthquake', strike: 'Strike or protest', traffic: 'Traffic and roads', holiday: 'Holiday or event', power: 'Power', security: 'Security', weather: 'Weather', other: 'General' };
+var NEWS_IMP = 'all';
+function newsItems(keys) {      // every story for these keys, once each, remembering which key it came from (for playing its video)
+  var seen = {}, out = [];
+  keys.forEach(function (k) { ((D.news || {})[k] || []).forEach(function (n) { if (seen[n.link + '|' + n.title]) return; seen[n.link + '|' + n.title] = 1; var c = Object.create(n); c._k = k; out.push(c); }); });
+  return out;
 }
+var IRANK = { reported: 0, possible: 1, awareness: 2 };
+function upcomingFor(ids, all) { return ((D && D.upcoming) || []).filter(function (u) { return all || !(u.airports || []).length || (u.airports || []).some(function (x) { return ids.indexOf(x) >= 0; }); }).slice().sort(function (p, q) { return (p.start < q.start ? -1 : p.start > q.start ? 1 : 0) || (IRANK[p.impact] - IRANK[q.impact]); }); }
+function newsList(key, what) { return newsView([key], what, {}); }
+function newsView(keys, what, opt) {
+  if (!D || !D.news_src) return '';
+  opt = opt || {};
+  var srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
+  var L = newsItems(keys), seenL = {}; L.forEach(function (n) { seenL[n.link + '|' + n.title] = 1; });
+  L = L.concat(newsItems(opt.extraReported || []).filter(function (n) { return n.impact === 'reported' && !seenL[n.link + '|' + n.title]; }));
+  var cnt = { reported: 0, possible: 0, awareness: 0 };
+  L.forEach(function (n) { n._i = cnt[n.impact] !== undefined ? n.impact : 'awareness'; cnt[n._i]++; });
+  var up0 = opt.up || []; up0.forEach(function (u) { if (cnt[u.impact] !== undefined) cnt[u.impact]++; });
+  var up = up0.filter(function (u) { return NEWS_IMP === 'all' || u.impact === NEWS_IMP; }), hrs = D.news_hours || 24, ph = D.plan_hours || 72;
+  var h = '<div class="news">';
+  // filter chips by impact
+  h += '<div class="nwf" role="group" aria-label="Show news by impact">' + [['all', 'All', L.length + up0.length]].concat(IMPACTS.map(function (x) { return [x[0], x[1], cnt[x[0]]]; })).map(function (c) {
+    return '<button class="nwfb i-' + c[0] + (NEWS_IMP === c[0] ? ' on' : '') + '" data-imp="' + c[0] + '" aria-pressed="' + (NEWS_IMP === c[0]) + '"' + (c[0] !== 'all' && !c[2] ? ' disabled' : '') + '>' + (c[0] !== 'all' ? '<i></i>' : '') + c[1] + '<b>' + c[2] + '</b></button>';
+  }).join('') + '</div>';
+  var evRow = function (u) {      // a holiday or planned event: its day in place of a picture
+    var where = !(u.airports || []).length ? 'All airports' : u.airports.map(function (x) { var a = byId(x); return a ? a.name : x; }).join(', ');
+    return '<li class="ev"><' + (u.link ? 'a href="' + esc(u.link) + '" target="_blank" rel="noopener noreferrer"' : 'div') + ' class="evr"><span class="nwi evd"><b>' + esc(u.when) + '</b></span><span class="nwt"><b>' + esc(u.title) + '</b>' +
+      (u.note ? '<span class="upn">' + esc(u.note) + '</span>' : '') + '<span class="nwm"><em class="tp">' + esc(TOPIC_WORDS[u.kind] || (u.kind.charAt(0).toUpperCase() + u.kind.slice(1))) + '</em><em class="ev">Planned</em>' + esc(where) + ' · ' + esc(u.src) + '</span></span></' + (u.link ? 'a' : 'div') + '></li>';
+  };
+  if (!L.length && !up.length) {
+    h += '<p class="nwe">' + (srcs.length ? 'No official update or news story links ' + what + ' (news from the last ' + hrs + ' hours; strikes, roads and holidays from the last ' + ph + ' hours). Checked: ' + srcs.join(', ') + '.' : 'The news sources could not be reached at this check.') + '</p></div>';
+    return h;
+  }
+  var tag = function (n) { return n.about === 'official' ? '<em class="of">Official</em>' : ''; };
+  IMPACTS.forEach(function (x) {
+    if (NEWS_IMP !== 'all' && NEWS_IMP !== x[0]) return;
+    var G = L.filter(function (n) { return n._i === x[0]; }).sort(function (p, q) { return ((q.about === 'official') - (p.about === 'official')) || (q.ms - p.ms); });
+    var E = up.filter(function (u) { return u.impact === x[0]; });
+    if (!G.length && !E.length) return;
+    h += '<div class="nwg i-' + x[0] + '"><div class="nwgh"><i></i><span>' + x[1] + '</span><b>' + (G.length + E.length) + '</b><em>' + x[2] + '</em></div><ul>' + E.map(evRow).join('') + G.map(function (n) {
+      return '<li><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
+        (n.img ? '<span class="nwi"><img src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add(\'none\');this.remove()">' + (n.video ? '<i>Video</i>' : '') + '</span>' : '<span class="nwi none' + (n.about === 'official' ? ' off' : '') + '">' + (n.video ? '<i>Video</i>' : '') + '</span>') +
+        '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm">' + tag(n) + '<em class="tp">' + esc(TOPIC_WORDS[n.topic] || TOPIC_WORDS.other) + '</em>' + (n.scope === 'national' || n._k === 'ph' ? '<em class="nat">Nationwide</em>' : '') + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' +
+        (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(n._k) + '">Play video here</button>' : '') + '</li>';
+    }).join('') + '</ul></div>';
+  });
+  h += '<p class="nwn">Sorted by possible impact using keyword rules, so read the story before acting. Headlines link to the publisher. News never changes an alert level.</p></div>';
+  return h;
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.nwfb'); if (!b || b.disabled) return;
+  NEWS_IMP = b.getAttribute('data-imp'); try { renderNewsPanel(); } catch (x) {}
+});
 /* ---------- the cyclone moves with the rain timeline ---------- */
 // While the rain forecast plays, each cyclone on the map is moved to where RSMC Tokyo forecasts its centre at that hour,
 // so the swirl and the rain move together. A small hollow ring stays at its reported position.
@@ -4730,13 +4745,12 @@ function renderNewsPanel() {
     var ids = Array.prototype.map.call(document.querySelectorAll('#list [data-a]'), function (b) { return b.getAttribute('data-a'); });
     var allView = !S.region && S.filter === 'alerts' && S.day === 'today', keys = ids.slice();
     if (allView) Object.keys(D.news || {}).forEach(function (k) { if (/^[tvq]:/.test(k)) keys.push(k); });      // the hazards' own stories too, on the full view only
-    var seen = {}, all = [];
-    keys.forEach(function (k) { ((D.news || {})[k] || []).forEach(function (n) { if (seen[n.link]) return; seen[n.link] = 1; all.push(n); }); });
-    all.sort(function (x, y) { return (newsRank(y) - newsRank(x)) || (y.ms - x.ms); });
-    D.news.__top = all.slice(0, NEWS_TOP);
+    keys.push('ph');      // nationwide strikes, holidays and flight news apply to every airport
     var rg = S.region ? $('region').options[$('region').selectedIndex].text : '', lt = $('listTitle').textContent;
-    label = lt + (rg ? ', ' + rg : '') + ' (' + ids.length + (ids.length === 1 ? ' airport' : ' airports') + (allView ? ' and hazards' : '') + ')';
-    html = all.length ? newsList('__top', 'these airports') : '<p class="nwe npempty">' + (ids.length ? 'No official update or news story in the last ' + (D.news_hours || 24) + ' hours mentions the airports listed above.' : 'No airports are listed, so there is no news to show.') + ' Select an airport, or a typhoon, volcano or earthquake, to see its own news.</p>';
+    label = lt + (rg ? ', ' + rg : '') + ' (' + ids.length + (ids.length === 1 ? ' airport' : ' airports') + (allView ? ' and hazards' : '') + ', plus nationwide)';
+    // on the full view, a reported disruption at any other airport (a strike, a closure) is shown too, so nothing serious is missed
+    var others = allView ? D.airports.map(function (a) { return a.id; }).filter(function (x) { return ids.indexOf(x) < 0; }) : [];
+    html = newsView(keys, 'the airports listed above', { up: upcomingFor(ids, allView), extraReported: others });
   }
   ctx.textContent = label; body.innerHTML = html || '';
   newsFit();
