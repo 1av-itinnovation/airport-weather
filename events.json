@@ -1,0 +1,17 @@
+{
+  "_how_to_use": "Add local holidays, festivals, announced transport strikes, road closures and other planned events that can affect an airport. Each event needs a title and a start date (YYYY-MM-DD). The end date is optional. List the airports it affects by their id (for example cebumactan, manilanaia, davao); leave the list empty for an event that affects every airport. impact is reported, possible or awareness; leave it out to let the dashboard decide (possible from the day before, awareness further ahead). kind is a word such as holiday, festival, strike, road closure or event. Events show for the next 7 days and disappear by themselves after their end date. The example below is in the past, so it does not show; copy it to add your own.",
+  "airport_ids": "bacolod, boholpanglao, busuangacoron, butuan, cagayandeoro, calbayog, camiguin, caticlanboracay, cauayan, cebumactan, clark, davao, dipolog, dumaguete, elnido, generalsantos, iloilo, kalibo, laoag, legazpibicol, manilanaia, masbate, naga, ozamiz, pagadian, puertoprincesa, roxas, sanjosemindoro, sanvicente, siargao, surigao, tacloban, tawitawi, tuguegarao, virac, zamboanga",
+  "events": [
+    {
+      "title": "Example: Sinulog Festival grand parade",
+      "start": "2026-01-18",
+      "end": "2026-01-18",
+      "airports": ["cebumactan"],
+      "kind": "festival",
+      "impact": "possible",
+      "note": "Road closures in Cebu City and heavy traffic on the bridges to Mactan. Allow extra travel time for staff.",
+      "source": "Cebu City traffic advisory",
+      "link": ""
+    }
+  ]
+}
