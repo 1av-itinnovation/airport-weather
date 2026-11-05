@@ -2415,6 +2415,38 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
   .glass .app .cols.has-sel .col.list{grid-column:2;grid-row:2}
   .glass .app .cols.has-sel .col.side{position:relative;inset:auto;width:auto;grid-column:3;grid-row:2;z-index:1}
 }
+/* ---- news by impact ---- */
+.news .nwf{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 4px}
+.news .nwfb{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line,#C9D6E2);background:transparent;color:inherit;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.news .nwfb b{font-weight:700;font-variant-numeric:tabular-nums;opacity:.75}
+.news .nwfb i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.news .nwfb.on{background:#12303F;color:#fff;border-color:#12303F}
+.news .nwfb:disabled{opacity:.45;cursor:default}
+.news .i-reported i,.news .nwg.i-reported .nwgh i{background:#C62828}.news .i-possible i,.news .nwg.i-possible .nwgh i{background:#E07B00}.news .i-awareness i,.news .nwg.i-awareness .nwgh i{background:#7A8C98}
+.news .nwg{display:flex;flex-direction:column;gap:6px;padding-left:10px;border-left:3px solid #7A8C98}
+.news .nwg.i-reported{border-left-color:#C62828}.news .nwg.i-possible{border-left-color:#E07B00}.news .nwg.up{border-left-color:#0077C8}
+.news .nwgh{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--ink,#12303F);flex-wrap:wrap}
+.news .nwgh i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.news .nwgh b{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted,#5B7180)}
+.news .nwgh em{font-style:normal;font-weight:400;color:var(--muted,#5B7180);font-size:12px}
+.news .nwm em.tp{color:#12303F;background:#E7EEF3}
+.news .nwm em.nat{color:#004F7A;background:#D9EEF9}
+.news .nwm em.imp.i-reported{color:#fff;background:#C62828}.news .nwm em.imp.i-possible{color:#5A3300;background:#FFE2B8}.news .nwm em.imp.i-awareness{color:#3F5563;background:#E7EEF3}
+.news .upl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.news li.ev .evr{display:flex;gap:10px;align-items:flex-start;text-decoration:none;color:inherit;padding:7px;border-radius:10px;background:#EEF6FB}
+.news li.ev .evd{display:flex;align-items:center;justify-content:center;text-align:center;background:#005687;color:#fff;font-size:12px;line-height:1.2;padding:4px}
+.news .nwm em.ev{color:#fff;background:#0077C8}
+.news .upn{font-size:12.5px;line-height:1.4}
+html[data-theme="dark"] .news li.ev .evr{background:#1D2B44}
+.news .upl .upn{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.news .upl .upd{flex:none;width:76px;font-size:12px;font-weight:700;color:#005687;line-height:1.35}
+.news .upl .upt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.news .upl .upt b{font-size:13px;font-weight:600;line-height:1.35}.news .upl .upt b a{color:inherit}
+.news .upl .upn{font-size:12.5px;line-height:1.4;color:var(--ink,#12303F)}
+html[data-theme="dark"] .news .nwfb.on{background:#E6ECF5;color:#12263F;border-color:#E6ECF5}
+html[data-theme="dark"] .news .nwm em.tp{color:#DCE5EE;background:#2A3550}html[data-theme="dark"] .news .nwm em.nat{color:#9FD8F5;background:#1D3A52}
+html[data-theme="dark"] .news .upl li{background:#222B40}html[data-theme="dark"] .news .upl .upd{color:#9FD8F5}html[data-theme="dark"] .news .nwgh{color:#E6ECF5}
+html[data-theme="dark"] .news .nwm em.imp.i-possible{color:#FFE2B8;background:#4A3418}html[data-theme="dark"] .news .nwm em.imp.i-awareness{color:#DCE5EE;background:#2A3550}
 .app .col.side .detail .hd{flex-wrap:nowrap}.app .col.side .detail .hd .ttl{min-width:0;flex:1 1 auto}.app .col.side .detail .hd .xbtn{flex:none}
 @media (max-width:900px){.app .col.list{overflow-y:auto}.app .col.list>#list{max-height:none;flex:none;overflow:visible}.newspanel{flex:none;min-height:0}.newspanel #newsBody{overflow:visible}}
 </style>
@@ -2592,7 +2624,9 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
         <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing red dot is a thunderstorm now; its name shows when you point at it or select it, so the map stays clear. A dashed outline is an Estimate.</li>
         <li><strong>Other marks on the map.</strong> Purple rings are earthquakes. Triangles are volcanoes. A swirl is a tropical cyclone. A red circle with an L is a low pressure area.</li>
         <li><strong>Airport list.</strong> The airports at the chosen level, with what to expect and when. Press a row to open it. Under "Needs attention", an airport that a confirmed typhoon's strong winds can reach is listed with a Typhoon now or Typhoon 24 h mark, even when its weather is normal.</li>
-        <li><strong>News.</strong> Under the airport list: official updates and news stories for whatever is selected, or the most important ones across all airports and hazards when nothing is. A video shows as a picture and plays, with sound, when you press it. On a short screen the news folds to one line so the airport list keeps its room; press Show news to open it.</li>
+        <li><strong>News.</strong> Under the airport list: official updates and news stories for whatever is selected: an airport, a typhoon, a volcano or an earthquake. With nothing selected, it follows the airport list as it stands, so choosing a region, a tile or Tomorrow changes the news too. A video shows as a picture and plays, with sound, when you press it. On a short screen the news folds to one line so the airport list keeps its room; press Show news to open it.</li>
+        <li><strong>News groups.</strong> Stories and planned events are sorted by how much they may affect operations. <b>Disruption reported</b>: something has already stopped or closed, such as cancelled flights, an airport closure, stranded passengers or a strike under way. <b>Disruption possible</b>: something may slow or stop work, such as a strike or protest, a road closure or heavy traffic, a holiday rush, a thunderstorm or rainfall advisory, or a power interruption. <b>For awareness</b>: worth knowing, nothing has stopped, or the disruption is over. Press a group above the list to show only that group. Each story also shows its topic, and a Nationwide mark when it applies to every airport. On the full view, a reported disruption at any airport is shown even when that airport's weather is normal.</li>
+        <li><strong>Holidays and planned events.</strong> National holidays for the next 7 days, and local holidays, festivals, announced strikes and road closures entered by the team. They show with a day mark (Today, Tomorrow, or the date) at the top of their group.</li>
         <li><strong>Tiles.</strong> The counts at each level and the key figures. Press one to filter the map and the list. Press it again, or "Clear filter", to go back.</li>
         <li><strong>Today and Tomorrow.</strong> Switch between today's alerts and tomorrow's forecast.</li>
         <li><strong>Region and Find an airport.</strong> Narrow to Luzon, Visayas or Mindanao, or jump straight to one airport.</li>
@@ -2695,6 +2729,8 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
       <div class="src"><b>Rain on the map</b><span class="t">MET Norway forecast, rebuilt every 3 hours.</span></div>
       <div class="src"><b>News</b><span class="t">Official: PAGASA bulletins and regional advisories, PHIVOLCS volcano bulletins. Newsrooms: GMA News, ABS-CBN News, TV5, CNN International (CNN Philippines closed in 2024), Philippine News Agency, Inquirer, SunStar, Philstar, Rappler and Manila Bulletin, read from their feeds and a news search limited to these sites. Social media: their public YouTube channels. Headlines and links only; the stories stay on their sites.</span></div>
       <div class="src"><b>Live flights</b><span class="t">adsb.lol, an open network of volunteer ADS-B receivers (open data, ODbL licence). Only Cebu Pacific and Cebgo aircraft are shown. Read through the company relay every 10 seconds while the layer is on.</span></div>
+      <div class="src"><b>News</b><span class="t">PAGASA regional advisories and PHIVOLCS bulletins first. Then the national newsrooms (GMA News, ABS-CBN, TV5, Inquirer, Philstar, Manila Bulletin, Rappler, Philippine News Agency and others), local newsrooms (SunStar, The Freeman, Panay News, Daily Guardian, Visayan Daily Star, MindaNews, Mindanao Times, Edge Davao, Bombo Radyo, Brigada News), and the transport and airport authorities (DOTr, CAAP, MIAA, MMDA, LTFRB, NDRRMC, PIA). News is read every 30 minutes. Strike, road and holiday stories are kept for 72 hours, other stories for 24.</span></div>
+      <div class="src"><b>Holidays and planned events</b><span class="t">National holidays from the Nager.Date public holiday calendar, read once a day. Local holidays, festivals, announced strikes and road closures from the events file kept by the team (events.json in the dashboard's files).</span></div>
       <div class="src"><b>Runways</b><span class="t">OurAirports public database. For a few airports only the runway number is published, so the direction comes from that number.</span></div>
     </div>
     <div class="sec hs">
@@ -2748,6 +2784,8 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
         <li>Earthquakes cannot be predicted, and no source is instant. Agencies usually publish 5 to 20 minutes after the event.</li>
         <li>Forecasts for tomorrow and beyond are less certain than today.</li>
         <li>PAGASA typhoon bulletins and wind signals are not published as data, so they are not read directly. Confirm typhoon decisions against PAGASA and CAAP advisories.</li>
+        <li>News groups come from keyword rules, in English, Filipino and Cebuano. They can misread a story, and a story without the place in its headline is not linked to an airport. Read the story before acting. News never changes an alert level.</li>
+        <li>Special non-working days are declared each year by proclamation and can be announced late. Check them, and add local holidays, in the events file.</li>
       </ul>
     </div>
     <div class="about">
@@ -3895,25 +3933,69 @@ function closeUp() {
 var volcanoFocusBase = volcanoFocus;
 volcanoFocus = function () { volcanoFocusBase(); closeUp(); };
 /* ---------- news about the selected airport (last 24 hours) ---------- */
-function newsBlock(a) { return newsList(a.id, 'this airport to flights or a hazard'); }
+function newsBlock(a) { return newsView([a.id, 'ph'], 'this airport', { up: upcomingFor([a.id]) }); }
 function hazNews(k, o) { return newsList(k + ':' + o.id, k === 'q' ? 'this earthquake' : k === 'v' ? 'this volcano' : 'this cyclone'); }      // matched by its own name or figures
 // How critical a story is, for choosing the video that plays by itself: official, then flights or the airport, then the event, then the area
 function newsRank(n) { return n.about === 'official' ? 4 : n.about === 'airport' ? 3 : n.about === 'hazard' ? 2 : 1; }
 function newsOrder(x, y) { return y.ms - x.ms; }      // the list runs newest to oldest; newsRank only decides which video plays by itself
-function newsList(key, what) {
-  if (!D || !D.news_src) return '';
-  var hrs = key.indexOf(':') > 0 ? (D.event_hours || D.news_hours || 24) : (D.news_hours || 24);
-  var L = ((D.news || {})[key] || []).slice().sort(newsOrder), srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
-  var head = '<div class="nwh"><span class="k">Official updates and news, last ' + hrs + ' hours</span><span class="nwc">' + (L.length ? L.length + (L.length === 1 ? ' story' : ' stories') : '') + '</span></div>';
-  if (!L.length) return '<div class="news">' + head + '<p class="nwe">' + (srcs.length ? 'No official update, news story or video in that time links ' + what + '. Checked: ' + srcs.join(', ') + '.' : 'The news sources could not be reached at this check.') + '</p></div>';
-  var tag = function (n) { return n.about === 'official' ? ['of', 'Official'] : n.about === 'airport' ? ['ap', 'Flights or airport'] : n.about === 'hazard' ? ['hz', 'About this event'] : ['ar', 'Hazard in the area']; };
-  return '<div class="news">' + head + '<ul>' + L.map(function (n) {
-    var t = tag(n);
-    return '<li><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
-      (n.img ? '<span class="nwi"><img src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add(\'none\');this.remove()">' + (n.video ? '<i>Video</i>' : '') + '</span>' : '<span class="nwi none">' + (n.video ? '<i>Video</i>' : '') + '</span>') +
-      '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm"><em class="' + t[0] + '">' + t[1] + '</em>' + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' + (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(key) + '">Play video here</button>' : '') + '</li>';
-  }).join('') + '</ul><p class="nwn">Headlines link to the publisher. Picked by name and topic, so check the story before acting. News never changes an alert level.</p></div>';
+/* News, sorted by how much it may affect operations. The categories come from plain keyword rules in build.py
+   (Disruption reported, Disruption possible, For awareness), with a topic for each story. Nationwide stories (key "ph")
+   are shown with every airport. Holidays and planned events for the next days sit at the top of their group. News never changes an alert level. */
+var IMPACTS = [['reported', 'Disruption reported', 'Something has already stopped or closed'], ['possible', 'Disruption possible', 'May slow or stop work; plan for it'], ['awareness', 'For awareness', 'Worth knowing; nothing has stopped']];
+var TOPIC_WORDS = { flights: 'Flights and airport', typhoon: 'Typhoon', volcano: 'Volcano', quake: 'Earthquake', strike: 'Strike or protest', traffic: 'Traffic and roads', holiday: 'Holiday or event', power: 'Power', security: 'Security', weather: 'Weather', other: 'General' };
+var NEWS_IMP = 'all';
+function newsItems(keys) {      // every story for these keys, once each, remembering which key it came from (for playing its video)
+  var seen = {}, out = [];
+  keys.forEach(function (k) { ((D.news || {})[k] || []).forEach(function (n) { if (seen[n.link + '|' + n.title]) return; seen[n.link + '|' + n.title] = 1; var c = Object.create(n); c._k = k; out.push(c); }); });
+  return out;
 }
+var IRANK = { reported: 0, possible: 1, awareness: 2 };
+function upcomingFor(ids, all) { return ((D && D.upcoming) || []).filter(function (u) { return all || !(u.airports || []).length || (u.airports || []).some(function (x) { return ids.indexOf(x) >= 0; }); }).slice().sort(function (p, q) { return (p.start < q.start ? -1 : p.start > q.start ? 1 : 0) || (IRANK[p.impact] - IRANK[q.impact]); }); }
+function newsList(key, what) { return newsView([key], what, {}); }
+function newsView(keys, what, opt) {
+  if (!D || !D.news_src) return '';
+  opt = opt || {};
+  var srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
+  var L = newsItems(keys), seenL = {}; L.forEach(function (n) { seenL[n.link + '|' + n.title] = 1; });
+  L = L.concat(newsItems(opt.extraReported || []).filter(function (n) { return n.impact === 'reported' && !seenL[n.link + '|' + n.title]; }));
+  var cnt = { reported: 0, possible: 0, awareness: 0 };
+  L.forEach(function (n) { n._i = cnt[n.impact] !== undefined ? n.impact : 'awareness'; cnt[n._i]++; });
+  var up0 = opt.up || []; up0.forEach(function (u) { if (cnt[u.impact] !== undefined) cnt[u.impact]++; });
+  var up = up0.filter(function (u) { return NEWS_IMP === 'all' || u.impact === NEWS_IMP; }), hrs = D.news_hours || 24, ph = D.plan_hours || 72;
+  var h = '<div class="news">';
+  // filter chips by impact
+  h += '<div class="nwf" role="group" aria-label="Show news by impact">' + [['all', 'All', L.length + up0.length]].concat(IMPACTS.map(function (x) { return [x[0], x[1], cnt[x[0]]]; })).map(function (c) {
+    return '<button class="nwfb i-' + c[0] + (NEWS_IMP === c[0] ? ' on' : '') + '" data-imp="' + c[0] + '" aria-pressed="' + (NEWS_IMP === c[0]) + '"' + (c[0] !== 'all' && !c[2] ? ' disabled' : '') + '>' + (c[0] !== 'all' ? '<i></i>' : '') + c[1] + '<b>' + c[2] + '</b></button>';
+  }).join('') + '</div>';
+  var evRow = function (u) {      // a holiday or planned event: its day in place of a picture
+    var where = !(u.airports || []).length ? 'All airports' : u.airports.map(function (x) { var a = byId(x); return a ? a.name : x; }).join(', ');
+    return '<li class="ev"><' + (u.link ? 'a href="' + esc(u.link) + '" target="_blank" rel="noopener noreferrer"' : 'div') + ' class="evr"><span class="nwi evd"><b>' + esc(u.when) + '</b></span><span class="nwt"><b>' + esc(u.title) + '</b>' +
+      (u.note ? '<span class="upn">' + esc(u.note) + '</span>' : '') + '<span class="nwm"><em class="tp">' + esc(TOPIC_WORDS[u.kind] || (u.kind.charAt(0).toUpperCase() + u.kind.slice(1))) + '</em><em class="ev">Planned</em>' + esc(where) + ' · ' + esc(u.src) + '</span></span></' + (u.link ? 'a' : 'div') + '></li>';
+  };
+  if (!L.length && !up.length) {
+    h += '<p class="nwe">' + (srcs.length ? 'No official update or news story links ' + what + ' (news from the last ' + hrs + ' hours; strikes, roads and holidays from the last ' + ph + ' hours). Checked: ' + srcs.join(', ') + '.' : 'The news sources could not be reached at this check.') + '</p></div>';
+    return h;
+  }
+  var tag = function (n) { return n.about === 'official' ? '<em class="of">Official</em>' : ''; };
+  IMPACTS.forEach(function (x) {
+    if (NEWS_IMP !== 'all' && NEWS_IMP !== x[0]) return;
+    var G = L.filter(function (n) { return n._i === x[0]; }).sort(function (p, q) { return ((q.about === 'official') - (p.about === 'official')) || (q.ms - p.ms); });
+    var E = up.filter(function (u) { return u.impact === x[0]; });
+    if (!G.length && !E.length) return;
+    h += '<div class="nwg i-' + x[0] + '"><div class="nwgh"><i></i><span>' + x[1] + '</span><b>' + (G.length + E.length) + '</b><em>' + x[2] + '</em></div><ul>' + E.map(evRow).join('') + G.map(function (n) {
+      return '<li><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
+        (n.img ? '<span class="nwi"><img src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add(\'none\');this.remove()">' + (n.video ? '<i>Video</i>' : '') + '</span>' : '<span class="nwi none' + (n.about === 'official' ? ' off' : '') + '">' + (n.video ? '<i>Video</i>' : '') + '</span>') +
+        '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm">' + tag(n) + '<em class="tp">' + esc(TOPIC_WORDS[n.topic] || TOPIC_WORDS.other) + '</em>' + (n.scope === 'national' || n._k === 'ph' ? '<em class="nat">Nationwide</em>' : '') + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' +
+        (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(n._k) + '">Play video here</button>' : '') + '</li>';
+    }).join('') + '</ul></div>';
+  });
+  h += '<p class="nwn">Sorted by possible impact using keyword rules, so read the story before acting. Headlines link to the publisher. News never changes an alert level.</p></div>';
+  return h;
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.nwfb'); if (!b || b.disabled) return;
+  NEWS_IMP = b.getAttribute('data-imp'); try { renderNewsPanel(); } catch (x) {}
+});
 /* ---------- the cyclone moves with the rain timeline ---------- */
 // While the rain forecast plays, each cyclone on the map is moved to where RSMC Tokyo forecasts its centre at that hour,
 // so the swirl and the rain move together. A small hollow ring stays at its reported position.
@@ -4726,13 +4808,16 @@ function renderNewsPanel() {
   else if (q) { html = hazNews('q', q); label = q.title; }
   else if (vo) { html = hazNews('v', vo); label = vo.title; }
   else if (cy && !cy.low) { html = hazNews('t', cy); label = cy.dname || cy.title; }
-  else {      // nothing selected: the most important stories across every airport and hazard, official ones first
-    var seen = {}, all = [];
-    Object.keys(D.news || {}).forEach(function (k) { if (k === '__top') return; (D.news[k] || []).forEach(function (n) { if (seen[n.link]) return; seen[n.link] = 1; all.push(n); }); });
-    all.sort(function (x, y) { return (newsRank(y) - newsRank(x)) || (y.ms - x.ms); });
-    D.news.__top = all.slice(0, NEWS_TOP);
-    html = newsList('__top', 'any airport or hazard'); label = 'Most important, all airports and hazards';
-    if (!all.length) html = '<p class="nwe npempty">No official update or news story in the last ' + (D.news_hours || 24) + ' hours mentions an airport or hazard on this dashboard.</p>';
+  else {      // nothing selected: the stories for the airports in the list as it stands (region, tile and day), official ones first
+    var ids = Array.prototype.map.call(document.querySelectorAll('#list [data-a]'), function (b) { return b.getAttribute('data-a'); });
+    var allView = !S.region && S.filter === 'alerts' && S.day === 'today', keys = ids.slice();
+    if (allView) Object.keys(D.news || {}).forEach(function (k) { if (/^[tvq]:/.test(k)) keys.push(k); });      // the hazards' own stories too, on the full view only
+    keys.push('ph');      // nationwide strikes, holidays and flight news apply to every airport
+    var rg = S.region ? $('region').options[$('region').selectedIndex].text : '', lt = $('listTitle').textContent;
+    label = lt + (rg ? ', ' + rg : '') + ' (' + ids.length + (ids.length === 1 ? ' airport' : ' airports') + (allView ? ' and hazards' : '') + ', plus nationwide)';
+    // on the full view, a reported disruption at any other airport (a strike, a closure) is shown too, so nothing serious is missed
+    var others = allView ? D.airports.map(function (a) { return a.id; }).filter(function (x) { return ids.indexOf(x) < 0; }) : [];
+    html = newsView(keys, 'the airports listed above', { up: upcomingFor(ids, allView), extraReported: others });
   }
   ctx.textContent = label; body.innerHTML = html || '';
   newsFit();
