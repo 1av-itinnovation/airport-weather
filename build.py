@@ -1840,7 +1840,8 @@ for _c2 in CYCLONES:      # the summary line uses the PAGASA name for a cyclone 
 # To keep requests light, everything is read at most every NEWS_EVERY_MIN minutes; refreshes in between reuse the last result.
 # Lines starting NEWS: in the run log show what each source gave.
 NEWS_HOURS = 24; EVENT_HOURS = 48; NEWS_MAX = 8; NEWS_EVERY_MIN = 30
-NEWS_VERSION = 3      # raise this when the news sources change, so the next refresh reads them at once instead of reusing
+PLAN_HOURS = 72      # strikes, holidays and road closures are announced days ahead, so these stories are kept longer
+NEWS_VERSION = 4      # raise this when the news sources change, so the next refresh reads them at once instead of reusing
 NEWS_PAGE_FETCH = 12      # at most this many story pages are opened per read, only to find the story's own YouTube video
 YT_RE = re.compile(r'(?:youtube(?:-nocookie)?\.com/(?:embed/|watch\?v=|shorts/)|youtu\.be/)([A-Za-z0-9_-]{11})')
 def _story_video(page):
@@ -1863,6 +1864,18 @@ NEWS_SOURCES = [
 NEWS_SITES = {'gmanetwork.com': 'GMA News', 'abs-cbn.com': 'ABS-CBN News', 'news5.com.ph': 'TV5 / News5', 'tv5.com.ph': 'TV5 / News5', 'cnn.com': 'CNN',
               'pna.gov.ph': 'Philippine News Agency', 'inquirer.net': 'Inquirer', 'sunstar.com.ph': 'SunStar', 'philstar.com': 'Philstar', 'rappler.com': 'Rappler',
               'mb.com.ph': 'Manila Bulletin', 'phivolcs.dost.gov.ph': 'PHIVOLCS', 'pagasa.dost.gov.ph': 'PAGASA'}
+# Local newsrooms and the agencies that announce strikes, road closures, holidays and airport changes. Searched separately,
+# so each search stays short, and added to NEWS_SITES so their stories are accepted.
+LOCAL_SITES = {'manilatimes.net': 'The Manila Times', 'pia.gov.ph': 'Philippine Information Agency', 'bomboradyo.com': 'Bombo Radyo', 'brigada.ph': 'Brigada News',
+               'mindanews.com': 'MindaNews', 'mindanaotimes.com.ph': 'Mindanao Times', 'edgedavao.net': 'Edge Davao', 'panaynews.net': 'Panay News',
+               'dailyguardian.com.ph': 'Daily Guardian', 'visayandailystar.com': 'Visayan Daily Star', 'thefreeman.com': 'The Freeman', 'sunstar.com.ph': 'SunStar',
+               'pna.gov.ph': 'Philippine News Agency', 'rappler.com': 'Rappler'}
+AGENCY_SITES = {'dotr.gov.ph': 'DOTr', 'caap.gov.ph': 'CAAP', 'miaa.gov.ph': 'MIAA', 'mmda.gov.ph': 'MMDA', 'ltfrb.gov.ph': 'LTFRB', 'ltfrb7.com': 'LTFRB Region 7',
+                'ndrrmc.gov.ph': 'NDRRMC', 'ocd.gov.ph': 'Office of Civil Defense', 'pcoo.gov.ph': 'Presidential Communications Office', 'pco.gov.ph': 'Presidential Communications Office',
+                'officialgazette.gov.ph': 'Official Gazette', 'mciaa.gov.ph': 'Mactan-Cebu International Airport Authority', 'gmcac.com.ph': 'Mactan-Cebu International Airport',
+                'cebupacificair.com': 'Cebu Pacific'}
+NEWS_SITES.update(LOCAL_SITES); NEWS_SITES.update(AGENCY_SITES)
+_NATIONAL_SITES = [k for k in NEWS_SITES if k not in LOCAL_SITES and k not in AGENCY_SITES]
 # YouTube channels: (shown name, channel id if known, page handles to look it up from)
 NEWS_CHANNELS = [('GMA News (YouTube)', 'UCqYw-CTd1dU2yGI71sEyqNw', []), ('ABS-CBN News (YouTube)', 'UCE2606prvXQc_noEqKxVJXA', []),
                  ('TV5 / News5 (YouTube)', '', ['@News5PH', '@news5everywhere', '@TV5Philippines']), ('PAGASA (YouTube)', 'UCpyLikj1x70S8UPxVqsPr6g', []),
@@ -1885,9 +1898,45 @@ NEWS_PLACES = {
     'tawitawi': r'Tawi-?Tawi|Bongao|Sanga-?Sanga', 'tuguegarao': r'Tuguegarao|\bCagayan\b(?! de Oro| Valley)', 'virac': r'Virac|Catanduanes',
     'zamboanga': r'Zamboanga City|\bZamboanga\b(?! del| Sibugay)',
 }
+# For strikes, protests, traffic and holidays the wider area matters too: the city the airport serves and the roads to it.
+NEWS_PLACES_WIDE = {'manilanaia': r'Metro Manila|\bNCR\b|\bManila\b|Para[n\u00f1]aque|\bMMDA\b|\bEDSA\b|Roxas Boulevard|Coastal Road|NAIA Expressway|\bNAIAX\b',
+                    'cebumactan': r'Mandaue|CCLEX|Marcelo Fernan|Mactan|Lapu-?Lapu|Metro Cebu|\bCebu\b', 'davao': r'Davao City|Metro Davao|\bDavao\b',
+                    'clark': r'Angeles|\bClark\b|Pampanga|\bSCTEX\b|\bNLEX\b', 'iloilo': r'Iloilo|Cabatuan|Sta\.? Barbara', 'bacolod': r'Bacolod|Silay|Talisay City'}
 NEWS_AIR = re.compile(r'\bairports?\b|\bflights?\b|\bflight cancell?ations?\b|\bcancell?ed\b|\bdelay(?:s|ed)?\b|\bdivert|\brunway|\bCAAP\b|\bMIAA\b|Cebu Pacific|\bCebgo\b|Philippine Airlines|\bAirAsia\b|stranded passengers|passengers stranded|\bterminal\b', re.I)
 NEWS_HAZ = re.compile(r'typhoon|tropical (?:storm|depression|cyclone)|wind signal|signal no\.?|\bLPA\b|low pressure|\bbagyo\b|flood|heavy rain|thunderstorm|\bstorm\b|earthquake|\bquake\b|magnitude|tsunami|erupt|ashfall|volcan|Phivolcs|PAGASA|landslide|state of calamity|evacuat|power (?:outage|interruption)|blackout|class(?:es)? suspended|suspension of classes|\blindol\b|\bbaha\b|\bulan\b|pagputok', re.I)
 NEWS_NOT = re.compile(r'flood[- ]control|\bNBI\b|\bDOJ\b|Ombudsman|Sandiganbayan|\bSenate\b|\bCongress\b|\bhearing\b|\bprobe\b|graft|corruption|kickback|anomal|\bcharges?\b|\bcase[s]?\b filed|\bcourt\b|\bbudget\b|contractor', re.I)
+# ---- what a story is about, and how much it may affect operations ----
+# Plain keyword rules, so anyone can see why a story was put where it is. Filipino and Cebuano words are included.
+# A story's impact never changes an airport's alert level; it only orders the news list.
+NEWS_TOPICS = [      # first match wins: strikes and roads first (a strike or road story often names the airport), then flights, then hazards
+    ('strike',   re.compile(r'transport strike|tigil[- ]?pasada|\bwelga\b|(?<!lightning )(?<!lightning-)\bstrikes?\b(?! (?:a |the )?balance)|\bPISTON\b|\bMANIBELA\b|transport (?:caravan|holiday)|walkout|\brall(?:y|ies)\b|\bprotests?\b|demonstration|kilos[- ]protesta|\bmartsa\b|picket', re.I)),
+    ('traffic',  re.compile(r'traffic|road closures?|closed to (?:traffic|motorists)|rerout|lane closure|road (?:works?|repairs?|reblocking)|reblocking|gridlock|\btrapik\b|\bMMDA\b|\bLTO\b|\bLTFRB\b|stalled|road crash|counterflow|motorists', re.I)),
+    ('flights',  NEWS_AIR),
+    ('typhoon',  re.compile(r'typhoon|tropical (?:storm|depression|cyclone)|wind signal|signal no\.?|\bbagyo(?:ng)?\b|\bLPA\b|low pressure area', re.I)),
+    ('volcano',  re.compile(r'volcan|bulkan|erupt|pagputok|ashfall|lahar|phreatic', re.I)),
+    ('quake',    re.compile(r'earthquake|\bquake|tremor|magnitude|\blindol\b|\blinog\b|aftershock|tsunami', re.I)),
+    ('holiday',  re.compile(r'holiday|non-working|walang pasok|\bway klase\b|work suspension|suspension of work|long weekend|\bUndas\b|Holy Week|Semana Santa|Christmas rush|holiday rush|\bexodus\b|festival|\bfiesta\b|Sinulog|Dinagyang|Kadayawan|MassKara|Ati-?Atihan|Panagbenga|Pahiyas|Moriones|Kaamulan|Charter Day', re.I)),
+    ('power',    re.compile(r'power (?:outage|interruption)|brownout|blackout|\bNGCP\b|(?:red|yellow) alert (?:status|on the)|grid', re.I)),
+    ('security', re.compile(r'bomb threat|security (?:alert|threat)|\bterror|lockdown|shooting|hostage|armed men|explosion', re.I)),
+    ('weather',  re.compile(r'flood|heavy rain|thunderstorm|rainfall|\bstorm\b|landslide|\bbaha\b|\bulan\b|PAGASA|state of calamity|evacuat|class(?:es)? suspended|suspension of classes', re.I)),
+]
+TOPIC_WORDS = {'flights': 'Flights and airport', 'typhoon': 'Typhoon', 'volcano': 'Volcano', 'quake': 'Earthquake', 'strike': 'Strike or protest', 'traffic': 'Traffic and roads',
+               'holiday': 'Holiday or event', 'power': 'Power', 'security': 'Security', 'weather': 'Weather', 'other': 'Other'}
+# "Disruption reported": something has already stopped or closed. "Disruption possible": something may slow or stop work.
+# "For awareness": worth knowing, nothing stopped. A story that says the disruption has ended is For awareness.
+IMPACT_REPORTED = re.compile(r'\bcancel(?:s|l?ed|l?ing|l?ations?)\b|\bsuspend(?:s|ed)?\b|\bcloses\b|suspension of (?:flights|operations|work)|\bclosed\b|closure of the airport|airport closure|shut(?:s| down)?\b|divert(?:s|ed)\b|grounded|stranded|state of calamity|evacuat|tsunami warning|signal (?:no\.? ?)?#?[345]\b|kanselado|gikansela|sinuspinde|gisuspinde|no flights|flights halted|operations halted|lockdown|bomb threat', re.I)
+IMPACT_POSSIBLE = re.compile(r'delay|naantala|(?<!lightning )strike|warns?\b|ash (?:emission|column|plume|puff)|emits ash|ash anew|belch|nagbuga ng abo|tigil|welga|\brall(?:y|ies)\b|protest|traffic|trapik|road closure|rerout|flood|baha|heavy rain|thunderstorm|rainfall (?:warning|advisory)|signal (?:no\.? ?)?#?[12]\b|wind signal|alert level [3-5]|ashfall|power (?:outage|interruption)|brownout|blackout|holiday|non-working|walang pasok|work suspension|long weekend|rush|influx|congest|advisory|warning|\bwatch\b|expected|landfall|security alert', re.I)
+IMPACT_OVER = re.compile(r'\blifted\b|resum(?:e|es|ed|ption)|reopen|back to normal|normal operations|no (?:flights? )?cancell?ations?|not (?:cancell?ed|affected|suspended)|downgraded|weakens? into|called off|postponed the strike|strike (?:is )?off|\bhoax\b|false alarm|all[- ]clear', re.I)
+NEWS_NATIONAL = re.compile(r'nationwide|\bnational\b|across the country|\bPH\b|Philippines|\bDOTr\b|\bLTFRB\b|Malaca[n\u00f1]ang|\bPalace\b|Proclamation|\bCAAP\b|all airports|\bPCO\b|Marcos', re.I)
+def news_topic(text):
+    for k, rx in NEWS_TOPICS:
+        if rx.search(text): return k
+    return 'other'
+def news_impact(text, topic):
+    if IMPACT_OVER.search(text): return 'awareness'
+    if IMPACT_REPORTED.search(text) and topic not in ('holiday',): return 'reported'
+    if IMPACT_POSSIBLE.search(text) or topic in ('strike', 'traffic', 'holiday', 'typhoon', 'power', 'security'): return 'possible'
+    return 'awareness'
 def _news_items(xml_text):
     """Stories from an RSS or Atom feed (newsrooms, Google News and YouTube): title, link, time, summary, picture, video."""
     out = []
@@ -1924,9 +1973,9 @@ def _site_name(host):
     for k, v in NEWS_SITES.items():
         if host == k or host.endswith('.' + k): return v
     return ''
-def _gnews(q, hours):
+def _gnews(q, hours, sites=None):
     """A Google News search limited to the trusted sites. Returns stories with the publisher's own name; others are dropped."""
-    sites = ' OR '.join('site:' + k for k in NEWS_SITES)
+    sites = ' OR '.join('site:' + k for k in (sites or _NATIONAL_SITES))
     u = 'https://news.google.com/rss/search?q=' + urllib.parse.quote(f'({q}) ({sites}) when:{max(1, round(hours / 24))}d') + '&hl=en-PH&gl=PH&ceid=PH:en'
     body = fetch(u, tries=1, text=True, timeout=15)
     items = _news_items(body) if body else []
@@ -1963,8 +2012,10 @@ def _yt_channel(name, cid, handles):
     for x in items: x['src'] = name; x['video'] = True
     print(f"NEWS: {name}: channel {cid}, {len(items)} videos" + (f' ({how})' if items else (' (no YouTube key set, and the public feed did not answer)' if not key else ' (key set, but neither the API nor the feed answered)')), file=sys.stderr)
     return items
-def _item(x, about):
+def _item(x, about, topic=None, scope=''):
+    text = x['title'] + ' ' + x.get('desc', '')[:300]; tp = topic or news_topic(text)
     return dict(yt=x.get('yt', ''), title=x['title'], link=x['link'], ms=int(x['t'].timestamp() * 1000), src=x['src'], img=x.get('img', ''), video=bool(x.get('video')), about=about,
+                topic=tp, impact=news_impact(x['title'] + ' ' + x.get('desc', '')[:200], tp), scope=scope,
                 desc=(x['desc'][:180].rsplit(' ', 1)[0] + '...' if len(x['desc']) > 180 else x['desc']))
 import urllib.parse
 NEWS = {}; NEWS_SRC = []; NEWS_MS = 0; _nver = str(NEWS_VERSION)
@@ -1997,10 +2048,19 @@ try:
     if _vols: _searches.append(('(' + ' OR '.join(sorted({'"' + v['name'] + '"' for v in _vols})) + ') (volcano OR PHIVOLCS OR eruption OR bulkan)', EVENT_HOURS))
     if _cys: _searches.append(('(' + ' OR '.join(sorted({'"' + n + '"' for c in _cys for n in (c.get('name'), c.get('local')) if n and n != 'Unnamed'})) + ') (typhoon OR storm OR bagyo OR PAGASA)', EVENT_HOURS))
     if any(q.get('ms') and (NOW.timestamp() * 1000 - q['ms']) <= EVENT_HOURS * 3600000 for q in quakes): _searches.append(('(earthquake OR lindol OR magnitude) PHIVOLCS', EVENT_HOURS))
+    # strikes, protests, road closures and holidays: these can stop staff and passengers reaching the airport
+    _searches += [('("transport strike" OR "tigil-pasada" OR welga OR PISTON OR MANIBELA OR "transport holiday")', PLAN_HOURS),
+                  ('(rally OR protest OR "road closure" OR "traffic advisory" OR rerouting OR "heavy traffic") (NAIA OR airport OR MMDA OR EDSA OR Mactan OR "Lapu-Lapu" OR Davao OR Iloilo OR Clark)', PLAN_HOURS),
+                  ('("special non-working" OR "regular holiday" OR "walang pasok" OR "work suspension" OR "suspension of work") (Proclamation OR Palace OR Malacanang OR declared)', PLAN_HOURS)]
+    _local = [('(strike OR "tigil-pasada" OR rally OR "road closure" OR traffic OR flood OR flights OR holiday) (Luzon OR Ilocos OR Cagayan OR Isabela OR Pampanga OR Bicol OR Albay OR Palawan OR Mindoro OR Catanduanes OR Masbate)', PLAN_HOURS),
+              ('(strike OR "tigil-pasada" OR rally OR "road closure" OR traffic OR flood OR flights OR holiday) (Cebu OR Bohol OR Iloilo OR Bacolod OR Negros OR Aklan OR Boracay OR Capiz OR Leyte OR Samar OR Dumaguete)', PLAN_HOURS),
+              ('(strike OR "tigil-pasada" OR rally OR "road closure" OR traffic OR flood OR flights OR holiday) (Davao OR "Cagayan de Oro" OR Zamboanga OR "General Santos" OR Butuan OR Surigao OR Siargao OR Dipolog OR Ozamiz OR Pagadian OR Camiguin OR "Tawi-Tawi")', PLAN_HOURS)]
     _gn = 0
     for _q, _h in _searches:
         for x in _gnews(_q, _h): _stories.append(x); _gn += 1
-    NEWS_SRC.append(dict(name='News search (trusted sites)', ok=_gn > 0))
+    for _q, _h in _local:      # the local newsrooms and the agencies, searched on their own so each search stays short
+        for x in _gnews(_q, _h, list(LOCAL_SITES) + list(AGENCY_SITES)): _stories.append(x); _gn += 1
+    NEWS_SRC.append(dict(name='News search (national and local newsrooms, transport and airport authorities)', ok=_gn > 0))
     _yn = 0
     for _name, _cid, _hs in NEWS_CHANNELS:      # 4. YouTube channels
         for x in _yt_channel(_name, _cid, _hs): _stories.append(x); _yn += 1
@@ -2016,28 +2076,38 @@ try:
         t0 = min(y['t'], x['t'])
         if (x.get('yt') and not y.get('yt')) or (x.get('img') and not y.get('img') and not y.get('yt')): y.update(x)
         y['t'] = t0
-    _kept = sorted([x for x in _by.values() if (NOW - x['t']).total_seconds() <= EVENT_HOURS * 3600], key=lambda x: x['t'], reverse=True)
-    print(f'NEWS: {len(_kept)} different stories in the last {EVENT_HOURS} hours', file=sys.stderr)
+    _kept = sorted([x for x in _by.values() if (NOW - x['t']).total_seconds() <= max(EVENT_HOURS, PLAN_HOURS) * 3600], key=lambda x: x['t'], reverse=True)
+    print(f'NEWS: {len(_kept)} different stories in the last {max(EVENT_HOURS, PLAN_HOURS)} hours', file=sys.stderr)
     # airports: the place is named and the story is about flights or a hazard, within NEWS_HOURS
+    _npl = 0
     for x in _kept:
-        if (NOW - x['t']).total_seconds() > NEWS_HOURS * 3600: continue
-        text = x['title'] + ' ' + x['desc']; placetext = re.sub(r'Cebu Pacific|Cebu-based', ' ', text, flags=re.I)
+        text = x['title'] + ' ' + x['desc']
         air = bool(NEWS_AIR.search(text)); haz = bool(NEWS_HAZ.search(re.sub(r'flood[- ]control', ' ', text, flags=re.I)))
-        if not (air or haz) or (not air and NEWS_NOT.search(text)): continue
-        placetitle = re.sub(r'Cebu Pacific|Cebu-based|SunStar \w+', ' ', x['title'], flags=re.I); placetext = re.sub(r'SunStar \w+', ' ', placetext, flags=re.I)
+        tp = news_topic(re.sub(r'flood[- ]control', ' ', x['title'] + ' ' + x['desc'][:300], flags=re.I))
+        plan = tp in ('strike', 'traffic', 'holiday', 'power', 'security')
+        if (NOW - x['t']).total_seconds() > (PLAN_HOURS if plan else NEWS_HOURS) * 3600: continue
+        if not (air or haz or plan): continue
+        if not air and not plan and NEWS_NOT.search(text): continue      # politics about flood-control funds and the like is not a disruption
+        if plan and re.search(r'\b(?:Senate|Congress|impeach|election|campaign|basketball|PBA|UAAP|NCAA|volleyball|concert)\b', x['title'], re.I) and not air: continue
+        placetitle = re.sub(r'Cebu Pacific|Cebu-based|SunStar \w+', ' ', x['title'], flags=re.I)
+        hit = False
         for aid, pat in NEWS_PLACES.items():
-            # a story about flights may name the place anywhere; a general hazard story must name it in the headline,
-            # so a long summary listing many provinces does not attach one story to many airports
-            if re.search(pat, placetitle, re.I):
-                L = NEWS.setdefault(aid, [])
-                if len(L) < NEWS_MAX: L.append(_item(x, 'airport' if air else 'area'))
+            # the place must be in the headline, so a long summary listing many provinces does not attach one story to many airports
+            if re.search(pat, placetitle, re.I) or (plan and aid in NEWS_PLACES_WIDE and re.search(NEWS_PLACES_WIDE[aid], placetitle, re.I)):
+                hit = True; L = NEWS.setdefault(aid, [])
+                if len(L) < NEWS_MAX: L.append(_item(x, 'airport' if air else 'area', tp))
+        # a strike, holiday or flight story for the whole country, with no one place in the headline, is shown with every airport
+        if not hit and tp in ('strike', 'holiday', 'flights', 'power', 'security') and NEWS_NATIONAL.search(x['title']):
+            L = NEWS.setdefault('ph', [])
+            if len(L) < NEWS_MAX: L.append(_item(x, 'airport' if air else 'area', tp, 'national')); _npl += 1
+    print(f'NEWS: {_npl} nationwide stories (strikes, holidays, flights)', file=sys.stderr)
     # events, matched by their own name or figures, within EVENT_HOURS
     QUAKE_W = re.compile(r'earthquake|\bquake|tremor|magnitude|\blindol\b|aftershock|tsunami', re.I)
     VOLC_W = re.compile(r'volcan|bulkan|erupt|pagputok|\bash\b|ashfall|Phivolcs|alert level|lahar|phreatic|sulfur', re.I)
     TY_W = re.compile(r'typhoon|tropical (?:storm|depression|cyclone)|\bstorm\b|\bbagyo\b|signal|PAGASA|landfall', re.I)
     for v in _vols:
         nm = {'Kanlaon': r'K[ae]nlaon|Canlaon', 'Hibok-Hibok': r'Hibok-?Hibok'}.get(v['name'], re.escape(v['name']))
-        L = [_item(x, 'hazard') for x in _kept if re.search(r'\b(' + nm + r')\b', x['title'], re.I) and VOLC_W.search(x['title'] + ' ' + x['desc'][:300]) and not (NEWS_NOT.search(x['title']) and not VOLC_W.search(x['title']))][:NEWS_MAX]
+        L = [_item(x, 'hazard', 'volcano') for x in _kept if re.search(r'\b(' + nm + r')\b', x['title'], re.I) and VOLC_W.search(x['title'] + ' ' + x['desc'][:300]) and not (NEWS_NOT.search(x['title']) and not VOLC_W.search(x['title']))][:NEWS_MAX]
         if L: NEWS['v:' + v['id']] = L
     for q in quakes:
         if not q.get('ms') or (NOW.timestamp() * 1000 - q['ms']) > EVENT_HOURS * 3600000: continue
@@ -2048,22 +2118,23 @@ try:
             t_ = x['title'] + ' ' + x['desc']
             if x['t'].timestamp() * 1000 < q['ms'] - 600000 or not QUAKE_W.search(x['title']): continue      # the headline itself must be about an earthquake
             t_ = x['title'] + ' ' + x['desc'][:300]
-            if re.search(r'(?<![\d.])' + re.escape(magtxt) + r'(?![\d])', t_) or any(re.search(r'\b' + re.escape(w) + r'\b', t_, re.I) for w in words): L.append(_item(x, 'hazard'))
+            if re.search(r'(?<![\d.])' + re.escape(magtxt) + r'(?![\d])', t_) or any(re.search(r'\b' + re.escape(w) + r'\b', t_, re.I) for w in words): L.append(_item(x, 'hazard', 'quake'))
         if L: NEWS['q:' + q['id']] = L[:NEWS_MAX]
     for c in _cys:
         nms = [n for n in (c.get('name'), c.get('local')) if n and n != 'Unnamed']
-        L = [_item(x, 'hazard') for x in _kept if any(re.search(r'\b' + re.escape(n) + r'\b', x['title'], re.I) for n in nms) and TY_W.search(x['title'] + ' ' + x['desc'][:300])][:NEWS_MAX]
+        L = [_item(x, 'hazard', 'typhoon') for x in _kept if any(re.search(r'\b' + re.escape(n) + r'\b', x['title'], re.I) for n in nms) and TY_W.search(x['title'] + ' ' + x['desc'][:300])][:NEWS_MAX]
         if L: NEWS['t:' + c['id']] = L
     # 1. official updates, pinned at the top of each list
     def _pin(key, item): NEWS.setdefault(key, []).insert(0, item)
     for v in _vols:
         b = PHIV_BUL.get(v['id'])
-        if b: _pin('v:' + v['id'], dict(yt='', title=f"PHIVOLCS bulletin: {v['name']} Volcano" + (f", Alert Level {b['level']}" if b.get('level') is not None else ''), link=b['url'], ms=b['ms'], src='PHIVOLCS', img='', video=False, about='official', desc=b.get('text', '')))
+        if b: _pin('v:' + v['id'], dict(yt='', title=f"PHIVOLCS bulletin: {v['name']} Volcano" + (f", Alert Level {b['level']}" if b.get('level') is not None else ''), link=b['url'], ms=b['ms'], src='PHIVOLCS', img='', video=False, about='official', desc=b.get('text', ''),
+                                        topic='volcano', impact=('possible' if (b.get('level') or 0) >= 3 or v.get('erupt') else 'awareness'), scope=''))
     if PAGASA_TC.get('url'):
         for c in CYCLONES:
             if c.get('inpar') and not c.get('low'):
                 _pin('t:' + c['id'], dict(yt='', title='PAGASA tropical cyclone bulletin' + (f": {c['local']}" if c.get('local') else ''), link=PAGASA_TC['url'], ms=NEWS_MS, src='PAGASA', img='', video=False, about='official',
-                                          desc='The official bulletin with the current Tropical Cyclone Wind Signals. Read at ' + clock_plain(NOW) + '.'))
+                                          desc='The official bulletin with the current Tropical Cyclone Wind Signals. Read at ' + clock_plain(NOW) + '.', topic='typhoon', impact='possible', scope=''))
     _pr = 0
     for reg, aids in PAGASA_REGIONS.items():
         u = f'https://www.pagasa.dost.gov.ph/regional-forecast/{reg}'
@@ -2078,7 +2149,8 @@ try:
                 pm = re.search(NEWS_PLACES[aid], seg, re.I)
                 if not pm or any(n['link'] == u and n['title'].lower().startswith('pagasa ' + m.group(1).lower()) for n in NEWS.get(aid, [])): continue
                 a0 = max(0, pm.start() - 140); snip = seg[a0: pm.end() + 160]
-                _pin(aid, dict(yt='', title=f"PAGASA {m.group(1).lower()} mentions {pm.group(0)}", link=u, ms=NEWS_MS, src='PAGASA', img='', video=False, about='official', desc=('...' if a0 else '') + snip + '...')); found += 1
+                _pin(aid, dict(yt='', title=f"PAGASA {m.group(1).lower()} mentions {pm.group(0)}", link=u, ms=NEWS_MS, src='PAGASA', img='', video=False, about='official', desc=('...' if a0 else '') + snip + '...',
+                               topic='weather', impact=('reported' if re.search(r'\b(?:red|orange)\b', snip, re.I) and 'rainfall' in m.group(1).lower() else 'possible'), scope='')); found += 1
         print(f'NEWS: PAGASA {reg}: read, {len(heads)} advisory headings, {found} airport mentions', file=sys.stderr)
     NEWS_SRC.insert(0, dict(name='PHIVOLCS and PAGASA', ok=bool(PHIV_BUL or PAGASA_TC.get('url') or _pr)))
     for k_ in list(NEWS): NEWS[k_] = NEWS[k_][:NEWS_MAX + 1]
@@ -2122,6 +2194,71 @@ try:
         print(f"TYPHOON: PAGASA name of {c['name']} taken from the news: {local} ({n_} stories)", file=sys.stderr)
 except Exception as _e: print('TYPHOON NAME FROM NEWS ERROR', _e, file=sys.stderr)
 
+# ---------------- Holidays and planned events, for the next UPCOMING_DAYS days ----------------
+# Two sources:
+#  1. National public holidays from the Nager.Date public holiday calendar (date.nager.at, free, no key), read once a day.
+#     Special non-working days are declared each year by proclamation and can be added late, so check them in events.json too.
+#  2. events.json, typed by hand: local holidays and festivals, announced strikes, road closures, VIP visits and the like.
+# A holiday is "Disruption possible" from the day before to the day itself (more passengers, heavier traffic); further ahead
+# it is "For awareness". Nothing here changes an alert level.
+EVENTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'events.json')
+UPCOMING_DAYS = 7; HOLIDAY_EVERY_H = 24
+UPCOMING = []; HOLIDAYS = {}; PLAN_SRC = []
+def _when_words(d0, d1, today):
+    def one(d):
+        k = (d - today).days
+        return 'Today' if k == 0 else 'Tomorrow' if k == 1 else d.strftime('%a, %b ') + str(d.day)
+    return one(d0) if d0 == d1 else (one(d0) + ' to ' + (d1.strftime('%a, %b ') + str(d1.day)))
+try:
+    _today = ph(NOW).date(); _last = _today + dt.timedelta(days=UPCOMING_DAYS)
+    try: _prevh = (json.load(open(OUT, encoding='utf-8')).get('holidays') or {})
+    except Exception: _prevh = {}
+    _hok = True
+    for _yr in sorted({_today.year, _last.year}):
+        c_ = _prevh.get(str(_yr))
+        if c_ and NOW.timestamp() * 1000 - c_.get('ms', 0) < HOLIDAY_EVERY_H * 3600000: HOLIDAYS[str(_yr)] = c_; continue
+        j_ = fetch(f'https://date.nager.at/api/v3/PublicHolidays/{_yr}/PH', tries=2, timeout=20)
+        if isinstance(j_, list) and j_:
+            HOLIDAYS[str(_yr)] = dict(ms=int(NOW.timestamp() * 1000), list=[dict(date=h['date'], name=h.get('name') or h.get('localName') or 'Holiday', local=h.get('localName') or '', types=h.get('types') or []) for h in j_ if isinstance(h, dict) and h.get('date')])
+            print(f"HOLIDAYS: {_yr}: {len(HOLIDAYS[str(_yr)]['list'])} public holidays read", file=sys.stderr)
+        elif c_: HOLIDAYS[str(_yr)] = c_; _hok = False; print(f'HOLIDAYS: {_yr}: calendar not reached, using the copy read before', file=sys.stderr)
+        else: _hok = False; print(f'HOLIDAYS: {_yr}: calendar not reached', file=sys.stderr)
+    PLAN_SRC.append(dict(name='Public holidays (Nager.Date calendar)', ok=_hok and bool(HOLIDAYS)))
+    for _yr, c_ in HOLIDAYS.items():
+        for h in c_.get('list', []):
+            try: d_ = dt.date.fromisoformat(h['date'])
+            except Exception: continue
+            if not (_today <= d_ <= _last): continue
+            nm = h['name'] + (f" ({h['local']})" if h.get('local') and h['local'] != h['name'] else '')
+            UPCOMING.append(dict(kind='holiday', title=nm, start=h['date'], end=h['date'], when=_when_words(d_, d_, _today), airports=[], scope='national',
+                                 impact=('possible' if (d_ - _today).days <= 1 else 'awareness'),
+                                 note='National holiday. Plan for more passengers and heavier traffic to and around the airports from the day before.',
+                                 src='Nager.Date public holiday calendar', link=''))
+    _ids = {a[0] for a in APTS}; _nev = 0
+    try:
+        ej = json.load(open(EVENTS_FILE, encoding='utf-8'))
+        for e in ej.get('events') or []:
+            if not isinstance(e, dict) or not e.get('title') or not e.get('start'): continue
+            try: d0 = dt.date.fromisoformat(str(e['start'])); d1 = dt.date.fromisoformat(str(e.get('end') or e['start']))
+            except Exception: print('EVENTS: bad date in events.json:', e.get('title'), file=sys.stderr); continue
+            if d1 < _today or d0 > _last: continue
+            aps = [x for x in (e.get('airports') or []) if x in _ids]
+            bad = [x for x in (e.get('airports') or []) if x not in _ids]
+            if bad: print('EVENTS: unknown airport id in events.json:', ', '.join(bad), file=sys.stderr)
+            imp = e.get('impact') if e.get('impact') in ('reported', 'possible', 'awareness') else ('possible' if (d0 - _today).days <= 1 else 'awareness')
+            kind = str(e.get('kind') or 'event').lower()
+            UPCOMING.append(dict(kind=kind, title=str(e['title']), start=d0.isoformat(), end=d1.isoformat(), when=_when_words(max(d0, _today), d1, _today), airports=aps, scope=('national' if not aps else 'local'),
+                                 impact=imp, note=str(e.get('note') or ''), src=str(e.get('source') or 'Entered by hand (events.json)'), link=str(e.get('link') or '')))
+            _nev += 1
+        PLAN_SRC.append(dict(name='Events entered by hand (events.json)', ok=True))
+    except FileNotFoundError: PLAN_SRC.append(dict(name='Events entered by hand (events.json)', ok=True))
+    except Exception as e: print('EVENTS: events.json could not be read:', e, file=sys.stderr); PLAN_SRC.append(dict(name='Events entered by hand (events.json)', ok=False))
+    _irank = {'reported': 0, 'possible': 1, 'awareness': 2}
+    UPCOMING.sort(key=lambda u: (u['start'], _irank[u['impact']], u['title']))
+    print(f'UPCOMING: {len(UPCOMING)} holidays and events in the next {UPCOMING_DAYS} days ({_nev} from events.json)', file=sys.stderr)
+except Exception as _e:
+    print('UPCOMING ERROR', type(_e).__name__, _e, file=sys.stderr); UPCOMING = []
+
 data=dict(
     generated=NOW.strftime('%Y-%m-%dT%H:%M:%SZ'), generated_ms=int(NOW.timestamp()*1000), recent=RECENT,
     checked=' '.join(parts), problems=PROBLEMS,
@@ -2134,7 +2271,7 @@ data=dict(
     quakes_small=QUAKES_SMALL, cyclones=CYCLONES, ty_alerts=TY_ALERTS, ty_near_km=TY_NEAR_KM, lows=LOWS, lows_ok=LOWS_OK,
     quake_src=QSRC, source_status=SRC_STATUS, eq_alerts=[dict(kind=a['kind'],q=a['q'],ms=a['ms'],text=a['text']) for a in EQ_ALERTS], rain_chance=bool(RAIN_CHANCE), week_ms=WEEK_MS, backup_tests=BACKUP_TESTS, thunder=dict(areas=TS_AREAS, airports=TS_AIRPORTS),
     tmr_note=f"{ph(T0).strftime('%A')}, {day(T0)}. Airports where bad weather is forecast for tomorrow, from airport forecasts and estimates. This is a forecast and is less certain than today's alerts. Select an airport on the map for its full report, including the days ahead.",
-    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], news=NEWS, news_src=NEWS_SRC, news_hours=NEWS_HOURS, event_hours=EVENT_HOURS, news_ms=NEWS_MS, news_ver=_nver, ash=ASH_AREAS, ash_fc=ASH_FC, volcano_ok=vol_ok, volcano_flag=vol_flag,
+    volcanoes=volcanoes, vol_alerts=[dict(kind=a['kind'],key=a['key'],v=a['v'],ms=a['ms'],text=a['text']) for a in VOL_ALERTS], news=NEWS, news_src=NEWS_SRC, news_hours=NEWS_HOURS, plan_hours=PLAN_HOURS, upcoming=UPCOMING, upcoming_days=UPCOMING_DAYS, holidays=HOLIDAYS, plan_src=PLAN_SRC, event_hours=EVENT_HOURS, news_ms=NEWS_MS, news_ver=_nver, ash=ASH_AREAS, ash_fc=ASH_FC, volcano_ok=vol_ok, volcano_flag=vol_flag,
     volcano_asof=((' and '.join(([] if SIGMET is None else ['Aviation ash warnings']) + ([] if VAAC is None else ['Tokyo VAAC'])) + f", {day(NOW)}, {clock_plain(NOW)}") if vol_ok else ''), volcano_km=VOLC_KM,
     sources=' '.join(src),
 )

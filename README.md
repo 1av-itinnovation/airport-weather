@@ -11,7 +11,10 @@ earthquakes, volcanoes or typhoons, and what staff should do.
 - **Volcanoes.** Volcano status, ash clouds and where the ash is heading.
 - **Typhoons.** Where each typhoon is, how far its strong winds reach, and where it is expected to go.
 - **Rain forecast.** The expected rain for the next 24 hours, played on the map.
-- **Official updates and news.** The latest advisories, news and videos about the selected airport or event.
+- **Official updates and news.** The latest advisories, news and videos about the selected airport or event, from national
+  and local newsrooms and the transport and airport authorities, sorted into Disruption reported, Disruption possible and
+  For awareness. Strikes, protests, road closures, traffic and holidays are included.
+- **Holidays and planned events.** National holidays for the next 7 days, and local events the team enters in `events.json`.
 - **Flights.** Cebu Pacific and Cebgo aircraft, so staff can see which flights are heading into bad weather.
 
 ## Alert levels
@@ -39,6 +42,12 @@ Earthquakes, volcanoes and typhoons have their own alerts.
 - Use the alert button at the top to see all current alerts.
 - Use **Layers** to turn parts of the map on or off.
 - Press the **?** button for a full guide.
+
+## Adding local holidays, strikes and road closures
+
+Open `events.json`, copy the example event, and fill in the title, the start date (and end date if longer than a day), and
+the airports it affects (their ids are listed in the file; leave the list empty for all airports). Save the file. The event
+shows on the dashboard for the 7 days before it and disappears by itself after it ends.
 
 ## Please note
 
