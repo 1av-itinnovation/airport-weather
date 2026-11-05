@@ -18,7 +18,7 @@ the others are backups. The order is set in SOURCE_ORDER below.
 Uses only the Python standard library. Run:  python3 build.py
 """
 import json, re, math, os, sys, time, html, datetime as dt
-import urllib.request, ssl
+import urllib.request, urllib.error, urllib.parse, ssl, threading
 from collections import Counter
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', 'data.json')
@@ -99,8 +99,32 @@ GROUP_LABEL = {'reports': 'Airport weather reports', 'forecasts': 'Airport forec
 STATUS = {g: [] for g in SOURCE_ORDER}      # filled in as sources are tried: (key, 'used' | 'failed' | 'standby', note)
 USED = {g: None for g in SOURCE_ORDER}
 
+# ---------- downloading, with a "this site is down" switch ----------
+# When a site is down it answers every request with an error, or not at all. Without this switch the
+# script would keep asking it hundreds of times (the rain map alone makes several hundred requests),
+# run past the job's time limit and lose the whole refresh. After DOWN_AFTER failures in a row that
+# point to the site itself (server errors, "too many requests", timeouts, no connection), the site is
+# skipped for the rest of this run and its backup takes over. A good answer resets the count.
+DOWN_AFTER = 5
+_FAILS = {}            # site -> failures in a row
+_DOWN = set()          # sites skipped for the rest of this run
+_FAIL_LOCK = threading.Lock()
+
+def _host(url):
+    return urllib.parse.urlsplit(url).netloc.lower()
+
+def _site_problem(e):
+    """True when the error says the whole site is unwell, not just that one page is missing."""
+    if isinstance(e, urllib.error.HTTPError): return e.code >= 500 or e.code == 429
+    return isinstance(e, (urllib.error.URLError, TimeoutError, ConnectionError, OSError))
+
+def site_down(url):
+    return _host(url) in _DOWN
+
 def fetch(url, tries=2, text=False, insecure_ok=False, timeout=40):
     """Download a URL. Returns parsed JSON (or text), or None if it could not be reached."""
+    host = _host(url)
+    if host in _DOWN: return None
     last = None
     for k in range(tries):
         try:
@@ -116,10 +140,19 @@ def fetch(url, tries=2, text=False, insecure_ok=False, timeout=40):
                     raise
             with r:
                 body = r.read().decode('utf-8', 'replace')
+            with _FAIL_LOCK: _FAILS[host] = 0
             if text: return body
             return json.loads(body) if body.strip() else []
         except Exception as e:
-            last = e; time.sleep(1 + 2 * k)
+            last = e
+            if _site_problem(e):
+                with _FAIL_LOCK:
+                    _FAILS[host] = _FAILS.get(host, 0) + 1
+                    if _FAILS[host] >= DOWN_AFTER and host not in _DOWN:
+                        _DOWN.add(host)
+                        print(f'SITE DOWN {host}: {DOWN_AFTER} failures in a row ({e}). Skipping it for the rest of this run.', file=sys.stderr)
+                if host in _DOWN: break
+            if k + 1 < tries: time.sleep(1 + 2 * k)
     print('FETCH FAILED', url[:100], last, file=sys.stderr)
     return None
 
@@ -232,7 +265,8 @@ def load_forecasts(key):
 def load_metno(wanted):
     out = {}
     for a in wanted:
-        m = fetch(f'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={a[4]:.4f}&lon={a[5]:.4f}', tries=2)
+        if site_down('https://api.met.no/'): break          # the backup (Open-Meteo) fills the rest
+        m = fetch(f'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={a[4]:.4f}&lon={a[5]:.4f}', tries=2, timeout=20)
         if m and m.get('properties', {}).get('timeseries'): m['_src'] = 'metno'; out[a[1]] = m
         time.sleep(0.2)
     return out
@@ -2123,6 +2157,7 @@ for p in PROBLEMS: print('PROBLEM:',p)
 RAIN_OUT = os.path.join(os.path.dirname(OUT), 'rain.json')
 RAIN_EVERY_HOURS = 3          # how often to rebuild the animation
 RAIN_HOURS = 30               # how many hours ahead to store
+RAIN_BUDGET_S = 150           # most time the rebuild may take; if it runs out, the previous animation is kept
 # The grid is much wider than the Philippines so the rain layer fills the whole map panel, even on
 # very wide screens (the neighbouring countries are shown there as a picture). The middle part, over
 # the Philippines, is read at every point. The outer parts are read at every second point and the
@@ -2144,14 +2179,20 @@ def build_rain():
     if age < RAIN_EVERY_HOURS:
         print(f'Rain animation: still fresh ({age:.1f} hours old), not rebuilt.'); return
     from concurrent.futures import ThreadPoolExecutor
+    # Ask for one point first (Manila). If MET Norway does not answer it, keep the previous animation
+    # instead of sending several hundred requests to a site that is down.
+    if site_down('https://api.met.no/') or not fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=14.51&lon=121.02', tries=2, timeout=20):
+        print('Rain animation: MET Norway is not answering, keeping the previous animation.', file=sys.stderr); return
+    deadline = time.time() + RAIN_BUDGET_S
     allpts = [(r, c) for r in range(GRID['rows']) for c in range(GRID['cols'])]
     direct = lambda r, c: (GRID_BAND[0] <= r <= GRID_BAND[1] and GRID_FULL[0] <= c <= GRID_FULL[1]) or (r % 2 == 0 and c % 2 == 0)
     pts = [p for p in allpts if direct(*p)]
     h0 = NOW.replace(minute=0, second=0, microsecond=0)
     hours = [h0 + dt.timedelta(hours=i) for i in range(RAIN_HOURS)]
     def one(p):
+        if time.time() > deadline or site_down('https://api.met.no/'): return None
         lat = GRID['lat0'] - p[0] * GRID['step']; lon = GRID['lon0'] + p[1] * GRID['step']
-        m = fetch(f'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat:.2f}&lon={lon:.2f}', tries=2, timeout=30)
+        m = fetch(f'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat:.2f}&lon={lon:.2f}', tries=2, timeout=20)
         if not m: return None
         out = {}
         try:
