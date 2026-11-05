@@ -2385,6 +2385,38 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
 .newsvid .nvc [data-v=sound] svg path.x,.newsvid .nvc [data-v=sound] svg path.w,.newsvid .nvc [data-v=full] svg path{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .newsvid .nvc [data-v=sound] .x{display:none}.newsvid .nvc.muted [data-v=sound] .x{display:inline}.newsvid .nvc.muted [data-v=sound] .w{display:none}
 @media (hover:none){.newsvid .nvc{opacity:1}}
+
+/* ---- news panel under the airport list; the list always keeps the room it needs ---- */
+.app .col.list{display:flex;flex-direction:column;min-height:0}
+.app .col.list>#list{flex:0 1 auto;max-height:62%;min-height:0;overflow-y:auto}
+.newspanel{flex:1 1 0;min-height:64px;display:flex;flex-direction:column;gap:8px;margin-top:10px;padding-top:12px;border-top:1px solid var(--line,#DCE5EE)}
+.newspanel .nph{display:flex;align-items:baseline;gap:10px;min-width:0}
+.newspanel .nph h2{margin:0;font-size:16px;font-weight:600}
+.newspanel .nph .sub{font-size:12px;color:var(--muted,#5B7180);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.newspanel #newsBody{flex:1 1 auto;min-height:0;overflow-y:auto}
+.newspanel .newsvid{margin:0;flex:none}
+.newspanel .newsvid .nvf{width:min(100%,calc(min(34vh,300px) * 16 / 9));margin:0 auto}
+.newspanel.long .newsvid .nvf{width:min(100%,calc(min(22vh,200px) * 16 / 9))}
+.newspanel .npbtn{margin-left:auto;flex:none;border:1px solid var(--line,#C9D6E2);background:transparent;color:inherit;border-radius:999px;padding:3px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.app .col.list:has(.newspanel.mini)>#list{max-height:none;flex:1 1 auto}
+.newspanel.mini{flex:none;min-height:0}.newspanel.mini #newsBody,.newspanel.mini .newsvid{display:none}
+.newspanel.open{flex:1 1 0}.newspanel.open~*{display:none}
+.newspanel .npempty{margin:0;font-size:13px;color:var(--muted,#5B7180)}
+.newsvid .nvplay{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;margin:0;background:#0B1226;cursor:pointer;display:block}
+.newsvid .nvplay img{width:100%;height:100%;object-fit:cover;display:block;opacity:.85}
+.newsvid .nvplay span{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(198,40,40,.92);display:flex;align-items:center;justify-content:center}
+.newsvid .nvplay span svg{width:30px;height:30px;fill:#fff;margin-left:4px}
+.newsvid .nvplay:hover span,.newsvid .nvplay:focus-visible span{background:#C62828;transform:scale(1.06)}
+.alert .a2 .tyb{margin-right:4px;vertical-align:1px}
+.alert.tyhit{box-shadow:inset 3px 0 0 #0B6E8A}
+.nextup.stale,.ckshort.stale{color:#fff !important;background:#C62828;border-radius:6px;padding:1px 8px;font-weight:600;border-left:none}
+@media (min-width:1500px){
+  /* a selected item opens in the details column itself, so it never covers the tiles, the airport list or the news */
+  .glass .app .cols.has-sel .col.list{grid-column:2;grid-row:2}
+  .glass .app .cols.has-sel .col.side{position:relative;inset:auto;width:auto;grid-column:3;grid-row:2;z-index:1}
+}
+.app .col.side .detail .hd{flex-wrap:nowrap}.app .col.side .detail .hd .ttl{min-width:0;flex:1 1 auto}.app .col.side .detail .hd .xbtn{flex:none}
+@media (max-width:900px){.app .col.list{overflow-y:auto}.app .col.list>#list{max-height:none;flex:none;overflow:visible}.newspanel{flex:none;min-height:0}.newspanel #newsBody{overflow:visible}}
 </style>
 </head>
 <body class="glass">
@@ -2478,6 +2510,10 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
   <section class="col list" data-pane="list">
     <div class="colhead"><h2 id="listTitle">Airports</h2><button class="clearf" id="clearFilter" hidden>Clear filter</button><span class="sub" id="listSub"></span></div>
     <div class="scrolly" id="list"></div>
+    <div class="newspanel" id="newsPanel">
+      <div class="nph"><h2>News</h2><span class="sub" id="newsCtx"></span><button class="npbtn" id="newsToggle" hidden aria-expanded="false"></button></div>
+      <div class="scrolly" id="newsBody"></div>
+    </div>
   </section>
 
   <section class="col side" data-pane="side">
@@ -2555,7 +2591,8 @@ html[data-theme="dark"] .ashlayer polygon{fill:rgba(215,184,168,.18);stroke:#D7B
       <ul>
         <li><strong>Map.</strong> Each dot is an airport, coloured by its level. A flashing red dot is a thunderstorm now; its name shows when you point at it or select it, so the map stays clear. A dashed outline is an Estimate.</li>
         <li><strong>Other marks on the map.</strong> Purple rings are earthquakes. Triangles are volcanoes. A swirl is a tropical cyclone. A red circle with an L is a low pressure area.</li>
-        <li><strong>Airport list.</strong> The airports at the chosen level, with what to expect and when. Press a row to open it.</li>
+        <li><strong>Airport list.</strong> The airports at the chosen level, with what to expect and when. Press a row to open it. Under "Needs attention", an airport that a confirmed typhoon's strong winds can reach is listed with a Typhoon now or Typhoon 24 h mark, even when its weather is normal.</li>
+        <li><strong>News.</strong> Under the airport list: official updates and news stories for whatever is selected, or the most important ones across all airports and hazards when nothing is. A video shows as a picture and plays, with sound, when you press it. On a short screen the news folds to one line so the airport list keeps its room; press Show news to open it.</li>
         <li><strong>Tiles.</strong> The counts at each level and the key figures. Press one to filter the map and the list. Press it again, or "Clear filter", to go back.</li>
         <li><strong>Today and Tomorrow.</strong> Switch between today's alerts and tomorrow's forecast.</li>
         <li><strong>Region and Find an airport.</strong> Narrow to Luzon, Visayas or Mindanao, or jump straight to one airport.</li>
@@ -2770,7 +2807,7 @@ function cycloneIcon(c) {
 var TY_STEPS = [['TD', 'Tropical Depression', 'up to 61 km/h'], ['TS', 'Tropical Storm', '62 to 88'], ['STS', 'Severe Tropical Storm', '89 to 117'], ['TY', 'Typhoon', '118 to 184'], ['STY', 'Super Typhoon', '185 or more']];
 function cycloneScale(c) {
   if (!c.stage) return '';
-  return '<div class="tscale" role="img" aria-label="Strength: ' + esc(c.word) + '">' + TY_STEPS.map(function (x) { return '<div class="' + (x[0] === c.stage ? 'on' : '') + '"><i></i><b>' + x[1] + '</b><span>' + x[2] + '</span></div>'; }).join('') + '</div>';
+  return '<div class="tscale" role="img" aria-label="Strength: ' + esc(c.word) + '">' + TY_STEPS.map(function (x) { return '<div class="' + (x[0] === c.stage ? 'on' : '') + '" title="' + x[1] + ', ' + x[2] + (/km/.test(x[2]) ? '' : ' km/h') + '"><i></i><b>' + (x[0] === c.stage ? x[1] : x[0]) + '</b><span>' + x[2] + '</span></div>'; }).join('') + '</div>';
 }
 function volcanoById(id) { var L = (D && D.volcanoes) || []; for (var i = 0; i < L.length; i++) { if (L[i].id === id) return L[i]; } return null; }
 var VCOL = { erupting: '#BF360C', high: '#BF360C', raised: '#D9541E', unrest: '#B9770E', unknown: '#7A8B95', quiet: '#7A8B95' };
@@ -2832,8 +2869,8 @@ function liveNow() { try { return new Date().toLocaleTimeString('en-GB', { timeZ
 setInterval(function () { var c = document.getElementById('liveClock'); if (c) c.textContent = liveNow(); }, 1000);
 function shortChecked() {
   var el = document.getElementById('ckShort'); if (!el || !D) return;
-  var nx = $('nextUp'), t = (nx.textContent || '').replace('Next update about ', 'next ').replace('Next update expected any moment', 'next any moment').replace('Update is running late', 'update running late').replace(/ \(in \d+ min\)/, '');
-  el.textContent = 'Updated ' + phTime(D.generated_ms) + (t ? ' · ' + t : ''); el.classList.toggle('late', nx.classList.contains('late'));
+  var nx = $('nextUp'), t = (nx.textContent || '').replace('Next update about ', 'next ').replace('Next update expected any moment', 'next any moment').replace('Update is running late', 'update running late').replace(/^Data is (.*) old\. Do not rely on it\.$/, 'data $1 old').replace(/ \(in \d+ min\)/, '');
+  el.textContent = 'Updated ' + phTime(D.generated_ms) + (t ? ' · ' + t : ''); el.classList.toggle('late', nx.classList.contains('late')); el.classList.toggle('stale', nx.classList.contains('stale'));
 }
 setInterval(shortChecked, 10000);
 function renderGlass() {
@@ -2841,7 +2878,7 @@ function renderGlass() {
   setTimeout(shortChecked, 0);
   var A = D.airports.filter(inRegion), n = A.length || 1, c = { danger: 0, warning: 0, advisory: 0, normal: 0, nodata: 0 };
   A.forEach(function (a) { c[a.level] = (c[a.level] || 0) + 1; });
-  var att = c.danger + c.warning + c.advisory, off = A.filter(function (a) { return !a.est; }).length, tm = A.filter(function (a) { return a.t; }).length;
+  var att = c.danger + c.warning + c.advisory + tyOnlyAirports().length, off = A.filter(function (a) { return !a.est; }).length, tm = A.filter(function (a) { return a.t; }).length;
   var nq = (D.eq_alerts || []).length + LIVE.length, nv = (D.vol_alerts || []).length, tyL = cyclonesShown().filter(function (c) { return c.inpar || c.show || (c.now || []).length || (c.soon || []).length; }), ty = tyL.length > 0, tyC = tyL.filter(function (c) { return c.confirmed; });
   var cur = S.day === 'tmr' ? 'tmr' : S.filter;
   var big = function (key, tip, t, a, b) { return '<button class="k big' + (cur === key ? ' on' : '') + '" data-k="' + key + '" aria-pressed="' + (cur === key) + '" title="' + tip + '"><div class="r"><span class="t">' + t + '</span><span class="v">' + a + '/' + b + '</span></div><div class="bar"><i style="width:' + Math.round(100 * a / b) + '%"></i></div></button>'; };
@@ -3154,7 +3191,7 @@ function applyState() {
   if (!D) return;
   var c = { advisory: 0, warning: 0, danger: 0, normal: 0 };
   D.airports.forEach(function (a) { if (inRegion(a) && c[a.level] !== undefined) c[a.level]++; });
-  $('nAll').textContent = c.advisory + c.warning + c.danger;
+  $('nAll').textContent = c.advisory + c.warning + c.danger + tyOnlyAirports().length;
   $('nAdv').textContent = c.advisory; $('nWarn').textContent = c.warning; $('nDanger').textContent = c.danger; $('nNormal').textContent = c.normal;
   Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (b) { b.classList.toggle('on', b.getAttribute('data-f') === S.filter); var n = b.querySelector('.n'); b.classList.toggle('zero', !!n && n.textContent === '0'); });
   Array.prototype.forEach.call(document.querySelectorAll('.daysw button'), function (b) { b.classList.toggle('on', b.getAttribute('data-day') === S.day); });
@@ -3173,9 +3210,14 @@ function applyState() {
   if (S.day === 'today') {
     var offOnly = S.filter === 'official', lvls = S.filter === 'alerts' ? ORDER : offOnly ? ORDER.concat(['normal']) : [S.filter], shown = [];
     lvls.forEach(function (lv) { shown = shown.concat(sorted(D.airports.filter(function (a) { return a.level === lv && inRegion(a) && (!offOnly || !a.est); }))); });
+    if (S.filter === 'alerts') {      // airports a confirmed typhoon's strong winds can reach are listed even when their weather level is Normal: after Danger, before Warning
+      var tyOnly = tyOnlyAirports(), nd = shown.filter(function (a) { return a.level === 'danger'; }).length;
+      shown = shown.slice(0, nd).concat(tyOnly, shown.slice(nd));
+    }
     shown.forEach(function (a) {
-      al += '<button class="alert' + (a.id === S.sel ? ' on' : '') + '" data-a="' + esc(a.id) + '"><span class="a1">' + pill(a.level) + '<span class="nm">' + esc(a.name) + '</span>' + (a.est ? EST : '') + '</span>' +
-        '<span class="a2"><span>' + esc(a.what || 'No bad weather expected today') + '</span><span class="wh">' + esc(a.when) + '</span></span></button>';
+      var th = tyHit(a), only = th && ORDER.indexOf(a.level) < 0;
+      al += '<button class="alert' + (a.id === S.sel ? ' on' : '') + (th ? ' tyhit' : '') + '" data-a="' + esc(a.id) + '"><span class="a1">' + (only ? tyPill(th) : pill(a.level)) + '<span class="nm">' + esc(a.name) + '</span>' + (a.est ? EST : '') + '</span>' +
+        '<span class="a2"><span>' + (th && !only ? tyPill(th) + ' ' : '') + esc(only ? (th.when === 'now' ? 'Strong winds can reach the airport' : 'Strong winds within about 24 hours') : (a.what || 'No bad weather expected today')) + '</span><span class="wh">' + esc(only ? (th.c.dname || th.c.title) : a.when) + '</span></span></button>';
     });
     n = shown.length;
     if (!n) al = '<div class="empty">' + (offOnly ? 'No airport has an official weather report right now.' : 'No airports at this level right now.') + '</div>';
@@ -3195,7 +3237,7 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
   if (a) {
     d.innerHTML = '<div class="detail ap">' + sceneBanner(a) +
-      todoBox(a.level, a.todo) + fltBlock(a) + nowFacts(a) + field('Forecast for later today', a.next) + hoursStrip(a) + newsBlock(a) +
+      (tyHit(a) ? todoBox('typhoon', tyHit(a).c.todo) : '') + todoBox(a.level, a.todo) + fltBlock(a) + nowFacts(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
       fold('out', 'Tomorrow and the week ahead', '', field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days))) +
       fold('about', 'About this reading', a.est ? 'Estimate' : 'Official report', field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src)) + '</div>';
   } else if (q) {
@@ -3206,13 +3248,11 @@ function applyState() {
       fold('qmag', 'Magnitude and depth', '', (q.magnote ? field('Magnitude', q.magnote) : '') + field('Depth', q.depth) + field('Time it happened', q.ms ? exactTime(q.ms) : q.when)) +
       fold('qtsu', 'Tsunami', '', field('Tsunami', q.tsu)) +
       fold('qaft', 'Aftershocks', q.nshock ? q.nshock + ' so far' : '', '<div class="f"><span class="k">Aftershocks</span><span class="v">' + esc(q.after) + '</span>' + ((q.slist || []).length ? '<div class="shocks">' + q.slist.map(function (r) { return '<div><b>M' + r[1].toFixed(1) + '</b><span>' + esc(r[0]) + '<em>' + esc(r[2]) + '</em></span></div>'; }).join('') + (q.nshock > q.slist.length ? '<div><span><em>and ' + (q.nshock - q.slist.length) + ' earlier.</em></span></div>' : '') + '</div>' : '') + '</div>') +
-      hazNews('q', q) +
       fold('about', 'About this reading', q.check ? (/^Confirmed/.test(q.check) ? 'Cross-checked' : 'One source so far') : '', field('Source', q.src)) + '</div>';
   } else if (vo) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(vo.title) + '</h3><span class="pill volcano">' + (vo.status === 'erupting' ? 'Eruption' : 'Volcano') + '</span></div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       todoBox(vo.status === 'quiet' || vo.status === 'unknown' ? '' : 'volcano', vo.todo) + (vo.eruptline ? field('Eruption started', vo.eruptline) : '') + field('Volcanic ash', vo.ashline) + ((vo.mv || vo.fcline) ? field('Where the ash is heading', [vo.mv ? 'Moving ' + vo.mv.word + (vo.mv.sp ? ' at about ' + vo.mv.sp + ' km/h' : '') + ', shown by the arrow on the map.' : '', vo.fcline || ''].filter(Boolean).join(' ')) : '') + field('Alert level', vo.levelline) +
       field('Airports within ' + (D.volcano_km || 150) + ' km', vo.near) +
-      hazNews('v', vo) +
       fold('about', 'About this reading', '', (vo.ms ? field('Ash warning issued', phDay(vo.ms) + ', ' + phTime(vo.ms) + ' Philippine time (' + agoText(vo.ms) + ').') : '') + field('Source', vo.src)) + '</div>';
   } else if (cy && cy.low) {
     d.innerHTML = '<div class="detail quake"><div class="hd"><div class="ttl"><h3>' + esc(cy.name) + '</h3><span class="pill unconf">For information</span></div><button class="btn xbtn" data-close="1" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
@@ -3227,7 +3267,6 @@ function applyState() {
       '<div class="dfacts"><div><span>Strongest winds</span><b>' + (cy.wind ? cy.wind + ' km/h' : 'Not reported') + '</b></div><div><span>Strong winds reach</span><b>' + (cy.gale ? 'about ' + (Math.round(cy.gale / 10) * 10) + ' km' : 'Not reported') + '</b></div><div><span>Nearest airport</span><b>' + (Math.round(cy.dist / 10) * 10).toLocaleString('en-US') + ' km</b></div></div>' +
       field('Where it is', cy.where) + ((cy.now || []).length ? field('Airports strong winds can reach now', cy.now.join(', ') + '.') : '') + ((cy.soon || []).length ? field('Airports that may be reached within 24 hours', cy.soon.join(', ') + '.') : '') +
       field('Winds', [cy.windline, cy.reachline].filter(Boolean).join(' ')) + (cy.fcline ? field('Forecast', cy.fcline) : '') + ((cy.track || []).length > 1 ? field('Forecast track (RSMC Tokyo)', cy.track.map(function (q) { return new Date(q.ms).toLocaleString('en-US', { timeZone: 'Asia/Manila', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric' }) + ': ' + (q.word || 'position only') + (q.wind ? ', ' + q.wind + ' km/h' : ''); }).join('. ') + '. The shaded cone on the map is where the centre is most likely to be; it widens because forecasts are less certain further ahead.') : '') + field('Cross-check', cy.cross) +
-      hazNews('t', cy) +
       fold('about', 'About this reading', cy.confirmed ? 'Cross-checked' : 'One source only', (cy.ms ? field('Reported', phDay(cy.ms) + ', ' + phTime(cy.ms) + ' Philippine time (' + agoText(cy.ms) + ').') : '') + field('Source', cy.src) +
         field('Official wind signals', 'PAGASA issues the official Tropical Cyclone Wind Signals. Confirm any decision against the PAGASA bulletin and CAAP and airline advisories.')) + '</div>';
   } else {
@@ -3433,7 +3472,9 @@ function nextUpdate() {
   var el = $('nextUp'); if (!D) { el.textContent = ''; return; }
   var gap = typicalGap(), next = D.generated_ms + gap * 60000, now = Date.now(), mins = Math.ceil((next - now) / 60000);        // next = last check + interval
   var t = new Date(next).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
-  el.classList.toggle('late', mins < 1);
+  var ageM = (now - D.generated_ms) / 60000;
+  el.classList.toggle('late', mins < 1); el.classList.toggle('stale', ageM > STALE_MIN);
+  if (ageM > STALE_MIN) { var hh = ageM / 60; el.textContent = 'Data is ' + (hh < 2 ? Math.round(ageM) + ' minutes' : hh < 48 ? Math.round(hh) + ' hours' : Math.round(hh / 24) + ' days') + ' old. Do not rely on it.'; var ch0 = $('chip'); if (ch0 && !ch0.classList.contains('stale')) ch0.textContent = chipText(); return; }
   el.textContent = mins >= 1 ? 'Next update about ' + t + ' (in ' + mins + ' min)' : (now - next < 10 * 60000 ? 'Next update expected any moment' : 'Update is running late');
   var chip = $('chip'); if (chip && !chip.classList.contains('stale')) chip.textContent = chipText();
 }
@@ -3928,12 +3969,12 @@ function vidBox() {
   if (!b) {
     b = document.createElement('div'); b.id = 'newsVid'; b.className = 'newsvid'; b.hidden = true;
     b.innerHTML = '<div class="nvh"><b>News video</b><span id="nvSrc"></span><button class="nvx" id="nvClose" aria-label="Close the video" title="Close">×</button></div><div class="nvf" id="nvFrame"></div><a id="nvLink" target="_blank" rel="noopener noreferrer"></a><p class="nvn" id="nvNote"></p>';
-    var dt = $('detail'); dt.parentNode.insertBefore(b, dt); $('nvClose').addEventListener('click', function () { vidClose(true); });
+    $('newsPanel').insertBefore(b, $('newsBody')); $('nvClose').addEventListener('click', function () { vidClose(true); });
   }
   return b;
 }
 function vidPlay(n, ap, auto, done) {
-  var b = vidBox(), a = byId(ap) || vidPlace(ap); vidClose(false);
+  var b = vidBox(), a = byId(ap) || vidPlace(ap); vidClose(false); b.classList.remove('cue');
   VID.open = true; VID.tour = !!auto; VID.done = done || null; VID.id = n.yt; if (auto) VID_SEEN[n.yt] = Date.now();
   $('nvFrame').innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(n.yt) + '?autoplay=1&mute=' + (auto ? 1 : 0) + '&controls=0&disablekb=1&iv_load_policy=3&cc_load_policy=0&fs=0&playsinline=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(location.origin) + '" title="' + esc(n.title) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
   $('nvSrc').textContent = (a ? a.name + ' · ' : '') + n.src + ' · ' + agoText(n.ms);
@@ -3945,7 +3986,7 @@ function vidPlay(n, ap, auto, done) {
     '<button data-v="sound" aria-label="Sound on" title="Sound on"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="x" d="M16 9l5 6M21 9l-5 6"/><path class="w" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg></button>' +
     '<span class="sp"></span><button data-v="full" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>';
   $('nvFrame').appendChild(ctl); VID.paused = false; VID.muted = !!auto; ctl.classList.toggle('muted', VID.muted);
-  b.hidden = false; if (!auto) try { b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+  b.hidden = false; try { newsFit(); } catch (e) {} if (!auto) try { b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
   var f = b.querySelector('iframe');
   f.addEventListener('load', function () { try { f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'], id: 1, channel: 'widget' }), '*'); } catch (e) {} });
   clearTimeout(VID.timer); VID.timer = setTimeout(function () { vidEnd(); }, VID_MAX_MS);      // a safety limit in case the player never reports the end
@@ -3968,7 +4009,7 @@ function vidEnd() {      // the video finished, failed, or ran past the limit
   if (tour && !touched) vidClose(false);      // someone who started watching keeps the video until they close it
   VID.done = null; if (done) done();
 }
-function vidClose(user) { clearTimeout(VID.timer); VID.open = false; var b = $('newsVid'); if (b) { b.hidden = true; $('nvFrame').innerHTML = ''; } if (user && VID.done) { var d = VID.done; VID.done = null; d(); } }
+function vidClose(user) { clearTimeout(VID.timer); VID.open = false; VID.cue = false; var b = $('newsVid'); if (b) { b.hidden = true; $('nvFrame').innerHTML = ''; } if (user && VID.done) { var d = VID.done; VID.done = null; d(); } }
 window.addEventListener('message', function (e) {
   if (!VID.open || !/youtube(-nocookie)?\.com$/.test(String(e.origin).replace(/^https?:\/\/(www\.)?/, ''))) return;
   var m; try { m = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
@@ -3982,19 +4023,19 @@ document.addEventListener('click', function (e) {
   if (n) vidPlay(n, ap, false, null);
 });
 
-// Selecting an airport, earthquake, volcano or typhoon plays its most critical news video at once (without sound, as browsers
-// require), at the top of the details panel. Closing or changing the selection stops it. Auto-show plays its own.
+// Selecting an airport, earthquake, volcano or typhoon puts its most critical news video, as a picture with a play button, at the top
+// of the news panel under the airport list. It plays only when pressed. Closing or changing the selection removes it. Auto-show plays its own.
 var VID_SEL = '';
 function vidSelSync() {
   var key = S.sel ? 'a:' + S.sel : S.tk ? 't:' + S.tk : S.vk ? 'v:' + S.vk : S.qk ? 'q:' + S.qk : '';
   if (key === VID_SEL) return;
   VID_SEL = key;
   if (TOUR.active) return;
-  if (VID.open) vidClose(false);
+  if (VID.open || VID.cue) vidClose(false);
   if (!key || !D) return;
   var it = {}; it[key[0]] = key.slice(2);
   var bv = bestVideo(airportsFor(it), false);
-  if (bv) vidPlay(bv.n, bv.ap, true, null);
+  if (bv) vidCue(bv.n, bv.ap);
 }
 function placeLabels() {
   if (!GLASS) return;
@@ -4663,6 +4704,63 @@ function fltBlock(a) { return '<div class="news fltin" id="fltIn" data-a="' + es
 })();
 
 setTimeout(fltInbound, 50);
+
+/* ---------- typhoon reach in the airport list, and the news panel under it ---------- */
+function tyHit(a) {      // the confirmed typhoon whose strong winds can reach this airport now, or within about 24 hours
+  if (!a || !D) return null; var r = null;
+  cyclonesShown().forEach(function (c) {
+    if (!c.confirmed || c.low) return;
+    if ((c.now || []).indexOf(a.name) >= 0) { if (!r || r.when !== 'now') r = { c: c, when: 'now' }; }
+    else if (!r && (c.soon || []).indexOf(a.name) >= 0) r = { c: c, when: 'soon' };
+  });
+  return r;
+}
+function tyOnlyAirports() { return D ? sorted(D.airports.filter(function (a) { return inRegion(a) && ORDER.indexOf(a.level) < 0 && tyHit(a); })).sort(function (x, y) { return (tyHit(x).when === 'now' ? 0 : 1) - (tyHit(y).when === 'now' ? 0 : 1); }) : []; }
+function tyPill(th) { return '<span class="pill typhoon tyb">' + (th.when === 'now' ? 'Typhoon now' : 'Typhoon 24 h') + '</span>'; }
+var NEWS_TOP = 8;
+function renderNewsPanel() {
+  var body = $('newsBody'), ctx = $('newsCtx'); if (!body || !D) return;
+  var a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
+  var html, label;
+  if (a) { html = newsBlock(a); label = a.name; }
+  else if (q) { html = hazNews('q', q); label = q.title; }
+  else if (vo) { html = hazNews('v', vo); label = vo.title; }
+  else if (cy && !cy.low) { html = hazNews('t', cy); label = cy.dname || cy.title; }
+  else {      // nothing selected: the most important stories across every airport and hazard, official ones first
+    var seen = {}, all = [];
+    Object.keys(D.news || {}).forEach(function (k) { if (k === '__top') return; (D.news[k] || []).forEach(function (n) { if (seen[n.link]) return; seen[n.link] = 1; all.push(n); }); });
+    all.sort(function (x, y) { return (newsRank(y) - newsRank(x)) || (y.ms - x.ms); });
+    D.news.__top = all.slice(0, NEWS_TOP);
+    html = newsList('__top', 'any airport or hazard'); label = 'Most important, all airports and hazards';
+    if (!all.length) html = '<p class="nwe npempty">No official update or news story in the last ' + (D.news_hours || 24) + ' hours mentions an airport or hazard on this dashboard.</p>';
+  }
+  ctx.textContent = label; body.innerHTML = html || '';
+  newsFit();
+}
+// On a short screen the airport list keeps the room: the news folds to one line, with a button to open it.
+var NEWS_OPEN = false;
+function newsFit() {
+  var np = $('newsPanel'), col = np && np.parentNode, tg = $('newsToggle'); if (!np || !col) return;
+  var rows = $('list').children.length || 0, h = col.clientHeight || 0, wide = window.innerWidth > 900;
+  np.classList.toggle('long', rows > 7);
+  var tight = wide && h > 0 && (h < 620 || (rows > 5 && h < 760)), mini = tight && !NEWS_OPEN && !(VID.open && VID.tour);
+  np.classList.toggle('mini', mini); np.classList.toggle('open', tight && !mini);
+  tg.hidden = !tight; tg.textContent = mini ? 'Show news' : 'Hide news'; tg.setAttribute('aria-expanded', String(!mini));
+}
+document.addEventListener('click', function (e) { if (e.target && e.target.id === 'newsToggle') { NEWS_OPEN = !NEWS_OPEN; newsFit(); } });
+window.addEventListener('resize', function () { clearTimeout(newsFit.t); newsFit.t = setTimeout(newsFit, 150); });
+var applyStateNP = applyState;
+applyState = function () { applyStateNP.apply(this, arguments); try { renderNewsPanel(); } catch (e) { if (window.console) console.error(e); } };
+function vidCue(n, ap) {      // a picture of the video with a play button; it plays, with sound, only when pressed
+  var b = vidBox(), a = byId(ap) || vidPlace(ap); vidClose(false);
+  VID.cue = true; b.classList.add('cue');
+  $('nvFrame').innerHTML = '<button class="nvplay" aria-label="Play video: ' + esc(n.title) + '"><img src="https://i.ytimg.com/vi/' + encodeURIComponent(n.yt) + '/hqdefault.jpg" alt="" referrerpolicy="no-referrer" onerror="this.remove()"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg></span></button>';
+  $('nvSrc').textContent = (a ? a.name + ' · ' : '') + n.src + ' · ' + agoText(n.ms);
+  $('nvLink').textContent = n.title; $('nvLink').href = n.link; $('nvNote').textContent = 'Press play to watch, with sound.';
+  b.hidden = false;
+  $('nvFrame').querySelector('.nvplay').addEventListener('click', function () { vidPlay(n, ap, false, null); });
+}
+try { renderNewsPanel(); } catch (e) {}
 })();
 </script>
 </body>
