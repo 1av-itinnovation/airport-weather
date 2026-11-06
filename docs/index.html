@@ -2045,15 +2045,12 @@ html[data-theme="dark"] .lyrkey{background:rgba(30,39,58,.94);color:#C9D3E5}html
 @media (min-width:901px){.glass #kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (min-width:901px) and (max-width:1499px){.glass .app .cols,.glass .app .cols.tall{grid-template-rows:auto minmax(0,1fr) minmax(0,1fr)}}
 #statsBig[hidden],#summary[hidden]{display:none !important}
-.others{margin:14px 2px 4px;padding-top:12px;border-top:1px solid var(--g-rule,#DCE5EE)}
-.others .oh{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;font-size:13px}
-.others .oh span{font-weight:600;color:var(--g-ink,#1B2B45)}.others .oh b{font-weight:600;color:var(--g-muted,#56657F)}.others .oh em{font-style:normal;margin-left:auto;font-size:12px;color:var(--g-muted,#56657F)}
-.others .og{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
-.others .oc{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;border:none;border-radius:10px;background:rgba(var(--g-surf,255,255,255),.6);box-shadow:inset 0 0 0 1px rgba(120,140,180,.18);color:var(--g-ink,#1B2B45);font:inherit;font-size:12.5px;text-align:left;cursor:pointer;min-width:0}
-.others .oc:hover,.others .oc.on{box-shadow:inset 0 0 0 2px var(--g-accent,#4D5EE0)}
-.others .oc i{width:9px;height:9px;border-radius:50%;background:#2E7D32;flex:none}.others .oc.lv-nodata i{background:transparent;box-shadow:inset 0 0 0 2px #8A97AD}
-.others .oc span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.others .oc em{font-style:normal;color:var(--g-muted,#56657F);font-variant-numeric:tabular-nums}
 .newspanel.side{flex:none;margin-top:14px;padding-top:12px;min-height:0}
+.col.list.newsmode>.colhead,.col.list.newsmode>#list{display:none !important}
+.newspanel.mid{flex:1 1 auto;min-height:0;margin-top:0;padding-top:4px;border-top:none}
+.newspanel.mid .nph{padding:0 6px 4px}.newspanel.mid .nph h2{font-size:17px;font-weight:500}
+.newspanel.mid #newsBody{flex:1 1 auto;min-height:0;overflow-y:auto}
+.newspanel .npbtn.back{margin-left:auto;border-color:var(--g-rule,#C9D3E3);color:var(--g-accent-ink,#4D5EE0);padding:5px 14px}
 #paneDetails:has(#detail:empty) .newspanel.side{margin-top:0;padding-top:4px;border-top:none}
 .newspanel.side #newsBody{overflow:visible;flex:none}
 .newspanel.side .nph h2{font-size:17px;font-weight:500}
@@ -2661,7 +2658,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
     </div>
     <div class="scrolly" id="paneDetails"><div id="statsBig" hidden></div><div id="detail"></div><div id="summary" hidden></div>
       <div class="newspanel side" id="newsPanel">
-        <div class="nph"><h2>News</h2><span class="sub" id="newsCtx"></span><button class="npbtn" id="newsToggle" hidden aria-expanded="false"></button></div>
+        <div class="nph"><h2>News</h2><span class="sub" id="newsCtx"></span><button class="npbtn" id="newsToggle" hidden aria-expanded="false"></button><button class="npbtn back" id="newsBack" type="button" hidden>Back to Needs attention</button></div>
         <div id="newsBody"></div>
       </div>
     </div>
@@ -2779,7 +2776,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
 
     <div class="sec hs one">
       <h3 id="hNews">5. News, strikes and holidays</h3>
-      <p>In the right-hand column, under the details. It shows news for whatever you select, or for all airports when nothing is selected. It counts <strong>airports, not stories</strong>: each situation, such as Mayon Volcano or a strike in Cebu, appears once with the airports it can affect. Press an airport name to open it.</p>
+      <p>With nothing selected, the right-hand column shows news for all airports. Select an airport, volcano, earthquake or typhoon and its news takes the place of "Needs attention" in the middle; close the selection to go back. It counts <strong>airports, not stories</strong>: each situation, such as Mayon Volcano or a strike in Cebu, appears once with the airports it can affect. Press an airport name to open it.</p>
       <ul>
         <li><strong>Disruption reported:</strong> something has already stopped, such as cancelled flights or a strike under way.</li>
         <li><strong>Disruption possible:</strong> something may slow work, such as a planned strike, a road closure, heavy traffic or a holiday rush.</li>
@@ -3296,12 +3293,6 @@ function applyState() {
     });
     n = shown.length;
     if (!n) al = '<div class="empty">' + (offOnly ? 'No airport has an official weather report right now.' : 'No airports at this level right now.') + '</div>';
-    if (S.filter === 'alerts') {      // every other airport, as a compact board, so the column shows all airports at a glance
-      var ids0 = {}; shown.forEach(function (a) { ids0[a.id] = 1; });
-      var rest = D.airports.filter(function (a) { return inRegion(a) && !ids0[a.id]; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
-      if (rest.length) al += '<div class="others"><div class="oh"><span>All other airports</span><b>' + rest.length + '</b><em>' + (rest.every(function (a) { return a.level === 'normal'; }) ? 'Normal' : 'Normal or no data') + '</em></div><div class="og">' +
-        rest.map(function (a) { var t = a.obs && a.obs.temp != null ? a.obs.temp + '°' : ''; return '<button class="oc lv-' + a.level + (a.id === S.sel ? ' on' : '') + '" data-o="' + esc(a.id) + '" title="' + esc(a.name + ': ' + (a.now || '')) + '"><i></i><span>' + esc(a.name.replace(/ \(.*\)$/, '')) + '</span>' + (t ? '<em>' + t + '</em>' : '') + '</button>'; }).join('') + '</div></div>';
-    }
     $('listTitle').textContent = LABELS[S.filter]; $('listSub').textContent = n + (n === 1 ? ' airport' : ' airports');
   } else {
     var tm = D.airports.filter(function (a) { return a.t && inRegion(a); }).sort(function (a, b) { return (a.tsort - b.tsort) || (a.test - b.test) || a.name.localeCompare(b.name); });
@@ -3735,7 +3726,7 @@ $('summary').addEventListener('click', function (e) { var b = e.target.closest('
 $('selGo').addEventListener('click', function () { S.pane = 'side'; S.tab = 'details'; applyState(); });
 $('detail').addEventListener('toggle', function (e) { var k = e.target && e.target.getAttribute && e.target.getAttribute('data-fold'); if (k) DOPEN[k] = e.target.open; }, true);
 $('detail').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) clearSel(); });
-$('list').addEventListener('click', function (e) { var b = e.target.closest('[data-a]') || e.target.closest('[data-o]'); if (b) { S.pane = 'side'; selectAirport(b.getAttribute('data-a') || b.getAttribute('data-o')); } });
+$('list').addEventListener('click', function (e) { var b = e.target.closest('[data-a]'); if (b) { S.pane = 'side'; selectAirport(b.getAttribute('data-a')); } });
 document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.nwhow')) { $('helpBtn').click(); setTimeout(function () { var h = $('hNews'); if (h) h.scrollIntoView({ block: 'start' }); }, 60); } });
 $('rail').addEventListener('click', function (e) { var b = e.target.closest('.rz'); if (b) { S.tab = b.getAttribute('data-go'); applyState(); } });
 arrange();
@@ -5058,9 +5049,18 @@ function tyHit(a) {      // the confirmed typhoon whose strong winds can reach t
 function tyOnlyAirports() { return D ? sorted(D.airports.filter(function (a) { return inRegion(a) && ORDER.indexOf(a.level) < 0 && tyHit(a); })).sort(function (x, y) { return (tyHit(x).when === 'now' ? 0 : 1) - (tyHit(y).when === 'now' ? 0 : 1); }) : []; }
 function tyPill(th) { return '<span class="pill typhoon tyb">' + (th.when === 'now' ? 'Typhoon now' : 'Typhoon 24 h') + '</span>'; }
 var NEWS_TOP = 8;
+function placeNews(selected) {
+  var np = $('newsPanel'), list = document.querySelector('.col.list'), pane = $('paneDetails'); if (!np || !list || !pane) return;
+  var mid = selected && window.innerWidth >= 1500;      // only where the details have their own column; on smaller screens the details slide over the list
+  if (mid && np.parentNode !== list) list.appendChild(np);
+  if (!mid && np.parentNode !== pane) pane.appendChild(np);
+  np.classList.toggle('mid', mid); np.classList.toggle('side', !mid); list.classList.toggle('newsmode', mid);
+  var bk = $('newsBack'); if (bk) bk.hidden = !mid;
+}
 function renderNewsPanel() {
   var body = $('newsBody'), ctx = $('newsCtx'); if (!body || !D) return;
   var a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
+  placeNews(!!(a || q || vo || (cy && !cy.low)));
   var html, label;
   if (a) { html = newsBlock(a); label = a.name; }
   else if (q) { html = hazNews('q', q); label = q.title; }
@@ -5083,7 +5083,7 @@ function renderNewsPanel() {
 var NEWS_OPEN = false;
 function newsFit() {
   var np = $('newsPanel'), col = np && np.parentNode, tg = $('newsToggle'); if (!np || !col) return;
-  if (np.classList.contains('side')) { np.classList.remove('mini', 'open', 'long'); tg.hidden = true; return; }
+  if (np.classList.contains('side') || np.classList.contains('mid')) { np.classList.remove('mini', 'open', 'long'); tg.hidden = true; return; }
   var rows = $('list').children.length || 0, h = col.clientHeight || 0, wide = window.innerWidth > 900;
   np.classList.toggle('long', rows > 7);
   var tight = wide && h > 0 && (h < 620 || (rows > 5 && h < 760)), mini = tight && !NEWS_OPEN && !(VID.open && VID.tour);
@@ -5091,7 +5091,8 @@ function newsFit() {
   tg.hidden = !tight; tg.textContent = mini ? 'Show news' : 'Hide news'; tg.setAttribute('aria-expanded', String(!mini));
 }
 document.addEventListener('click', function (e) { if (e.target && e.target.id === 'newsToggle') { NEWS_OPEN = !NEWS_OPEN; newsFit(); } });
-window.addEventListener('resize', function () { clearTimeout(newsFit.t); newsFit.t = setTimeout(newsFit, 150); });
+window.addEventListener('resize', function () { clearTimeout(newsFit.t); newsFit.t = setTimeout(function () { try { renderNewsPanel(); } catch (e) {} newsFit(); }, 150); });
+document.addEventListener('click', function (e) { if (e.target && e.target.id === 'newsBack') { var x = document.querySelector('#detail [data-close]'); if (x) x.click(); } });
 var applyStateNP = applyState;
 applyState = function () { applyStateNP.apply(this, arguments); try { renderNewsPanel(); } catch (e) { if (window.console) console.error(e); } };
 function vidCue(n, ap) {      // a picture of the video with a play button; it plays, with sound, only when pressed
