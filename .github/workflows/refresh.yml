@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write     # lets each refresh start the next one (see the last step)
 
 concurrency:
   group: airport-weather-refresh
@@ -23,9 +24,12 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 16
 
     steps:
+      - name: Note the start time
+        run: echo "RUN_START=$(date +%s)" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
@@ -203,3 +207,16 @@ jobs:
           done
           echo "Could not save the data after 3 attempts."
           exit 1
+
+      - name: Start the next refresh
+        # GitHub runs scheduled workflows only when it has spare capacity, often only once an hour or less.
+        # So each refresh starts the next one itself, about 10 minutes after it began. The schedule above
+        # stays as a backup that restarts the chain if it ever stops. If two chains meet, GitHub keeps only
+        # one waiting run (see "concurrency"), so they merge back into one.
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          WAIT=$(( 600 - ( $(date +%s) - ${RUN_START:-$(date +%s)} ) ))
+          if [ "$WAIT" -gt 0 ]; then echo "Waiting $WAIT seconds before starting the next refresh."; sleep "$WAIT"; fi
+          gh workflow run refresh.yml --repo "$GITHUB_REPOSITORY" --ref main && echo "Next refresh started." || echo "Could not start the next refresh; the schedule will pick it up."
