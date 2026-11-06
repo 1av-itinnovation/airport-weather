@@ -2462,6 +2462,50 @@ html[data-theme="dark"] .news .nwm em.imp.i-possible{color:#FFE2B8;background:#4
 html[data-theme="dark"] #modal .lvc{background:rgba(255,255,255,.03);border-color:#2B394C}
 html[data-theme="dark"] #modal .lvc.normal{border-top-color:#43A047}html[data-theme="dark"] #modal .lvc.advisory{border-top-color:#E0AE00}html[data-theme="dark"] #modal .lvc.warning{border-top-color:#FB8C00}html[data-theme="dark"] #modal .lvc.danger{border-top-color:#EF5350}
 html[data-theme="dark"] #modal .lvc dd{color:#E6ECF5}
+/* ---- news counted by airport ---- */
+.news .nsum{list-style:none;margin:2px 0 4px;padding:0;display:flex;flex-direction:column;gap:4px}
+.news .nsum li{display:flex !important;flex-direction:row !important;gap:8px;align-items:baseline;font-size:13px;line-height:1.45;padding:0;background:none;border:0}
+.news .nsum li i{flex:none;width:9px;height:9px;border-radius:50%;display:inline-block;transform:translateY(1px)}
+.news .nsum li.i-reported i{background:#C62828}.news .nsum li.i-possible i{background:#E07B00}
+.news .nsum0{margin:2px 0 4px;font-size:13px;color:var(--muted,#5B7180)}
+.news .nwfb.i-all{padding:4px 12px}
+.news .ncs-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.news .nc{border:1px solid var(--line,#DCE5EE);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;background:var(--panel,#fff)}
+.news .nch{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;min-width:0}
+.news .nch b,.news .nch .ncgo{font-size:14px;font-weight:700;line-height:1.3;color:var(--ink,#12303F)}
+.news .nch b a{color:inherit}
+.news .ncgo{border:0;background:none;padding:0;font:inherit;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:rgba(0,96,167,.35);text-underline-offset:3px}
+.news .ncgo:hover{color:#0060A7}
+.news .nch .sub{font-size:12px;color:var(--muted,#5B7180)}
+.news .nch em{font-style:normal;font-size:11px;font-weight:600;border-radius:5px;padding:1px 6px}
+.news .nch em.tp{color:#12303F;background:#E7EEF3}.news .nch em.ev{color:#fff;background:#0077C8}
+.news .evday{font-size:11.5px;font-weight:700;color:#fff;background:#005687;border-radius:5px;padding:2px 7px}
+.news .nca{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.news .nca .why{font-size:11.5px;font-weight:600;color:var(--muted,#5B7180);margin-right:2px}
+.news .nca.none .why{font-weight:400;font-style:italic}
+.news .apc{border:1px solid #9FC3DD;background:#EEF6FB;color:#004F7A;border-radius:999px;padding:2px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;line-height:1.5}
+.news .apc:hover,.news .apc:focus-visible{background:#0077C8;color:#fff;border-color:#0077C8}
+.news .apc.out{opacity:.6}
+.news .apall{font-size:12px;font-weight:600;color:#004F7A;background:#D9EEF9;border-radius:999px;padding:2px 9px}
+.news .ncl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.news .ncl li>a{display:flex;gap:10px;align-items:flex-start;text-decoration:none;color:inherit}
+.news .ncl li.lead .nwi{width:72px;height:48px;flex:none}
+.news .ncl.small li>a{padding:5px 0;border-top:1px solid var(--line,#E7EEF3)}
+.news .ncl.small .nwt b{font-size:12.5px;font-weight:600}
+.news .ncm summary{cursor:pointer;font-size:12px;font-weight:600;color:#0060A7;list-style:none}
+.news .ncm summary::-webkit-details-marker{display:none}
+.news .ncm summary::before{content:"+ "}.news .ncm[open] summary::before{content:"\2212  "}
+.news .ncn{margin:0;font-size:12.5px;line-height:1.45}.news .ncs{margin:0;font-size:11.5px;color:var(--muted,#5B7180)}
+.news .nwo{border-left-color:#B8C6D0}.news .nwo>summary{cursor:pointer;list-style:none}.news .nwo>summary::-webkit-details-marker{display:none}
+.news .nwo>summary::after{content:"Show";margin-left:auto;font-size:11.5px;font-weight:600;color:#0060A7;border:1px solid #C9D6E2;border-radius:999px;padding:0 9px}
+.news .nwo[open]>summary::after{content:"Hide"}.news .nwo[open]>summary{margin-bottom:6px}
+html[data-theme="dark"] .news .nc{background:rgba(255,255,255,.03);border-color:#2B394C}
+html[data-theme="dark"] .news .nch b,html[data-theme="dark"] .news .nch .ncgo{color:#E6ECF5}
+html[data-theme="dark"] .news .nch em.tp{color:#DCE5EE;background:#2A3550}
+html[data-theme="dark"] .news .apc{background:#1D3A52;border-color:#2E5A7A;color:#BFE3F7}
+html[data-theme="dark"] .news .apall{color:#9FD8F5;background:#1D3A52}
+html[data-theme="dark"] .news .ncm summary,html[data-theme="dark"] .news .nwo>summary::after{color:#8CC8F0}
+html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
 .modal .hmore>summary{cursor:pointer;list-style:none}.modal .hmore>summary::-webkit-details-marker{display:none}
 .modal .hmore>summary h3{display:inline-flex;align-items:center;gap:8px;margin:0}.modal .hmore>summary h3::after{content:"Show";font-size:12px;font-weight:600;color:#0060A7;border:1px solid #C9D6E2;border-radius:999px;padding:1px 10px}
 .modal .hmore[open]>summary h3::after{content:"Hide"}.modal .hmore[open]>summary{margin-bottom:10px}
@@ -2686,7 +2730,7 @@ html[data-theme="dark"] #modal .lvc dd{color:#E6ECF5}
 
     <div class="sec hs one">
       <h3>5. News, strikes and holidays</h3>
-      <p>Under the airport list. It shows news for whatever you select, or for the airports in the list.</p>
+      <p>Under the airport list. It shows news for whatever you select, or for the airports in the list. It counts <strong>airports, not stories</strong>: each situation, such as Mayon Volcano or a strike in Cebu, appears once with the airports it can affect. Press an airport name to open it.</p>
       <ul>
         <li><strong>Disruption reported:</strong> something has already stopped, such as cancelled flights or a strike under way.</li>
         <li><strong>Disruption possible:</strong> something may slow work, such as a planned strike, a road closure, heavy traffic or a holiday rush.</li>
@@ -3866,7 +3910,7 @@ function closeUp() {
 var volcanoFocusBase = volcanoFocus;
 volcanoFocus = function () { volcanoFocusBase(); closeUp(); };
 /* ---------- news about the selected airport (last 24 hours) ---------- */
-function newsBlock(a) { return newsView([a.id, 'ph'], 'this airport', { up: upcomingFor([a.id]) }); }
+function newsBlock(a) { var hk = hazKeys().filter(function (k) { var h0 = hazInfo(k); return h0 && h0.aps.indexOf(a.id) >= 0; }); return newsView([a.id, 'ph'].concat(hk), 'this airport', { up: upcomingFor([a.id]), scope: [a.id] }); }
 function hazNews(k, o) { return newsList(k + ':' + o.id, k === 'q' ? 'this earthquake' : k === 'v' ? 'this volcano' : 'this cyclone'); }      // matched by its own name or figures
 // How critical a story is, for choosing the video that plays by itself: official, then flights or the airport, then the event, then the area
 function newsRank(n) { return n.about === 'official' ? 4 : n.about === 'airport' ? 3 : n.about === 'hazard' ? 2 : 1; }
@@ -3885,46 +3929,152 @@ function newsItems(keys) {      // every story for these keys, once each, rememb
 var IRANK = { reported: 0, possible: 1, awareness: 2 };
 function upcomingFor(ids, all) { return ((D && D.upcoming) || []).filter(function (u) { return all || !(u.airports || []).length || (u.airports || []).some(function (x) { return ids.indexOf(x) >= 0; }); }).slice().sort(function (p, q) { return (p.start < q.start ? -1 : p.start > q.start ? 1 : 0) || (IRANK[p.impact] - IRANK[q.impact]); }); }
 function newsList(key, what) { return newsView([key], what, {}); }
+/* The news counts AIRPORTS, not stories: each situation (a volcano, a typhoon, a strike in one city) is shown once, with the
+   airports it can affect, and the stories about it folded under it. The airports come from the same rules as the rest of the
+   dashboard: a volcano's airports within 150 km (or under its ash), a typhoon's airports in reach of its strong winds now or
+   within 24 hours, an earthquake's flagged airports within 100 km. Other stories count the airports whose area the headline names.
+   Nationwide stories apply to every airport and are counted apart, so one general story does not turn every count into 36. */
+function apIdsIn(text) { text = String(text || ''); return D.airports.filter(function (a) { return text.indexOf(a.name) >= 0; }).sort(function (p, q) { return text.indexOf(p.name) - text.indexOf(q.name); }).map(function (a) { return a.id; }); }      // in the order the text names them (nearest first)
+function hazInfo(k) {
+  var t = k.charAt(0), id = k.slice(2);
+  if (t === 'v') { var v = volcanoById(id); if (!v) return null;
+    var ash = (v.hits || []).length;
+    return { title: v.title, sub: v.level != null ? 'Alert Level ' + v.level : '', topic: 'volcano', aps: ash ? apIdsIn(v.hits.join('; ')) : (/^No airport/.test(v.near || '') ? [] : apIdsIn(v.near)), why: ash ? 'Under its ash' : 'Within 150 km', go: 'data-v="' + esc(id) + '"' }; }
+  if (t === 't') { var c = cycloneById(id); if (!c) return null;
+    var now = apIdsIn((c.now || []).join('; ')), soon = apIdsIn((c.soon || []).join('; '));
+    return { title: c.title, sub: c.inpar ? 'In the Philippine area' : 'Outside the Philippine area', topic: 'typhoon', aps: now.concat(soon.filter(function (x) { return now.indexOf(x) < 0; })), why: now.length ? 'Strong winds can reach' : 'Strong winds within 24 hours', go: 'data-t="' + esc(id) + '"' }; }
+  if (t === 'q') { var q = quakeById(id); if (!q) return null;
+    return { title: q.title, sub: q.where || q.place || '', topic: 'quake', aps: apIdsIn((q.hits || []).join('; ')), why: 'Within 100 km', go: 'data-q="' + esc(id) + '"' }; }
+  return null;
+}
+function hazKeys() { return Object.keys((D && D.news) || {}).filter(function (k) { return /^[tvq]:/.test(k); }); }
+function hazNamed(title) {      // a story whose headline names a volcano or typhoon on the dashboard belongs with it
+  var hit = '';
+  (D.volcanoes || []).forEach(function (v) { if (!hit && v.name && new RegExp('\\b' + v.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(title)) hit = 'v:' + v.id; });
+  cyclonesShown().forEach(function (c) { [c.name, c.local].forEach(function (nm) { if (!hit && nm && nm.length > 2 && new RegExp('\\b' + nm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(title)) hit = 't:' + c.id; }); });
+  return hit;
+}
+function apNames(ids) { return ids.map(function (x) { var a = byId(x); return a ? a.name : x; }); }
+function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
 function newsView(keys, what, opt) {
   if (!D || !D.news_src) return '';
   opt = opt || {};
+  var scope = opt.scope || null;      // the airports counted; null counts every airport
   var srcs = (D.news_src || []).filter(function (s) { return s.ok; }).map(function (s) { return s.name; });
-  var L = newsItems(keys), seenL = {}; L.forEach(function (n) { seenL[n.link + '|' + n.title] = 1; });
-  L = L.concat(newsItems(opt.extraReported || []).filter(function (n) { return n.impact === 'reported' && !seenL[n.link + '|' + n.title]; }));
-  var cnt = { reported: 0, possible: 0, awareness: 0 };
-  L.forEach(function (n) { n._i = cnt[n.impact] !== undefined ? n.impact : 'awareness'; cnt[n._i]++; });
-  var up0 = opt.up || []; up0.forEach(function (u) { if (cnt[u.impact] !== undefined) cnt[u.impact]++; });
-  var up = up0.filter(function (u) { return NEWS_IMP === 'all' || u.impact === NEWS_IMP; }), hrs = D.news_hours || 24, ph = D.plan_hours || 72;
+  var hrs = D.news_hours || 24, ph = D.plan_hours || 72;
+  var C = {}, order = [], used = {};
+  var sid = function (n) { return n.link + '|' + n.title; };
+  var cl = function (key, base) { if (!C[key]) { base.items = []; base.key = key; C[key] = base; order.push(key); } return C[key]; };
+  var add = function (c, n, k) { var x = Object.create(n); x._k = k; x._i = IRANK[n.impact] !== undefined ? n.impact : 'awareness'; c.items.push(x); used[sid(n)] = 1; };
+  // 1. volcanoes, typhoons and earthquakes, with the airports they can reach
+  keys.filter(function (k) { return /^[tvq]:/.test(k); }).forEach(function (k) {
+    var h0 = hazInfo(k); if (!h0) return;
+    var c = cl(k, { kind: 'haz', h: h0, aps: h0.aps, nat: false, topic: h0.topic });
+    ((D.news || {})[k] || []).forEach(function (n) { if (!used[sid(n)]) add(c, n, k); });
+  });
+  // 2. every other story: the airports whose area it names, or every airport for a nationwide story
+  var per = {}, porder = [];
+  keys.filter(function (k) { return !/^[tvq]:/.test(k); }).forEach(function (k) {
+    ((D.news || {})[k] || []).forEach(function (n) {
+      var id = sid(n); if (used[id]) return;
+      var p = per[id]; if (!p) { p = per[id] = { n: n, aps: [], nat: false, k: k }; porder.push(id); }
+      if (k === 'ph') p.nat = true; else if (p.aps.indexOf(k) < 0) p.aps.push(k);
+    });
+  });
+  // one PAGASA regional page lists many provinces: its advisories become one situation with every airport it names
+  var PGR = { ncrprsd: 'Metro Manila', nlprsd: 'Northern Luzon', slprsd: 'Southern Luzon', visprsd: 'Visayas', minprsd: 'Mindanao' };
+  porder = porder.filter(function (id) {
+    var p = per[id], m = /^PAGASA (.+?) mentions /.exec(p.n.title); if (!m || p.n.about !== 'official') return true;
+    var rg = (/regional-forecast\/(\w+)/.exec(p.n.link) || [])[1] || '', c = cl('pg:' + p.n.link, { kind: 'pg', aps: [], nat: false, topic: 'weather', region: PGR[rg] || 'regional' });
+    if (!c.aps.length) Object.keys(D.news || {}).forEach(function (k) { if (byId(k) && (D.news[k] || []).some(function (n) { return n.link === p.n.link && /^PAGASA .+ mentions /.test(n.title); })) c.aps.push(k); });      // every airport the regional page names, not only the ones in view
+    var kind = m[1].charAt(0).toUpperCase() + m[1].slice(1), have = c.items.filter(function (x) { return x._adv === kind; })[0];
+    if (!have) { add(c, { title: 'PAGASA ' + m[1], link: p.n.link, src: p.n.src, ms: p.n.ms, about: 'official', impact: p.n.impact, topic: 'weather', img: '', yt: '', video: false }, p.k); c.items[c.items.length - 1]._adv = kind; }
+    else if (IRANK[p.n.impact] < IRANK[have._i]) have._i = p.n.impact;
+    used[id] = 1; return false;
+  });
+  porder.forEach(function (id) {
+    var p = per[id], hk = hazNamed(p.n.title);
+    if (hk) { var h1 = hazInfo(hk); if (h1) { add(cl(hk, { kind: 'haz', h: h1, aps: h1.aps, nat: false, topic: h1.topic }), p.n, p.k); return; } }
+    var tp = p.n.topic || 'other', key = 's:' + (p.nat ? '*' : p.aps.slice().sort().join(',')) + '|' + tp;
+    add(cl(key, { kind: 'story', aps: p.nat ? [] : p.aps, nat: p.nat, topic: tp }), p.n, p.k);
+  });
+  // 3. holidays and planned events
+  (opt.up || []).forEach(function (u, i) { var c = cl('u:' + i, { kind: 'plan', u: u, aps: (u.airports || []).slice(), nat: !(u.airports || []).length, topic: u.kind }); c.imp = IRANK[u.impact] !== undefined ? u.impact : 'awareness'; c.plan = true; });
+  // each situation takes the most serious impact among its stories
+  var list = order.map(function (k) { return C[k]; }).filter(function (c) { return c.plan || c.items.length; });
+  list.forEach(function (c) {
+    if (!c.plan) c.imp = c.items.reduce(function (m, x) { return IRANK[x._i] < IRANK[m] ? x._i : m; }, 'awareness');
+    c.items.sort(function (p, q) { return ((q.about === 'official') - (p.about === 'official')) || (q.ms - p.ms); });
+    c.inScope = scope ? c.aps.filter(function (x) { return scope.indexOf(x) >= 0; }) : c.aps.slice();
+    c.linked = c.nat || c.aps.length > 0;
+  });
+  // counts: airports per impact group, with nationwide news noted apart
+  var G = {}; IMPACTS.forEach(function (x) { G[x[0]] = { aps: [], nat: 0 }; });
+  list.forEach(function (c) { if (!c.linked) return; var g = G[c.imp]; if (c.nat) g.nat++; c.inScope.forEach(function (x) { if (g.aps.indexOf(x) < 0) g.aps.push(x); }); });
+  var countText = function (g) { return g.aps.length ? plural(g.aps.length, 'airport') + (g.nat ? ' + nationwide' : '') : g.nat ? 'Nationwide' : '0 airports'; };
+  if (NEWS_IMP !== 'all' && !G[NEWS_IMP].aps.length && !G[NEWS_IMP].nat) NEWS_IMP = 'all';
   var h = '<div class="news">';
-  // filter chips by impact
-  h += '<div class="nwf" role="group" aria-label="Show news by impact">' + [['all', 'All', L.length + up0.length]].concat(IMPACTS.map(function (x) { return [x[0], x[1], cnt[x[0]]]; })).map(function (c) {
-    return '<button class="nwfb i-' + c[0] + (NEWS_IMP === c[0] ? ' on' : '') + '" data-imp="' + c[0] + '" aria-pressed="' + (NEWS_IMP === c[0]) + '"' + (c[0] !== 'all' && !c[2] ? ' disabled' : '') + '>' + (c[0] !== 'all' ? '<i></i>' : '') + c[1] + '<b>' + c[2] + '</b></button>';
+  h += '<div class="nwf" role="group" aria-label="Show news by impact">' + '<button class="nwfb i-all' + (NEWS_IMP === 'all' ? ' on' : '') + '" data-imp="all" aria-pressed="' + (NEWS_IMP === 'all') + '">All</button>' + IMPACTS.map(function (x) {
+    var g = G[x[0]], n = g.aps.length + g.nat;
+    return '<button class="nwfb i-' + x[0] + (NEWS_IMP === x[0] ? ' on' : '') + '" data-imp="' + x[0] + '" aria-pressed="' + (NEWS_IMP === x[0]) + '"' + (!n ? ' disabled' : '') + '><i></i>' + x[1] + '<b>' + esc(countText(g)) + '</b></button>';
   }).join('') + '</div>';
-  var evRow = function (u) {      // a holiday or planned event: its day in place of a picture
-    var where = !(u.airports || []).length ? 'All airports' : u.airports.map(function (x) { var a = byId(x); return a ? a.name : x; }).join(', ');
-    return '<li class="ev"><' + (u.link ? 'a href="' + esc(u.link) + '" target="_blank" rel="noopener noreferrer"' : 'div') + ' class="evr"><span class="nwi evd"><b>' + esc(u.when) + '</b></span><span class="nwt"><b>' + esc(u.title) + '</b>' +
-      (u.note ? '<span class="upn">' + esc(u.note) + '</span>' : '') + '<span class="nwm"><em class="tp">' + esc(TOPIC_WORDS[u.kind] || (u.kind.charAt(0).toUpperCase() + u.kind.slice(1))) + '</em><em class="ev">Planned</em>' + esc(where) + ' · ' + esc(u.src) + '</span></span></' + (u.link ? 'a' : 'div') + '></li>';
-  };
-  if (!L.length && !up.length) {
+  // one plain sentence for the serious groups, the way a briefing would put it
+  var lines = ['reported', 'possible'].filter(function (k) { return G[k].aps.length || G[k].nat; }).map(function (k) {
+    var g = G[k], nm = apNames(g.aps);
+    return '<li class="i-' + k + '"><i></i><span><b>' + (k === 'reported' ? 'Disruption reported' : 'Disruption possible') + '</b> at ' + (g.aps.length ? plural(g.aps.length, 'airport') + ': ' + esc(nm.join(', ')) + (g.nat ? ', and nationwide news that applies to every airport' : '') : 'every airport (nationwide news)') + '.</span></li>';
+  });
+  if (lines.length) h += '<ul class="nsum">' + lines.join('') + '</ul>';
+  else if (list.some(function (c) { return c.linked; })) h += '<p class="nsum0">No disruption reported or possible at any airport in these stories.</p>';
+  if (!list.length) {
     h += '<p class="nwe">' + (srcs.length ? 'No official update or news story links ' + what + ' (news from the last ' + hrs + ' hours; strikes, roads and holidays from the last ' + ph + ' hours). Checked: ' + srcs.join(', ') + '.' : 'The news sources could not be reached at this check.') + '</p></div>';
     return h;
   }
   var tag = function (n) { return n.about === 'official' ? '<em class="of">Official</em>' : ''; };
+  var storyRow = function (n, big) {
+    return '<li' + (big ? ' class="lead"' : '') + '><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
+      (big ? (n.img ? '<span class="nwi"><img src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add(\'none\');this.remove()">' + (n.video ? '<i>Video</i>' : '') + '</span>' : '<span class="nwi none' + (n.about === 'official' ? ' off' : '') + '">' + (n.video ? '<i>Video</i>' : '') + '</span>') : '') +
+      '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm">' + tag(n) + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' +
+      (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(n._k) + '">Play video here</button>' : '') + '</li>';
+  };
+  var apsRow = function (c) {
+    if (c.nat) return '<div class="nca"><span class="why">Applies to</span><span class="apall">All airports (nationwide)</span></div>';
+    if (!c.aps.length) return '<div class="nca none"><span class="why">' + (c.kind === 'haz' ? 'No airport in reach at this check' : 'No airport named') + '</span></div>';
+    return '<div class="nca"><span class="why">' + esc(c.h ? c.h.why : c.plan ? 'Applies to' : c.kind === 'pg' ? 'Provinces named' : 'Area named') + ' · ' + plural(c.aps.length, 'airport') + '</span>' + c.aps.map(function (x) { var a = byId(x); return '<button class="apc' + (scope && scope.indexOf(x) < 0 ? ' out' : '') + '" data-goa="' + esc(x) + '">' + esc(a ? a.name : x) + '</button>'; }).join('') + '</div>';
+  };
+  var card = function (c) {
+    var head, body = '';
+    if (c.plan) {
+      var u = c.u;
+      head = '<div class="nch"><span class="evday">' + esc(u.when) + '</span><b>' + (u.link ? '<a href="' + esc(u.link) + '" target="_blank" rel="noopener noreferrer">' + esc(u.title) + '</a>' : esc(u.title)) + '</b><em class="tp">' + esc(TOPIC_WORDS[u.kind] || (u.kind.charAt(0).toUpperCase() + u.kind.slice(1))) + '</em><em class="ev">Planned</em></div>';
+      body = (u.note ? '<p class="ncn">' + esc(u.note) + '</p>' : '') + '<p class="ncs">Source: ' + esc(u.src) + '</p>';
+      return '<li class="nc plan">' + head + apsRow(c) + body + '</li>';
+    }
+    var ttl = c.h ? '<button class="ncgo" ' + c.h.go + '>' + esc(c.h.title) + '</button>' + (c.h.sub ? '<span class="sub">' + esc(c.h.sub) + '</span>' : '') :
+      c.kind === 'pg' ? '<b>PAGASA weather advisories, ' + esc(c.region) + '</b>' :
+      '<b>' + esc(c.nat ? 'Nationwide' : apNames(c.aps).join(', ')) + '</b>';
+    head = '<div class="nch">' + ttl + '<em class="tp">' + esc(TOPIC_WORDS[c.topic] || TOPIC_WORDS.other) + '</em></div>';
+    var rest = c.items.slice(1);
+    body = '<ul class="ncl">' + storyRow(c.items[0], true) + '</ul>' +
+      (rest.length ? '<details class="ncm"><summary>' + plural(rest.length, 'more story').replace('storys', 'stories') + '</summary><ul class="ncl small">' + rest.map(function (n) { return storyRow(n, false); }).join('') + '</ul></details>' : '');
+    return '<li class="nc">' + head + apsRow(c) + body + '</li>';
+  };
+  var rank = function (p, q) { return (q.inScope.length - p.inScope.length) || ((q.items[0] ? q.items[0].ms : 0) - (p.items[0] ? p.items[0].ms : 0)); };
   IMPACTS.forEach(function (x) {
     if (NEWS_IMP !== 'all' && NEWS_IMP !== x[0]) return;
-    var G = L.filter(function (n) { return n._i === x[0]; }).sort(function (p, q) { return ((q.about === 'official') - (p.about === 'official')) || (q.ms - p.ms); });
-    var E = up.filter(function (u) { return u.impact === x[0]; });
-    if (!G.length && !E.length) return;
-    h += '<div class="nwg i-' + x[0] + '"><div class="nwgh"><i></i><span>' + x[1] + '</span><b>' + (G.length + E.length) + '</b><em>' + x[2] + '</em></div><ul>' + E.map(evRow).join('') + G.map(function (n) {
-      return '<li><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
-        (n.img ? '<span class="nwi"><img src="' + esc(n.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add(\'none\');this.remove()">' + (n.video ? '<i>Video</i>' : '') + '</span>' : '<span class="nwi none' + (n.about === 'official' ? ' off' : '') + '">' + (n.video ? '<i>Video</i>' : '') + '</span>') +
-        '<span class="nwt"><b>' + esc(n.title) + '</b><span class="nwm">' + tag(n) + '<em class="tp">' + esc(TOPIC_WORDS[n.topic] || TOPIC_WORDS.other) + '</em>' + (n.scope === 'national' || n._k === 'ph' ? '<em class="nat">Nationwide</em>' : '') + esc(n.src) + ' · ' + esc(agoText(n.ms)) + '</span></span></a>' +
-        (n.yt ? '<button class="nwp" data-play="' + esc(n.yt) + '" data-ap="' + esc(n._k) + '">Play video here</button>' : '') + '</li>';
-    }).join('') + '</ul></div>';
+    var S0 = list.filter(function (c) { return c.linked && c.imp === x[0]; }).sort(function (p, q) { return (q.plan - p.plan) || rank(p, q); });
+    if (!S0.length) return;
+    var g = G[x[0]];
+    h += '<div class="nwg i-' + x[0] + '"><div class="nwgh"><i></i><span>' + x[1] + '</span><b>' + esc(countText(g)) + '</b><em>' + x[2] + '</em></div><ul class="ncs-list">' + S0.map(card).join('') + '</ul></div>';
   });
-  h += '<p class="nwn">Sorted by possible impact using keyword rules, so read the story before acting. Headlines link to the publisher. News never changes an alert level.</p></div>';
+  var other = list.filter(function (c) { return !c.linked; });
+  if (other.length && NEWS_IMP === 'all') h += '<details class="nwg nwo"><summary class="nwgh"><span>Other news</span><b>' + plural(other.length, 'item') + '</b><em>Not linked to any airport, so not counted</em></summary><ul class="ncs-list">' + other.sort(rank).map(card).join('') + '</ul></details>';
+  h += '<p class="nwn">Counts are airports, not stories. A volcano counts the airports within 150 km or under its ash, a typhoon the airports its strong winds can reach now or within 24 hours, an earthquake the airports it flags within 100 km, and other stories the airports whose area the headline names. Groups come from keyword rules, so read the story before acting. News never changes an alert level.</p></div>';
   return h;
 }
+document.addEventListener('click', function (e) {
+  var g = e.target.closest && e.target.closest('.news [data-goa]'); if (g) { S.pane = 'side'; selectAirport(g.getAttribute('data-goa')); return; }
+  var hz = e.target.closest && e.target.closest('.news .ncgo'); if (hz) { var v = hz.getAttribute('data-v'), t = hz.getAttribute('data-t'), q = hz.getAttribute('data-q'); if (v) selectVolcano(v); else if (t) selectCyclone(t); else if (q) selectQuake(q); }
+});
 document.addEventListener('click', function (e) {
   var b = e.target.closest && e.target.closest('.nwfb'); if (!b || b.disabled) return;
   NEWS_IMP = b.getAttribute('data-imp'); try { renderNewsPanel(); } catch (x) {}
@@ -4743,14 +4893,13 @@ function renderNewsPanel() {
   else if (cy && !cy.low) { html = hazNews('t', cy); label = cy.dname || cy.title; }
   else {      // nothing selected: the stories for the airports in the list as it stands (region, tile and day), official ones first
     var ids = Array.prototype.map.call(document.querySelectorAll('#list [data-a]'), function (b) { return b.getAttribute('data-a'); });
-    var allView = !S.region && S.filter === 'alerts' && S.day === 'today', keys = ids.slice();
-    if (allView) Object.keys(D.news || {}).forEach(function (k) { if (/^[tvq]:/.test(k)) keys.push(k); });      // the hazards' own stories too, on the full view only
-    keys.push('ph');      // nationwide strikes, holidays and flight news apply to every airport
+    // the full view counts every airport; a narrowed view (region, tile or day) counts the airports in the list
+    var allView = !S.region && S.filter === 'alerts' && S.day === 'today';
+    var pool = allView ? D.airports.map(function (x) { return x.id; }) : ids;
+    var keys = pool.concat(hazKeys().filter(function (k) { if (allView) return true; var h0 = hazInfo(k); return h0 && h0.aps.some(function (x) { return pool.indexOf(x) >= 0; }); }), ['ph']);
     var rg = S.region ? $('region').options[$('region').selectedIndex].text : '', lt = $('listTitle').textContent;
-    label = lt + (rg ? ', ' + rg : '') + ' (' + ids.length + (ids.length === 1 ? ' airport' : ' airports') + (allView ? ' and hazards' : '') + ', plus nationwide)';
-    // on the full view, a reported disruption at any other airport (a strike, a closure) is shown too, so nothing serious is missed
-    var others = allView ? D.airports.map(function (a) { return a.id; }).filter(function (x) { return ids.indexOf(x) < 0; }) : [];
-    html = newsView(keys, 'the airports listed above', { up: upcomingFor(ids, allView), extraReported: others });
+    label = allView ? 'All 36 airports' : lt + (rg ? ', ' + rg : '') + ' (' + plural(ids.length, 'airport') + ')';
+    html = newsView(keys, allView ? 'any airport' : 'the airports listed above', { up: upcomingFor(pool, allView), scope: allView ? null : pool });
   }
   ctx.textContent = label; body.innerHTML = html || '';
   newsFit();
