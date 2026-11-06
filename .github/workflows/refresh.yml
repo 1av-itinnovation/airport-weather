@@ -94,6 +94,7 @@ jobs:
           for attempt in 1 2 3; do
             for f in $FILES; do if [ -f "$f" ]; then git add "$f"; fi; done
             if [ -d docs/alertmaps ]; then git add -A docs/alertmaps; fi
+            if [ -d docs/history ]; then git add -A docs/history; fi
             if git diff --cached --quiet; then
               echo "No generated data changes to commit."
               exit 0
@@ -106,10 +107,12 @@ jobs:
             mkdir -p /tmp/fresh
             for f in $FILES; do if [ -f "$f" ]; then cp "$f" "/tmp/fresh/$(basename "$f")"; fi; done
             rm -rf /tmp/fresh-maps; if [ -d docs/alertmaps ]; then cp -r docs/alertmaps /tmp/fresh-maps; fi
+            rm -rf /tmp/fresh-history; if [ -d docs/history ]; then cp -r docs/history /tmp/fresh-history; fi
             git fetch -q origin main
             git reset -q --hard origin/main
             for f in $FILES; do if [ -f "/tmp/fresh/$(basename "$f")" ]; then cp "/tmp/fresh/$(basename "$f")" "$f"; fi; done
             if [ -d /tmp/fresh-maps ]; then rm -rf docs/alertmaps; cp -r /tmp/fresh-maps docs/alertmaps; fi
+            if [ -d /tmp/fresh-history ]; then rm -rf docs/history; cp -r /tmp/fresh-history docs/history; fi
           done
           echo "Could not save the data after 3 attempts."
           exit 1
@@ -177,6 +180,7 @@ jobs:
           for attempt in 1 2 3; do
             for f in $FILES; do if [ -f "$f" ]; then git add "$f"; fi; done
             if [ -d docs/alertmaps ]; then git add -A docs/alertmaps; fi
+            if [ -d docs/history ]; then git add -A docs/history; fi
             if git diff --cached --quiet; then
               echo "No generated data changes to commit."
               exit 0
@@ -189,10 +193,12 @@ jobs:
             mkdir -p /tmp/fresh
             for f in $FILES; do if [ -f "$f" ]; then cp "$f" "/tmp/fresh/$(basename "$f")"; fi; done
             rm -rf /tmp/fresh-maps; if [ -d docs/alertmaps ]; then cp -r docs/alertmaps /tmp/fresh-maps; fi
+            rm -rf /tmp/fresh-history; if [ -d docs/history ]; then cp -r docs/history /tmp/fresh-history; fi
             git fetch -q origin main
             git reset -q --hard origin/main
             for f in $FILES; do if [ -f "/tmp/fresh/$(basename "$f")" ]; then cp "/tmp/fresh/$(basename "$f")" "$f"; fi; done
             if [ -d /tmp/fresh-maps ]; then rm -rf docs/alertmaps; cp -r /tmp/fresh-maps docs/alertmaps; fi
+            if [ -d /tmp/fresh-history ]; then rm -rf docs/history; cp -r /tmp/fresh-history docs/history; fi
           done
           echo "Could not save the data after 3 attempts."
           exit 1
