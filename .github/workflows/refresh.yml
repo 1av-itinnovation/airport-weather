@@ -45,6 +45,7 @@ jobs:
         run: python3 build.py
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          WINDY_WEBCAMS_KEY: ${{ secrets.WINDY_WEBCAMS_KEY }}
 
       - name: Check generated data
         run: |
@@ -86,7 +87,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          FILES="docs/data.json docs/rain.json notify_state.json"
+          FILES="docs/data.json docs/rain.json docs/webcams.json notify_state.json"
 
           # If something else was pushed while this run was working (a file upload, or another run),
           # start again from the newest version and put this run's fresh data on top. The data files
@@ -172,7 +173,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          FILES="docs/data.json docs/rain.json notify_state.json"
+          FILES="docs/data.json docs/rain.json docs/webcams.json notify_state.json"
 
           # If something else was pushed while this run was working (a file upload, or another run),
           # start again from the newest version and put this run's fresh data on top. The data files
