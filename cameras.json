@@ -1,0 +1,50 @@
+{
+  "_how_to_use": [
+    "Extra cameras for the dashboard, added by hand. Each camera belongs to one airport (use the ids listed below).",
+    "For a volcano camera, use \"volcano\" (mayon, bulusan, taal, kanlaon, ...) instead of \"airport\".",
+    "url: the camera's own page. It is shown as a link that opens that page, because sites such as SkylineWebcams and EarthCam do not allow their video to be shown inside another website.",
+    "youtube: optional. A YouTube video id or link. If the owner allows it, the video plays on the dashboard itself.",
+    "source and note are optional. Save the file; it shows on the dashboard at the next update (about 10 minutes)."
+  ],
+  "airport_ids": "bacolod, boholpanglao, busuangacoron, butuan, cagayandeoro, calbayog, camiguin, caticlanboracay, cauayan, cebumactan, clark, davao, dipolog, dumaguete, elnido, generalsantos, iloilo, kalibo, laoag, legazpibicol, manilanaia, masbate, naga, ozamiz, pagadian, puertoprincesa, roxas, sanjosemindoro, sanvicente, siargao, surigao, tacloban, tawitawi, tuguegarao, virac, zamboanga",
+  "cameras": [
+    {
+      "airport": "elnido",
+      "title": "El Nido beach and Bacuit Bay",
+      "source": "SkylineWebcams",
+      "url": "https://www.skylinewebcams.com/en/webcam/philippines/mimaropa/palawan/el-nido.html",
+      "note": "Live video on SkylineWebcams."
+    },
+    {
+      "airport": "cebumactan",
+      "title": "Cebu City",
+      "source": "EarthCam",
+      "url": "https://www.earthcam.com/world/philippines/cebucity/",
+      "note": "Live video on EarthCam."
+    },
+    {
+      "volcano": "mayon",
+      "title": "Mayon Volcano, 24/7 live",
+      "source": "YouTube",
+      "youtube": "https://www.youtube.com/watch?v=UDAZWxehMAI"
+    },
+    {
+      "volcano": "bulusan",
+      "title": "Bulusan Volcano, 24/7 live",
+      "source": "YouTube",
+      "youtube": "https://www.youtube.com/watch?v=GQYME0i_idI"
+    },
+    {
+      "volcano": "taal",
+      "title": "Taal Volcano, 24/7 live",
+      "source": "YouTube",
+      "youtube": "https://www.youtube.com/watch?v=yqz0GC-Sd50"
+    },
+    {
+      "volcano": "kanlaon",
+      "title": "Kanlaon Volcano, 24/7 live",
+      "source": "YouTube",
+      "youtube": "https://www.youtube.com/watch?v=LjhN6FZWqi0"
+    }
+  ]
+}

@@ -2413,24 +2413,49 @@ print(data['flag'])
 for p in PROBLEMS: print('PROBLEM:',p)
 
 # =====================================================================================
-# NEARBY WEBCAMS (Windy Webcams API, free plan)
-# Once a day, finds the public webcams within WEBCAM_KM of each airport and saves them to docs/webcams.json.
-# Needs the WINDY_WEBCAMS_KEY secret; without it this step is skipped. Only webcam ids, names and the
-# embeddable player links are saved (the player needs no key, so the key never reaches the web page).
+# NEARBY CAMERAS  ->  docs/webcams.json
+# Three sources, merged per airport:
+#  1. Windy Webcams (free API, WINDY_WEBCAMS_KEY secret): public webcams within WEBCAM_KM of each airport.
+#     Shown with Windy's own player, which may be embedded. Looked up once a day.
+#  2. YouTube live streams (YOUTUBE_API_KEY secret): 24/7 "live cam" streams that name the airport's town
+#     and that their owners allow to be embedded. Looked up once a day (about 36 searches, well inside
+#     YouTube's free daily allowance).
+#  3. cameras.json (edited by hand): any other camera, e.g. SkylineWebcams or EarthCam. Their terms do not
+#     allow showing their video on another site, so these are listed as links that open their own page.
+#     A YouTube video id can also be entered here to show it on the dashboard.
+# Only ids, names and player links are saved; the keys never reach the web page.
 # =====================================================================================
 WEBCAM_OUT = os.path.join(os.path.dirname(OUT), 'webcams.json')
-WEBCAM_KM = 25                # how far from the airport a camera may be
-WEBCAM_EVERY_HOURS = 24       # how often to look again
+WEBCAM_KM = 25                # how far from the airport a Windy camera may be
+WEBCAM_EVERY_HOURS = 24       # how often to look again (Windy and YouTube)
+CAM_PLACES = {                # the town name used to search YouTube, where the airport name alone is not enough
+    'caticlanboracay': ['Boracay', 'Caticlan'], 'boholpanglao': ['Panglao', 'Bohol'], 'busuangacoron': ['Coron', 'Busuanga'],
+    'manilanaia': ['Manila', 'NAIA', 'Pasay'], 'cebumactan': ['Cebu', 'Mactan', 'Lapu-Lapu'], 'legazpibicol': ['Legazpi', 'Albay', 'Mayon'],
+    'sanjosemindoro': ['San Jose Occidental Mindoro'], 'sanvicente': ['San Vicente Palawan', 'Port Barton'], 'elnido': ['El Nido'],
+    'puertoprincesa': ['Puerto Princesa'], 'generalsantos': ['General Santos', 'GenSan'], 'cagayandeoro': ['Cagayan de Oro', 'CDO'],
+    'tawitawi': ['Tawi-Tawi', 'Bongao'], 'siargao': ['Siargao', 'General Luna'], 'clark': ['Clark Pampanga', 'Angeles City'],
+}
+CAM_WORDS = re.compile(r'live ?cam|webcam|live view|live stream|24/7|cctv|skyline|weather cam|sky ?cam|live feed', re.I)
+CAM_SKIP = re.compile(r'news|mass\b|misa|concert|game|gaming|music|radio|sermon|church|worship|news ?live|tv patrol|balita|bingo|sabong|casino|karaoke', re.I)
+def _cam_places(i, nm):
+    return CAM_PLACES.get(i) or [re.sub(r' \(.*\)$', '', nm)]
 try:
     _wkey = os.environ.get('WINDY_WEBCAMS_KEY', '').strip()
+    _ykey = os.environ.get('YOUTUBE_API_KEY', '').strip()
     try:
         with open(WEBCAM_OUT, encoding='utf-8') as f: _wold = json.load(f)
     except Exception: _wold = None
-    _wage = (NOW.timestamp() * 1000 - (_wold or {}).get('ms', 0)) / 3600000
-    if not _wkey: print('WEBCAMS: no WINDY_WEBCAMS_KEY secret, skipped', file=sys.stderr)
-    elif _wold and _wage < WEBCAM_EVERY_HOURS and os.environ.get('WEBCAMS_FORCE') != '1': print(f'WEBCAMS: list is {_wage:.1f} hours old, kept', file=sys.stderr)
+    _wold = _wold or {}
+    _wage = (NOW.timestamp() * 1000 - _wold.get('ms', 0)) / 3600000
+    _due = _wage >= WEBCAM_EVERY_HOURS or os.environ.get('WEBCAMS_FORCE') == '1'
+    _cams = _wold.get('airports') or {}
+    _yt = _wold.get('youtube') or {}
+    _changed = False
+    # 1. Windy
+    if not _wkey: print('WEBCAMS: no WINDY_WEBCAMS_KEY secret, Windy cameras skipped', file=sys.stderr)
+    elif not _due and _wold.get('airports') is not None: print(f'WEBCAMS: list is {_wage:.1f} hours old, kept', file=sys.stderr)
     else:
-        _cams = {}; _ok = 0; _fail = 0
+        _new = {}; _ok = 0; _fail = 0
         for _i, _ic, _nm, _rg, _la, _lo, _x, _y in APTS:
             _u = ('https://api.windy.com/webcams/api/v3/webcams?nearby=' + f'{_la:.4f},{_lo:.4f},{WEBCAM_KM}' +
                   '&limit=10&lang=en&include=categories,location,player,urls')
@@ -2452,15 +2477,67 @@ try:
                                   day=_pl.get('day') or '', live=_pl.get('live') or '', cats=[c.get('name') for c in (_w.get('categories') or []) if c.get('name')],
                                   lat=_loc['latitude'], lon=_loc['longitude'], link=((_w.get('urls') or {}).get('detail') or '')))
             _list.sort(key=lambda c: (not c['active'], c['km']))
-            if _list: _cams[_i] = _list[:3]
+            if _list: _new[_i] = _list[:3]
             time.sleep(0.3)
         if _ok:
-            with open(WEBCAM_OUT + '.tmp', 'w', encoding='utf-8') as f:
-                json.dump(dict(ms=int(NOW.timestamp() * 1000), km=WEBCAM_KM, credit='Webcams provided by windy.com', airports=_cams), f, ensure_ascii=False, separators=(',', ':'))
-            os.replace(WEBCAM_OUT + '.tmp', WEBCAM_OUT)
-            print(f'WEBCAMS: {len(_cams)} of {len(APTS)} airports have a public webcam within {WEBCAM_KM} km', file=sys.stderr)
+            _cams = _new; _changed = True
+            print(f'WEBCAMS: {len(_cams)} of {len(APTS)} airports have a Windy webcam within {WEBCAM_KM} km', file=sys.stderr)
             for _k, _v in _cams.items(): print(f"WEBCAMS   {_k}: " + '; '.join(f"{c['title']} ({c['km']} km{'' if c['active'] else ', inactive'})" for c in _v), file=sys.stderr)
-        else: print('WEBCAMS: the Windy webcam service could not be reached; the previous list is kept', file=sys.stderr)
+        else: print('WEBCAMS: Windy could not be reached; the previous list is kept', file=sys.stderr)
+    # 2. YouTube live streams
+    if not _ykey: print('WEBCAMS: no YOUTUBE_API_KEY secret, YouTube live cameras skipped', file=sys.stderr)
+    elif _due or 'youtube' not in _wold:
+        _ynew = {}; _yok = 0; _seen = set()
+        for _i, _ic, _nm, _rg, _la, _lo, _x, _y in APTS:
+            _pl = _cam_places(_i, _nm)
+            _q = urllib.parse.quote(f'{_pl[0]} live cam')
+            _j = fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&eventType=live&maxResults=10&regionCode=PH&relevanceLanguage=en&q=' + _q + '&key=' + urllib.parse.quote(_ykey), tries=1, timeout=20)
+            if _j is None: continue
+            _yok += 1
+            _hits = []
+            for _it in (_j.get('items') or []):
+                _sn = _it.get('snippet') or {}; _vid = (_it.get('id') or {}).get('videoId')
+                _t = html.unescape(_sn.get('title') or ''); _ch = html.unescape(_sn.get('channelTitle') or '')
+                if not _vid or _vid in _seen: continue
+                if not any(p.lower() in (_t + ' ' + (_sn.get('description') or '')).lower() for p in _pl): continue
+                if not CAM_WORDS.search(_t) or CAM_SKIP.search(_t + ' ' + _ch): continue
+                _hits.append(dict(id=_vid, title=_t, channel=_ch))
+            if _hits:
+                # only streams their owners allow other sites to show, and that are live right now
+                _ids = ','.join(h['id'] for h in _hits)
+                _st = fetch('https://www.googleapis.com/youtube/v3/videos?part=status,liveStreamingDetails,snippet&id=' + _ids + '&key=' + urllib.parse.quote(_ykey), tries=1, timeout=20) or {}
+                _okids = {v['id'] for v in (_st.get('items') or []) if (v.get('status') or {}).get('embeddable') and (v.get('snippet') or {}).get('liveBroadcastContent') == 'live'}
+                _hits = [h for h in _hits if h['id'] in _okids][:2]
+                for h in _hits: _seen.add(h['id'])
+                if _hits: _ynew[_i] = _hits
+        if _yok:
+            _yt = _ynew; _changed = True
+            print(f'WEBCAMS: {len(_yt)} airports have a YouTube live camera', file=sys.stderr)
+            for _k, _v in _yt.items(): print(f"WEBCAMS   youtube {_k}: " + '; '.join(f"{h['title']} [{h['channel']}]" for h in _v), file=sys.stderr)
+        else: print('WEBCAMS: YouTube could not be reached; the previous list is kept', file=sys.stderr)
+    # 3. cameras.json, edited by hand (read at every update, so changes show within minutes)
+    _extra = {}; _extra_v = {}
+    _cp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cameras.json')
+    try:
+        with open(_cp, encoding='utf-8') as f: _cj = json.load(f)
+        _ids = {a[0] for a in APTS}
+        for _c in (_cj.get('cameras') or []):
+            _a = str(_c.get('airport') or '').strip(); _vk = re.sub(r'[^a-z0-9]', '', str(_c.get('volcano') or '').lower())
+            if (_a not in _ids and not _vk) or not _c.get('title'): continue
+            _url = str(_c.get('url') or '').strip(); _yid = str(_c.get('youtube') or '').strip()
+            _m = re.search(r'(?:v=|youtu\.be/|/live/|/embed/)([A-Za-z0-9_-]{11})', _yid) if len(_yid) != 11 else None
+            if _m: _yid = _m.group(1)
+            if not (_url.startswith('https://') or re.fullmatch(r'[A-Za-z0-9_-]{11}', _yid or '')): continue
+            (_extra_v.setdefault(_vk, []) if _vk else _extra.setdefault(_a, [])).append(dict(title=str(_c['title']), source=str(_c.get('source') or ''), url=_url, youtube=_yid if re.fullmatch(r'[A-Za-z0-9_-]{11}', _yid or '') else '',
+                                                 note=str(_c.get('note') or '')))
+    except FileNotFoundError: pass
+    except Exception as _e: print('WEBCAMS: cameras.json could not be read:', _e, file=sys.stderr)
+    if _extra != (_wold.get('extra') or {}) or _extra_v != (_wold.get('volcanoes') or {}): _changed = True
+    if _changed or not os.path.exists(WEBCAM_OUT):
+        _out = dict(ms=(int(NOW.timestamp() * 1000) if _due or not _wold.get('ms') else _wold['ms']), km=WEBCAM_KM, credit='Webcams provided by windy.com', airports=_cams, youtube=_yt, extra=_extra, volcanoes=_extra_v)
+        with open(WEBCAM_OUT + '.tmp', 'w', encoding='utf-8') as f: json.dump(_out, f, ensure_ascii=False, separators=(',', ':'))
+        os.replace(WEBCAM_OUT + '.tmp', WEBCAM_OUT)
+        print(f'WEBCAMS: saved ({len(_cams)} Windy, {len(_yt)} YouTube, {sum(len(v) for v in _extra.values()) + sum(len(v) for v in _extra_v.values())} from cameras.json)', file=sys.stderr)
 except Exception as _e:
     print('WEBCAMS ERROR', type(_e).__name__, _e, file=sys.stderr)
 
