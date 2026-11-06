@@ -43,6 +43,16 @@ Earthquakes, volcanoes and typhoons have their own alerts.
 - Use **Layers** to turn parts of the map on or off.
 - Press the **?** button for a full guide.
 
+## Pages (view only)
+
+- `airport.html?id=<airport id>`: one airport's full page: today, hour by hour with heat index, the next 7 days,
+  the last 30 days, hazards in reach, and news.
+- `event.html?id=v:<volcano>`, `t:<typhoon>` or `q:<earthquake>`: map, affected airports and timeline of one event.
+- `report.html`: the monthly disruption report.
+
+The pages have no download, email or share controls. The monthly report and the "last 30 days" figures come from
+`docs/history/`, a small daily record the update adds to each time it runs (one file per month).
+
 ## Adding local holidays, strikes and road closures
 
 Open `events.json`, copy the example event, and fill in the title, the start date (and end date if longer than a day), and

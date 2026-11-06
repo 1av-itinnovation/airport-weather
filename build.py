@@ -17,7 +17,7 @@ the others are backups. The order is set in SOURCE_ORDER below.
 
 Uses only the Python standard library. Run:  python3 build.py
 """
-import json, re, math, os, sys, time, html, datetime as dt
+import json, re, math, hashlib, os, sys, time, html, datetime as dt
 import urllib.request, urllib.error, urllib.parse, ssl, threading
 from collections import Counter
 
@@ -276,7 +276,8 @@ def openmeteo_to_met(j):
     for i, t in enumerate(h['time']):
         nxt = h['precipitation'][i + 1] if i + 1 < len(h['time']) else None      # Open-Meteo rain is for the hour that just ended
         e = {'time': t + ':00Z', 'data': {'instant': {'details': {'air_temperature': h['temperature_2m'][i],
-             'wind_speed': (h['wind_speed_10m'][i] or 0) / 3.6, 'cloud_area_fraction': h['cloud_cover'][i] or 0}}}}
+             'wind_speed': (h['wind_speed_10m'][i] or 0) / 3.6, 'cloud_area_fraction': h['cloud_cover'][i] or 0,
+             'relative_humidity': (h.get('relative_humidity_2m') or [None] * len(h['time']))[i]}}}}
         if nxt is not None: e['data']['next_1_hours'] = {'details': {'precipitation_amount': nxt or 0.0}}
         ts.append(e)
     upd = NOW.replace(minute=0, second=0, microsecond=0)
@@ -285,7 +286,7 @@ def load_openmeteo(wanted):
     out = {}
     if not wanted: return out
     url = ('https://api.open-meteo.com/v1/forecast?latitude=' + ','.join(f'{a[4]:.4f}' for a in wanted) + '&longitude=' + ','.join(f'{a[5]:.4f}' for a in wanted) +
-           '&hourly=temperature_2m,precipitation,wind_speed_10m,cloud_cover&wind_speed_unit=kmh&timezone=UTC&past_hours=2&forecast_days=5')
+           '&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,cloud_cover&wind_speed_unit=kmh&timezone=UTC&past_hours=2&forecast_days=5')
     d = fetch(url, tries=2)
     if d is None: return out
     if isinstance(d, dict): d = [d]
@@ -640,6 +641,56 @@ TODO={'normal':'No action needed.','advisory':'Bad weather is expected later tod
 SRC_OFF='Official airport weather report and forecast (aviationweather.gov).'
 SRC_EST='Estimate from the MET Norway forecast for this location. No official airport report is available. Estimates show rain and wind only and cannot confirm thunderstorms.'
 
+# ---------- heat index ----------
+# How hot it feels, from temperature and humidity. Same formula as PAGASA and the US National Weather
+# Service (Rothfusz, with the NWS adjustments). PAGASA levels: Caution 27-32, Extreme caution 33-41,
+# Danger 42-51, Extreme danger 52 and above (degrees C).
+HEAT_LEVELS = [(52, 'xdanger', 'Extreme danger'), (42, 'danger', 'Danger'), (33, 'xcaution', 'Extreme caution'), (27, 'caution', 'Caution')]
+HEAT_TODO = {'xdanger': 'Limit outdoor ramp work to the essential, rotate crews often, and keep water and shade at every stand.',
+             'danger': 'Rotate ramp crews, schedule water and shade breaks, and watch for signs of heat exhaustion.',
+             'xcaution': 'Remind ramp crews to drink water and take shade breaks.',
+             'caution': 'Normal heat precautions.'}
+def heat_index(tc, rh):
+    if tc is None or rh is None: return None
+    T = tc * 9 / 5 + 32; R = max(0.0, min(100.0, float(rh)))
+    hi = 0.5 * (T + 61 + (T - 68) * 1.2 + R * 0.094)
+    if (hi + T) / 2 >= 80:
+        hi = (-42.379 + 2.04901523 * T + 10.14333127 * R - .22475541 * T * R - .00683783 * T * T - .05481717 * R * R
+              + .00122874 * T * T * R + .00085282 * T * R * R - .00000199 * T * T * R * R)
+        if R < 13 and 80 <= T <= 112: hi -= ((13 - R) / 4) * math.sqrt((17 - abs(T - 95)) / 17)
+        elif R > 85 and 80 <= T <= 87: hi += ((R - 85) / 10) * ((87 - T) / 5)
+    return (hi - 32) * 5 / 9
+def heat_level(c):
+    if c is None: return None
+    for lo, k, w in HEAT_LEVELS:
+        if round(c) >= lo: return k
+    return None
+HEAT_WORD = {k: w for lo, k, w in HEAT_LEVELS}
+def rh_from_dew(t, td):
+    if t is None or td is None: return None
+    a, b = 17.625, 243.04
+    return 100 * math.exp(a * td / (b + td) - a * t / (b + t))
+def heat_summary(hrs, now_c=None, now_src='estimate'):
+    """Highest heat index over the next 24 hours, and the hours it stays at that level."""
+    end = NOW + dt.timedelta(hours=24)
+    hs = [h for h in hrs if h['t'] < end and h.get('hi') is not None]
+    if not hs and now_c is None: return None
+    out = dict(now=(round(now_c) if now_c is not None else (round(hs[0]['hi']) if hs else None)), nowsrc=(now_src if now_c is not None else 'estimate'))
+    out['nowlv'] = heat_level(out['now'])
+    if hs:
+        pk = max(hs, key=lambda h: h['hi']); lv = heat_level(pk['hi'])
+        i = hs.index(pk); a = b = i
+        while a > 0 and heat_level(hs[a - 1]['hi']) == lv and hs[a]['t'] - hs[a - 1]['t'] == dt.timedelta(hours=1): a -= 1
+        while b + 1 < len(hs) and heat_level(hs[b + 1]['hi']) == lv and hs[b + 1]['t'] - hs[b]['t'] == dt.timedelta(hours=1): b += 1
+        st, en = hs[a]['t'], hs[b]['t'] + dt.timedelta(hours=1)
+        when = (f"now until {clock_plain(en)}" if st <= NOW else f"{clock_plain(st)} to {clock_plain(en)}")
+        out.update(peak=round(pk['hi']), lv=lv, word=HEAT_WORD.get(lv, 'Normal'), at=int(pk['t'].timestamp() * 1000),
+                   when=when, day=('today' if ph(pk['t']).date() == ph(NOW).date() else 'tomorrow'))
+    if out['now'] is not None and (out.get('peak') is None or out['now'] > out['peak']):      # the airport report is hotter than the forecast: the report wins
+        out.update(peak=out['now'], lv=out['nowlv'], word=HEAT_WORD.get(out['nowlv'], 'Normal'), at=int(NOW.timestamp() * 1000), when='now', day='today')
+    out['todo'] = HEAT_TODO.get(out.get('lv'), '')
+    return out
+
 # ---------- MET Norway ----------
 def met_parse(ic):
     m=MET.get(ic)
@@ -651,7 +702,7 @@ def met_parse(ic):
         n1=e['data'].get('next_1_hours')
         if not n1: continue
         d=e['data']['instant']['details']
-        hrs.append(dict(t=t,p=n1['details'].get('precipitation_amount',0.0),w=d['wind_speed']*3.6,temp=d['air_temperature'],cloud=d.get('cloud_area_fraction',0)))
+        hrs.append(dict(t=t,p=n1['details'].get('precipitation_amount',0.0),w=d['wind_speed']*3.6,temp=d['air_temperature'],cloud=d.get('cloud_area_fraction',0),hi=heat_index(d['air_temperature'],d.get('relative_humidity'))))
     cur=[h for h in hrs if h['t']<=NOW<h['t']+dt.timedelta(hours=1)]
     if not cur: return None
     i0=hrs.index(cur[0]); hrs=hrs[i0:]
@@ -700,8 +751,8 @@ def met_parse(ic):
         sky='h' if h['p']>=7.6 else 'r' if h['p']>=2.5 else 'l' if h['p']>=0.2 else ('c' if h['cloud']<25 else 'p' if h['cloud']<75 else 'o')
         return sky+('n' if night else 'd')
     ch=RAIN_CHANCE.get(ic,{})
-    hourly=[[int(h['t'].timestamp()*1000),round(h['temp']),round(h['p'],1),round(h['w']),pic(h),ch.get(h['t'].strftime('%Y-%m-%dT%H'))] for h in hrs[:12]]
-    return dict(upd=upd,cur=hrs[0],runs=runs,later=later,truns=truns,tsum=tsum,days=days,src=m.get('_src','metno'),hourly=hourly)
+    hourly=[[int(h['t'].timestamp()*1000),round(h['temp']),round(h['p'],1),round(h['w']),pic(h),ch.get(h['t'].strftime('%Y-%m-%dT%H')),(round(h['hi']) if h['hi'] is not None else None)] for h in hrs[:12]]
+    return dict(upd=upd,cur=hrs[0],runs=runs,later=later,truns=truns,tsum=tsum,days=days,src=m.get('_src','metno'),hourly=hourly,hrs=hrs)
 def met(ic):
     try: return met_parse(ic)
     except Exception as e:
@@ -941,6 +992,11 @@ for i,ic,nm_,rg_,la,lo,x_,y_ in APTS:
     try: obs_lines(r['obs'],i)
     except Exception as _e: print('OBS LINES ERROR',ic,_e,file=sys.stderr)
     r['week']=WEEK.get(ic,[])
+    try:
+        _nowc=None
+        if mt and mt.get('temp') is not None and mt.get('dewp') is not None: _nowc=heat_index(mt['temp'],rh_from_dew(mt['temp'],mt['dewp']))
+        r['heat']=heat_summary(m['hrs'] if m else [],_nowc,'report')
+    except Exception as _e: print('HEAT ERROR',ic,_e,file=sys.stderr); r['heat']=None
     if not r['est'] and r['level']!='nodata':
         if r['level']=='danger': TS_AIRPORTS.append(dict(id=i,a=int(NOW.timestamp()*1000),b=int((NOW+dt.timedelta(hours=1)).timestamp()*1000)))
         for f in (tf['fcsts'] if tf else []):
@@ -1822,7 +1878,7 @@ elif _nerupt: vol_flag = f"{_nerupt} volcano{'' if _nerupt == 1 else 'es'} with 
 else: vol_flag = 'No volcanic ash warning in the Philippine area, and no volcano alert for any airport.'
 src.append(f"Volcanoes: ash clouds and eruptions are from official aviation ash warnings (SIGMET) on aviationweather.gov, checked {clock_plain(NOW)}. " + (f"Volcano alert levels are from {vol_level_src}." if vol_level_src else "Volcano alert levels could not be read automatically at this check; see PHIVOLCS volcano bulletins.") if vol_ok else "Volcanoes: the ash warning source could not be reached at this check.")
 
-KEEP=('obs','id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc','week')
+KEEP=('obs','id','name','region','x','y','lat','lon','level','est','now','next','tmr','days','conf','todo','upd','src','what','when','sort','t','twhat','twhen','tsort','test','hours','estsrc','week','heat')
 QKEEP=('check','hits','ms','lat','lon','magnote','shocks','slist','nshock','id','mag','place','x','y','onmap','op','size','title','where','when','depth','near','tsu','after','todo','src','line')
 for _c2 in CYCLONES:      # the summary line uses the PAGASA name for a cyclone inside the PAR
     if _c2.get('local') and _c2.get('name'): ty_banner = re.sub(r'\b' + re.escape(_c2['name']) + r'\b', _c2['local'], ty_banner, flags=re.I)
@@ -2279,6 +2335,77 @@ os.makedirs(os.path.dirname(OUT), exist_ok=True)
 tmp=OUT+'.tmp'
 with open(tmp,'w',encoding='utf-8') as f: json.dump(data,f,ensure_ascii=False,separators=(',',':'))
 os.replace(tmp,OUT)
+
+# =====================================================================================
+# DAILY HISTORY (for the monthly report page)
+# Each refresh adds to docs/history/YYYY-MM.json (Philippine time). For each airport and day it keeps
+# which hours of the day were at Advisory, Warning or Danger (one bit per hour, so running more or less
+# often never double counts), the highest heat index, and the hazards and reported disruptions seen
+# that day. The file only ever grows by merging, so a failed refresh loses nothing.
+# =====================================================================================
+HISTORY_DIR = os.path.join(os.path.dirname(OUT), 'history')
+try:
+    _pn = ph(NOW); _day = _pn.strftime('%Y-%m-%d'); _bit = 1 << _pn.hour
+    _hp = os.path.join(HISTORY_DIR, _pn.strftime('%Y-%m') + '.json')
+    try:
+        with open(_hp, encoding='utf-8') as f: H = json.load(f)
+        if H.get('v') != 1: raise ValueError('old format')
+    except FileNotFoundError: H = None
+    except Exception as _e: print('HISTORY: starting a new file,', _e, file=sys.stderr); H = None
+    if H is None: H = dict(v=1, month=_pn.strftime('%Y-%m'), airports={r['id']: r['name'] for r in rows}, days={})
+    D = H['days'].setdefault(_day, dict(ap={}, haz={}, hours=0))
+    D['hours'] |= _bit
+    _code = {'advisory': 'a', 'warning': 'w', 'danger': 'd'}
+    for r in rows:
+        e = D['ap'].setdefault(r['id'], {})
+        k = _code.get(r['level'])
+        if k: e[k] = e.get(k, 0) | _bit
+        if r['level'] == 'nodata': e['n'] = e.get('n', 0) | _bit
+        hp = (r.get('heat') or {}).get('now')
+        if hp is not None and hp > e.get('hi', -99): e['hi'] = hp
+        if not e: del D['ap'][r['id']]
+    _ids = {r['name']: r['id'] for r in rows}
+    def _aps(names): return sorted({_ids[n] for n in names if n in _ids})
+    def _named(text): return [n for n in _ids if n in (text or '')]
+    def _haz(key, kind, title, aps, lv, extra=None):
+        h = D['haz'].get(key)
+        if h is None: h = D['haz'][key] = dict(kind=kind, title=title, aps=[], lv=lv, first=int(NOW.timestamp() * 1000))
+        h['title'] = title; h['aps'] = sorted(set(h['aps']) | set(aps)); h['last'] = int(NOW.timestamp() * 1000)
+        if ['awareness', 'possible', 'advisory', 'warning', 'danger'].index(lv) > ['awareness', 'possible', 'advisory', 'warning', 'danger'].index(h['lv']): h['lv'] = lv
+        if extra: h.update(extra)
+    for c in CYCLONES:
+        if c.get('now') or c.get('soon'):
+            _haz('ty:' + c['name'].lower(), 'typhoon', c['title'], _aps((c.get('now') or []) + (c.get('soon') or [])), 'danger' if c.get('now') else 'warning')
+    for q in quakes:
+        if q.get('hits'):
+            _haz('eq:' + str(q['ms']), 'quake', f"{q['title']}, {q.get('place') or ''}".strip(', '), _aps(q['hits']), 'warning')
+    for a in VOL_ALERTS:
+        v = next((x for x in volcanoes if x['id'] == a['v']), None)
+        if not v: continue
+        lvl = v.get('level')
+        _haz('vo:' + a['v'], 'volcano', v.get('title') or (v['name'] + (f' Volcano, Alert Level {lvl}' if lvl else ' Volcano')),
+             _aps(_named(a['text'])), 'danger' if a['kind'] in ('ash', 'eruption') else 'advisory', dict(vol=a['v']))
+    _seen = set()
+    for key, items in (NEWS or {}).items():
+        if key.startswith(('t:', 'v:', 'q:')): continue
+        for it in items:
+            if it.get('impact') != 'reported' or it.get('topic') not in ('strike', 'traffic', 'flights', 'power', 'security', 'weather'): continue
+            if not (int(NOW.timestamp() * 1000) - (it.get('ms') or 0) <= 36 * 3600 * 1000): continue
+            nk = 'nw:' + hashlib.sha1((it.get('link') or it.get('title', '')).encode()).hexdigest()[:10]
+            aps = [key] if key in H['airports'] else []
+            if nk in _seen: D['haz'][nk]['aps'] = sorted(set(D['haz'][nk]['aps']) | set(aps)); continue
+            _seen.add(nk)
+            _haz(nk, 'news', it.get('title', ''), aps, 'possible', dict(topic=it.get('topic'), src=it.get('src', ''), link=it.get('link', '')))
+    os.makedirs(HISTORY_DIR, exist_ok=True)
+    with open(_hp + '.tmp', 'w', encoding='utf-8') as f: json.dump(H, f, ensure_ascii=False, separators=(',', ':'))
+    os.replace(_hp + '.tmp', _hp)
+    _months = sorted(x[:-5] for x in os.listdir(HISTORY_DIR) if re.fullmatch(r'\d{4}-\d{2}\.json', x))
+    with open(os.path.join(HISTORY_DIR, 'index.json.tmp'), 'w', encoding='utf-8') as f: json.dump(dict(months=_months), f)
+    os.replace(os.path.join(HISTORY_DIR, 'index.json.tmp'), os.path.join(HISTORY_DIR, 'index.json'))
+    print(f'HISTORY: {_day} saved ({len(D["ap"])} airports recorded, {len(D["haz"])} hazards or disruptions)', file=sys.stderr)
+except Exception as _e:
+    print('HISTORY ERROR', type(_e).__name__, _e, file=sys.stderr)
+
 c=Counter(r['level'] for r in rows)
 print(data['checked'])
 print('Danger',c['danger'],'| Warning',c['warning'],'| Advisory',c['advisory'],'| Normal',c['normal'],'| No data',c['nodata'])
