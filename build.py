@@ -2413,6 +2413,58 @@ print(data['flag'])
 for p in PROBLEMS: print('PROBLEM:',p)
 
 # =====================================================================================
+# NEARBY WEBCAMS (Windy Webcams API, free plan)
+# Once a day, finds the public webcams within WEBCAM_KM of each airport and saves them to docs/webcams.json.
+# Needs the WINDY_WEBCAMS_KEY secret; without it this step is skipped. Only webcam ids, names and the
+# embeddable player links are saved (the player needs no key, so the key never reaches the web page).
+# =====================================================================================
+WEBCAM_OUT = os.path.join(os.path.dirname(OUT), 'webcams.json')
+WEBCAM_KM = 25                # how far from the airport a camera may be
+WEBCAM_EVERY_HOURS = 24       # how often to look again
+try:
+    _wkey = os.environ.get('WINDY_WEBCAMS_KEY', '').strip()
+    try:
+        with open(WEBCAM_OUT, encoding='utf-8') as f: _wold = json.load(f)
+    except Exception: _wold = None
+    _wage = (NOW.timestamp() * 1000 - (_wold or {}).get('ms', 0)) / 3600000
+    if not _wkey: print('WEBCAMS: no WINDY_WEBCAMS_KEY secret, skipped', file=sys.stderr)
+    elif _wold and _wage < WEBCAM_EVERY_HOURS and os.environ.get('WEBCAMS_FORCE') != '1': print(f'WEBCAMS: list is {_wage:.1f} hours old, kept', file=sys.stderr)
+    else:
+        _cams = {}; _ok = 0; _fail = 0
+        for _i, _ic, _nm, _rg, _la, _lo, _x, _y in APTS:
+            _u = ('https://api.windy.com/webcams/api/v3/webcams?nearby=' + f'{_la:.4f},{_lo:.4f},{WEBCAM_KM}' +
+                  '&limit=10&lang=en&include=categories,location,player,urls')
+            try:
+                _rq = urllib.request.Request(_u, headers={'x-windy-api-key': _wkey, 'User-Agent': UA, 'Accept': 'application/json'})
+                with urllib.request.urlopen(_rq, timeout=25) as _r: _j = json.loads(_r.read().decode('utf-8', 'replace'))
+                _ok += 1
+            except Exception as _e:
+                _fail += 1; print('WEBCAMS ERROR', _i, type(_e).__name__, str(_e)[:120], file=sys.stderr)
+                if _fail >= 3 and not _ok: break
+                continue
+            _list = []
+            for _w in (_j.get('webcams') or []):
+                _loc = _w.get('location') or {}; _pl = _w.get('player') or {}
+                if _loc.get('latitude') is None: continue
+                _km = hav(_la, _lo, _loc['latitude'], _loc['longitude'])
+                _list.append(dict(id=_w.get('webcamId'), title=_w.get('title') or '', city=_loc.get('city') or '', km=round(_km, 1),
+                                  active=(_w.get('status') == 'active'), updated=_w.get('lastUpdatedOn') or '',
+                                  day=_pl.get('day') or '', live=_pl.get('live') or '', cats=[c.get('name') for c in (_w.get('categories') or []) if c.get('name')],
+                                  lat=_loc['latitude'], lon=_loc['longitude'], link=((_w.get('urls') or {}).get('detail') or '')))
+            _list.sort(key=lambda c: (not c['active'], c['km']))
+            if _list: _cams[_i] = _list[:3]
+            time.sleep(0.3)
+        if _ok:
+            with open(WEBCAM_OUT + '.tmp', 'w', encoding='utf-8') as f:
+                json.dump(dict(ms=int(NOW.timestamp() * 1000), km=WEBCAM_KM, credit='Webcams provided by windy.com', airports=_cams), f, ensure_ascii=False, separators=(',', ':'))
+            os.replace(WEBCAM_OUT + '.tmp', WEBCAM_OUT)
+            print(f'WEBCAMS: {len(_cams)} of {len(APTS)} airports have a public webcam within {WEBCAM_KM} km', file=sys.stderr)
+            for _k, _v in _cams.items(): print(f"WEBCAMS   {_k}: " + '; '.join(f"{c['title']} ({c['km']} km{'' if c['active'] else ', inactive'})" for c in _v), file=sys.stderr)
+        else: print('WEBCAMS: the Windy webcam service could not be reached; the previous list is kept', file=sys.stderr)
+except Exception as _e:
+    print('WEBCAMS ERROR', type(_e).__name__, _e, file=sys.stderr)
+
+# =====================================================================================
 # RAIN AND THUNDER ANIMATION
 # A grid of MET Norway forecasts over the map, hour by hour, saved as docs/rain.json.
 # The page plays it as a moving rain layer. Rebuilt only every few hours, because the
