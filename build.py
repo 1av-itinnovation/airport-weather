@@ -2550,6 +2550,8 @@ except Exception as _e:
 RAIN_OUT = os.path.join(os.path.dirname(OUT), 'rain.json')
 RAIN_EVERY_HOURS = 3          # how often to rebuild the animation
 RAIN_HOURS = 30               # how many hours ahead to store
+RAIN_PART = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rain_partial.json')   # readings kept between updates while a rebuild is under way
+RAIN_PART_MAX_H = 6           # readings older than this are read again
 RAIN_BUDGET_S = 150           # most time the rebuild may take; if it runs out, the previous animation is kept
 # The grid is much wider than the Philippines so the rain layer fills the whole map panel, even on
 # very wide screens (the neighbouring countries are shown there as a picture). The middle part, over
@@ -2582,6 +2584,29 @@ def build_rain():
     pts = [p for p in allpts if direct(*p)]
     h0 = NOW.replace(minute=0, second=0, microsecond=0)
     hours = [h0 + dt.timedelta(hours=i) for i in range(RAIN_HOURS)]
+    # The grid has too many points to read in one update, so the readings are kept in RAIN_PART between
+    # updates and the rebuild carries on where it stopped. Readings older than RAIN_PART_MAX_H are read again.
+    part = None
+    try:
+        with open(RAIN_PART, encoding='utf-8') as f: part = json.load(f)
+        pbase = dt.datetime.fromisoformat(part['base'] + ':00:00+00:00')
+        if part.get('grid') != GRID or (h0 - pbase).total_seconds() / 3600 > RAIN_PART_MAX_H: part = None
+    except Exception: part = None
+    if part is None: part = dict(base=h0.strftime('%Y-%m-%dT%H'), grid=GRID, pts={})
+    pbase = dt.datetime.fromisoformat(part['base'] + ':00:00+00:00')
+    def unpack(v):          # [rain in tenths of a mm for each hour from base, thunder hours as a bit mask]
+        out = {}
+        for i, mm in enumerate(v[0]):
+            out[(pbase + dt.timedelta(hours=i)).strftime('%Y-%m-%dT%H')] = (mm / 10.0, bool((v[1] >> i) & 1))
+        return out
+    def pack(o):
+        mm = []; th = 0
+        for i in range(RAIN_HOURS + RAIN_PART_MAX_H):
+            v = o.get((pbase + dt.timedelta(hours=i)).strftime('%Y-%m-%dT%H'))
+            mm.append(int(round(v[0] * 10)) if v else 0)
+            if v and v[1]: th |= 1 << i
+        return [mm, th]
+    todo = [p for p in pts if f'{p[0]},{p[1]}' not in part['pts']]
     def one(p):
         if time.time() > deadline or site_down('https://api.met.no/'): return None
         lat = GRID['lat0'] - p[0] * GRID['step']; lon = GRID['lon0'] + p[1] * GRID['step']
@@ -2596,7 +2621,10 @@ def build_rain():
         except Exception:
             return None
         return out
-    with ThreadPoolExecutor(max_workers=6) as ex: got = dict(zip(pts, ex.map(one, pts)))
+    with ThreadPoolExecutor(max_workers=8) as ex: new = dict(zip(todo, ex.map(one, todo)))
+    for p, o in new.items():
+        if o: part['pts'][f'{p[0]},{p[1]}'] = pack(o)
+    got = {p: (unpack(part['pts'][f'{p[0]},{p[1]}']) if f'{p[0]},{p[1]}' in part['pts'] else None) for p in pts}
     ok = sum(1 for r in got.values() if r)
     last_r = (GRID['rows'] - 1) // 2 * 2
     def near(r, c):
@@ -2614,8 +2642,10 @@ def build_rain():
             v = got[q].get(k) if (w > 0 and got.get(q)) else None
             if v: tot += v[0] * w; wsum += w
         return (tot / wsum, False) if wsum > 0 else None
-    if ok < 0.8 * len(pts):
-        print(f'Rain animation: only {ok} of {len(pts)} grid points answered, keeping the previous animation.', file=sys.stderr); return
+    if ok < 0.95 * len(pts):
+        with open(RAIN_PART + '.tmp', 'w', encoding='utf-8') as f: json.dump(part, f, separators=(',', ':'))
+        os.replace(RAIN_PART + '.tmp', RAIN_PART)
+        print(f'Rain animation: {ok} of {len(pts)} grid points read so far ({sum(1 for o in new.values() if o)} in this update); the rebuild carries on at the next update.', file=sys.stderr); return
     rain = []; thunder = []
     for h in hours:
         k = h.strftime('%Y-%m-%dT%H'); fr = []; th = []
@@ -2629,6 +2659,8 @@ def build_rain():
     tmp = RAIN_OUT + '.tmp'
     with open(tmp, 'w', encoding='utf-8') as f: json.dump(doc, f, separators=(',', ':'))
     os.replace(tmp, RAIN_OUT)
+    try: os.remove(RAIN_PART)
+    except FileNotFoundError: pass
     print(f'Rain animation: rebuilt from {ok} of {len(pts)} grid points.')
 
 # An urgent refresh for an earthquake or volcano alert skips the rain animation, which can take two minutes.
