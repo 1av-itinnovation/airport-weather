@@ -2037,6 +2037,10 @@ html[data-theme="dark"] .lyrkey{background:rgba(30,39,58,.94);color:#C9D3E5}html
 .camlink>svg{width:22px;height:22px;flex:none;color:var(--g-accent-ink,#4D5EE0)}
 .camlink>span{display:flex;flex-direction:column;min-width:0;font-size:12.5px;line-height:1.35}.camlink>span b{font-size:13.5px;font-weight:600}.camlink>span>span{color:var(--g-muted,#56657F)}
 .camlink i{margin-left:auto;font-style:normal;font-size:12.5px;font-weight:600;color:#FFFFFF;background:var(--g-accent,#4D5EE0);border-radius:999px;padding:6px 14px;flex:none}
+.apinset.camin{width:clamp(250px,40%,340px);pointer-events:auto}
+.apinset .camv{position:relative;width:100%;aspect-ratio:16/10;border-radius:9px;overflow:hidden;background:#0B1019}
+.apinset .camv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.apinset.camin .apf{font-size:11px;line-height:1.35;color:#56657F;margin:6px 2px 0}
 .pagelink:hover{filter:brightness(1.08)}.pagelink svg{width:16px;height:16px}
 html[data-theme="dark"]{color-scheme:dark;--ink:#E8EDF6;--muted:#9AA8BF;--line:rgba(140,160,200,.20);--panel:#1B2335;--page:#0C111B;--brand:#A9BEFF;--action:#A9BEFF;--tint:#222B40}
 html[data-theme="dark"] .glass{--muted:#9AA8BF;--g-surf:30,39,58;--g-solid:#2A3550;--g-ink:#E8EDF6;--g-muted:#9AA8BF;--g-accent:#4F5FE4;--g-accent-ink:#AEB9FF;--g-rule:rgba(140,160,200,.28)}
@@ -2728,7 +2732,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
         <li><strong>Narrow it down</strong> with Today or Tomorrow, the region menu, or Find airport.</li>
         <li><strong>The triangle button</strong> at the top shows every active alert. Press an alert to go to it.</li>
         <li><strong>Full pages:</strong> under any airport or event, press the blue button for its own page, with the hour-by-hour forecast, the last 30 days, or a map and timeline. The <strong>chart button</strong> at the top opens the monthly report. These pages are for viewing only.</li>
-        <li><strong>Nearby camera:</strong> where a public webcam is close to an airport, the airport shows a camera button. It opens the camera on the airport page. It is someone else's camera, not an official weather report.</li>
+        <li><strong>Nearby camera:</strong> where a public webcam is close to an airport, selecting the airport plays that camera in the box at the bottom left of the map, in place of the runway close-up. The airport page shows it larger. It is someone else's camera, not an official weather report.</li>
         <li><strong>Close</strong> a selection with the X, or press an empty part of the map.</li>
       </ul>
     </div>
@@ -3930,6 +3934,19 @@ function nowFacts(a) {
 function airportInset() {
   var box = $('apInset'), a = S.sel ? byId(S.sel) : null, R = a && RWY[a.id];
   if (!box) { box = document.createElement('div'); box.id = 'apInset'; box.className = 'apinset'; box.hidden = true; $('vp').appendChild(box); }
+  // an airport with a working public webcam nearby shows the camera here instead of the runway drawing
+  var cam = a ? camFor(a.id) : null;
+  if (cam) {
+    var ck = a.id + ':' + cam.id;
+    if (box.getAttribute('data-cam') === ck && !box.hidden) return;          // already playing: do not restart it
+    var cname = cam.title.replace(/^.*?:\s*/, '').replace(/ › /g, ', '), cu = Date.parse(cam.updated || '');
+    box.className = 'apinset camin'; box.setAttribute('data-cam', ck);
+    box.innerHTML = '<div class="aph"><b>' + (cam.live ? 'Live camera' : 'Nearby camera') + '</b><span>' + esc(a.name) + ' · ' + esc(cname) + ', about ' + Math.round(cam.km) + ' km</span></div>' +
+      '<div class="camv"><iframe src="' + esc((cam.live || cam.day) + '?autoplay=1&loop=1') + '" title="' + esc('Webcam near ' + a.name) + '" allow="autoplay; fullscreen" allowfullscreen></iframe></div>' +
+      '<div class="apf">' + (cam.live ? 'Live video' : 'Last 24 hours, playing on repeat') + (cu ? '. Latest picture ' + phTime(cu) : '') + '. Not an official weather report. Webcams provided by windy.com</div>';
+    box.hidden = false; return;
+  }
+  if (box.getAttribute('data-cam')) { box.removeAttribute('data-cam'); box.className = 'apinset'; }
   if (!a || !R || !R.length) { box.hidden = true; box.innerHTML = ''; return; }
   var o = a.obs || {}, x = crossOf(a), W = 240, H = 200, cx = 120, cy = 102, K = 14, s = '';
   s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (10 * K) + '" class="r2"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (5 * K) + '" class="r1"/>' +

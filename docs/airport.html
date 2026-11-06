@@ -117,8 +117,8 @@
       var name = c.title.replace(/^.*?:\s*/, '').replace(/ › /g, ', ');
       var upd = c.updated ? Date.parse(c.updated) : 0;
       el.innerHTML = '<div class="card cam" id="camera"><div class="hd"><h2>Nearby camera' + (c.live ? ' <span class="pill normal" style="vertical-align:2px">Live</span>' : '') + '</h2><span class="sub">' + E(name) + ' · about ' + Math.round(c.km) + ' km from the airport</span></div>' +
-        '<div class="camframe"><iframe src="' + E(c.live || c.day) + '" title="' + E('Webcam: ' + name) + '" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
-        '<p class="sub" style="margin:8px 0 0">' + (c.live ? 'Live video' : 'Today\'s pictures as a timelapse; press play') + (upd ? '. Latest picture ' + AW.time(upd) + ' (' + AW.ago(upd) + ')' : '') + '. A public camera near the airport, not an official weather report. Webcams provided by <a href="' + E(c.link || 'https://www.windy.com/webcams') + '" target="_blank" rel="noopener">windy.com</a>.</p></div>';
+        '<div class="camframe"><iframe src="' + E((c.live || c.day) + '?autoplay=1&loop=1') + '" title="' + E('Webcam: ' + name) + '" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
+        '<p class="sub" style="margin:8px 0 0">' + (c.live ? 'Live video' : 'The last 24 hours of pictures, playing on repeat') + (upd ? '. Latest picture ' + AW.time(upd) + ' (' + AW.ago(upd) + ')' : '') + '. A public camera near the airport, not an official weather report. Webcams provided by <a href="' + E(c.link || 'https://www.windy.com/webcams') + '" target="_blank" rel="noopener">windy.com</a>.</p></div>';
       if (location.hash === '#camera') el.scrollIntoView({ block: 'start' });
     });
 
