@@ -59,27 +59,28 @@
       tile('Airport-days at Advisory or above', apDays, 'One airport on one day counts once') +
       tile('Hours at Warning', wH, 'Added up across airports') +
       tile('Thunderstorm hours at an airport (Danger)', dH, 'Added up across airports') +
-      tile('Days with a typhoon in reach', tyDays, 'of ' + n + ' days') +
+      tile('Days with a typhoon in reach', tyDays, 'of ' + AW.plural(n, 'day')) +
       tile('Days with a volcano alert', voDays, 'Raised level, eruption or ash') +
       tile('Earthquake flags', Object.keys(haz).filter(function (k) { return haz[k].kind === 'quake'; }).length, 'Within 100 km of an airport') +
       tile('Reported disruptions in the news', nwN, 'Strikes, roads, flights, power') + '</div>';
 
-    h += '<div class="cols ev"><div class="card"><div class="hd"><h2>Airports needing attention, day by day</h2><span class="sub">Airports at Advisory or above at any time that day</span></div><div id="lc"></div>' +
+    // two columns that stack their cards, so a short card never leaves a gap beside a tall one
+    var L = '<div class="card"><div class="hd"><h2>Airports needing attention, day by day</h2><span class="sub">Airports at Advisory or above at any time that day</span></div><div id="lc"></div>' +
       '<details class="tv"><summary>Show as a table</summary><div class="scrollx"><table class="tbl"><thead><tr><th>Day</th><th>Airports</th><th>Typhoon in reach</th></tr></thead><tbody>' +
       daily.map(function (x) { return '<tr><td>' + AW.day(AW.ymdMs(x.k)) + '</td><td>' + x.n + '</td><td>' + (x.ty ? 'Yes' : '') + '</td></tr>'; }).join('') + '</tbody></table></div></details></div>';
 
     var top = Object.keys(per).map(function (id) { return { id: id, v: per[id].w + per[id].d, days: per[id].days }; }).filter(function (x) { return x.v > 0 || x.days > 0; })
       .sort(function (a, b) { return b.v - a.v || b.days - a.days; }).slice(0, 10);
     var mx = Math.max.apply(null, top.map(function (x) { return x.v; }).concat([1]));
-    h += '<div class="card"><div class="hd"><h2>Most affected airports</h2><span class="sub">Hours at Warning or Danger</span></div>' + (top.length ? '<div class="bars">' + top.map(function (x) {
+    var R = '<div class="card"><div class="hd"><h2>Most affected airports</h2><span class="sub">Hours at Warning or Danger</span></div>' + (top.length ? '<div class="bars">' + top.map(function (x) {
       return '<a href="' + AW.apUrl(x.id) + '">' + E(names[x.id] || x.id) + '</a><span class="tr" title="' + E((names[x.id] || x.id) + ': ' + x.v + ' hours at Warning or Danger, ' + x.days + ' days at Advisory or above') + '"><i style="width:' + (x.v / mx * 100) + '%"></i></span><b>' + x.v + '</b>';
-    }).join('') + '</div>' : '<div class="empty">No airport reached Warning or Danger this month.</div>') + '</div></div>';
+    }).join('') + '</div>' : '<div class="empty">No airport reached Warning or Danger this month.</div>') + '</div>';
 
     var hot = Object.keys(heat).map(function (id) { return { id: id, v: heat[id] }; }).sort(function (a, b) { return b.v - a.v; }).slice(0, 8);
     var hl = function (v) { return v >= 52 ? 'xdanger' : v >= 42 ? 'danger' : v >= 33 ? 'xcaution' : v >= 27 ? 'caution' : null; };
-    h += '<div class="cols ev"><div class="card"><div class="hd"><h2>Hazards and disruptions this month</h2><span class="sub">Newest first</span></div>';
+    L += '<div class="card"><div class="hd"><h2>Hazards and disruptions this month</h2><span class="sub">Newest first</span></div>';
     var hz = Object.keys(haz).map(function (k) { return haz[k]; }).sort(function (a, b) { return a.last < b.last ? 1 : a.last > b.last ? -1 : 0; });
-    h += hz.length ? '<div class="scrollx"><table class="tbl"><thead><tr><th>Dates</th><th>Event</th><th>Airports</th><th>Highest</th></tr></thead><tbody>' + hz.map(function (x) {
+    L += hz.length ? '<div class="scrollx"><table class="tbl"><thead><tr><th>Dates</th><th>Event</th><th>Airports</th><th>Highest</th></tr></thead><tbody>' + hz.map(function (x) {
       var ap = Object.keys(x.aps).map(function (i) { return AW.short(names[i] || i); });
       var evKey = x.kind === 'volcano' ? 'v:' + x.vol : x.kind === 'typhoon' ? 't:' + x.key.slice(3) : null;
       var live = evKey && d.volcanoes ? AW.findEvent(d, evKey) : null;
@@ -87,10 +88,12 @@
       var dates = x.first === x.last ? AW.day(AW.ymdMs(x.first)) : AW.day(AW.ymdMs(x.first)) + ' to ' + AW.day(AW.ymdMs(x.last));
       return '<tr><td style="white-space:nowrap">' + dates + '</td><td><span class="pill ' + KCLS[x.kind] + '" style="margin-right:6px">' + KIND[x.kind] + '</span>' + title + (x.src ? ' <span class="sub">· ' + E(x.src) + '</span>' : '') + '</td><td>' + (ap.length ? E(AW.list(ap)) : '<span class="sub">None named</span>') + '</td><td>' + (LV[x.lv] ? '<span class="pill ' + (x.lv === 'possible' ? 'warning' : x.lv === 'awareness' ? 'flag' : x.lv) + '">' + LV[x.lv] + '</span>' : '') + '</td></tr>';
     }).join('') + '</tbody></table></div>' : '<div class="empty">No typhoon, volcano or earthquake alert and no reported disruption reached an airport this month.</div>';
-    h += '</div><div class="card"><div class="hd"><h2>Highest heat index</h2><span class="sub">Hottest reading at each airport</span></div>' + (hot.length ? '<div class="bars">' + hot.map(function (x) {
+    L += '</div>';
+    R += '<div class="card"><div class="hd"><h2>Highest heat index</h2><span class="sub">Hottest reading at each airport</span></div>' + (hot.length ? '<div class="bars">' + hot.map(function (x) {
       var lv = hl(x.v);
       return '<a href="' + AW.apUrl(x.id) + '">' + E(names[x.id] || x.id) + '</a><span class="tr"><i style="width:' + Math.max(4, (x.v - 20) / 35 * 100) + '%;background:var(--' + ({ caution: 'h1', xcaution: 'h2', danger: 'h3', xdanger: 'h4' }[lv] || 'rule2') + ')"></i></span><b>' + x.v + '°</b>';
-    }).join('') + '</div><div class="legend"><span><i class="sw" style="background:var(--h1)"></i>Caution</span><span><i class="sw" style="background:var(--h2)"></i>Extreme caution</span><span><i class="sw" style="background:var(--h3)"></i>Danger</span><span><i class="sw" style="background:var(--h4)"></i>Extreme danger</span></div>' : '<div class="empty">No heat index recorded yet.</div>') + '</div></div>';
+    }).join('') + '</div><div class="legend"><span><i class="sw" style="background:var(--h1)"></i>Caution</span><span><i class="sw" style="background:var(--h2)"></i>Extreme caution</span><span><i class="sw" style="background:var(--h3)"></i>Danger</span><span><i class="sw" style="background:var(--h4)"></i>Extreme danger</span></div>' : '<div class="empty">No heat index recorded yet.</div>') + '</div>';
+    h += '<div class="cols ev"><div class="stack">' + L + '</div><div class="stack">' + R + '</div></div>';
     h += '<footer class="foot">View only. Counts come from the dashboard\'s saved record, not from official statistics.</footer>';
     app.innerHTML = h;
     var s = AW.$('mSel'); if (s) s.addEventListener('change', function () { location.href = 'report.html?month=' + s.value; });
