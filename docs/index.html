@@ -4418,7 +4418,7 @@ document.addEventListener('click', function (e) {
   if (!GLASS || !(S.sel || S.qk || S.vk || S.tk)) return;
   var t = e.target; if (!t || !t.closest || !document.contains(t)) return;
   if (!WIDE.matches && !t.closest('#vp')) return;      // on a phone, only a tap on an empty part of the map lets go of the selection
-  if (t.closest('.fltp, #fltCard, .col.side, .pin button, .alert, #alertBar, #alertBtn, #kpis, header.top, .zoom, .lyrbtn, .lyr, .tour, .mapfoot, .modal, .notice, [data-q], [data-v], [data-a], [data-t], select, a')) return;
+  if (t.closest('.fltp, #fltCard, .col.side, .newspanel, .newsvid, .pin button, .alert, #alertBar, #alertBtn, #kpis, header.top, .zoom, .lyrbtn, .lyr, .tour, .mapfoot, .modal, .notice, [data-q], [data-v], [data-a], [data-t], select, a')) return;
   clearSel();
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && GLASS && (S.sel || S.qk || S.vk || S.tk) && !modal.classList.contains('open') && !WX.open) clearSel(); });
