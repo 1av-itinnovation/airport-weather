@@ -71,7 +71,6 @@
           return '<div class="day"><b>' + new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', timeZone: AW.TZ }).format(new Date(ms)) + '</b><span>' + w[4] + '° / ' + w[5] + '°</span><span class="muted">' + (w[1] == null ? '–' : w[1] + '% rain') + '</span>' + (w[6] ? '<span class="muted">' + w[6] + ' mm</span>' : '') + '</div>';
         }).join('') + '</div></div>';
     }
-    main = '<div id="camSlot"></div>' + main;
     main += '<div class="card" id="hist"><div class="hd"><h2>Last 30 days at this airport</h2><span class="sub">From the dashboard\'s saved history</span></div><div class="empty">Loading history…</div></div>';
 
     /* side */
@@ -104,21 +103,23 @@
       return '<div class="story">' + E(u.title) + '<span>' + E(u.when) + (u.scope === 'national' ? ' · nationwide' : '') + '</span></div>';
     }).join('') : '<span class="sub">No holiday or planned event entered for the next ' + (d.upcoming_days || 7) + ' days.</span>') + '</div></div>';
 
-    side += '<div class="card"><h2 style="margin-bottom:8px">About this information</h2><p class="sub" style="margin:0 0 6px"><b>How sure:</b> ' + E(a.conf) + '</p><p class="sub" style="margin:0"><b>Source:</b> ' + E(a.src) + '</p></div>';
+    side += '<div id="camSlot"></div><div class="card"><h2 style="margin-bottom:8px">About this information</h2><p class="sub" style="margin:0 0 6px"><b>How sure:</b> ' + E(a.conf) + '</p><p class="sub" style="margin:0"><b>Source:</b> ' + E(a.src) + '</p></div>';
 
     app.innerHTML = AW.header(['Airports', a.name], d, opts) + h + '<div class="cols"><div class="stack">' + main + '</div><aside class="stack">' + side + '</aside></div>' +
       '<footer class="foot">View only. For the full picture, open the <a href="./">dashboard</a>.</footer>';
     wire();
 
-    /* nearby public webcam (Windy): only shown when one is working */
+    /* nearby cameras: a player when one may be shown here, and links to cameras on other sites */
     AW.loadOpt('webcams.json').then(function (W) {
-      var list = ((W && W.airports) || {})[a.id] || [], c = list.filter(function (x) { return x.active; })[0], el = AW.$('camSlot');
-      if (!c || !el) return;
-      var name = c.title.replace(/^.*?:\s*/, '').replace(/ › /g, ', ');
-      var upd = c.updated ? Date.parse(c.updated) : 0;
-      el.innerHTML = '<div class="card cam" id="camera"><div class="hd"><h2>Nearby camera' + (c.live ? ' <span class="pill normal" style="vertical-align:2px">Live</span>' : '') + '</h2><span class="sub">' + E(name) + ' · about ' + Math.round(c.km) + ' km from the airport</span></div>' +
-        '<div class="camframe"><iframe src="' + E((c.live || c.day) + '?autoplay=1&loop=1') + '" title="' + E('Webcam: ' + name) + '" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
-        '<p class="sub" style="margin:8px 0 0">' + (c.live ? 'Live video' : 'The last 24 hours of pictures, playing on repeat') + (upd ? '. Latest picture ' + AW.time(upd) + ' (' + AW.ago(upd) + ')' : '') + '. A public camera near the airport, not an official weather report. Webcams provided by <a href="' + E(c.link || 'https://www.windy.com/webcams') + '" target="_blank" rel="noopener">windy.com</a>.</p></div>';
+      var pk = AW.camPick(W, a.id), el = AW.$('camSlot'), p = pk.player;
+      if (!el || (!p && !pk.links.length)) return;
+      var h = '<div class="card cam" id="camera"><div class="hd"><h2>Nearby camera' + (p && p.kind === 'youtube' ? ' <span class="pill normal" style="vertical-align:2px">Live</span>' : '') + '</h2>' + (p && p.km != null ? '<span class="sub">About ' + Math.round(p.km) + ' km away</span>' : '') + '</div>';
+      if (p) h += '<div class="camframe"><iframe src="' + E(p.src) + '" title="' + E('Camera: ' + p.title) + '" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
+        '<p class="sub" style="margin:8px 0 0"><b style="color:var(--ink)">' + E(p.title) + '</b><br>' + E(AW.camCaption(p)) + ' A public camera, not an official weather report.</p>';
+      if (pk.links.length) h += '<div class="camlinks"><span class="k">' + (p ? 'More cameras' : 'Cameras on other sites') + '</span>' + pk.links.map(function (l) {
+        return '<a href="' + E(l.url) + '" target="_blank" rel="noopener"><b>' + E(l.title) + '</b><span>' + E((l.by ? l.by + ' · ' : '') + (l.note || 'Opens the camera\'s own page')) + '</span></a>';
+      }).join('') + '</div>';
+      el.innerHTML = h + '</div>';
       if (location.hash === '#camera') el.scrollIntoView({ block: 'start' });
     });
 

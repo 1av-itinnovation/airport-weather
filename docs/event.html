@@ -80,10 +80,19 @@
     aff += '</div>';
 
     app.innerHTML = AW.header(['Events', o.title], d, opts) + h +
-      '<div class="cols ev"><div class="stack"><div class="card"><div id="mm"></div><div class="cap">' + E(ring && onmap ? ring.cap : (onmap ? '' : AW.short(o.dname || o.name || o.title) + ' is outside this map; its marker sits at the edge, in its direction.')) + (track && track.length > 1 ? ' Dotted line: forecast track.' : '') + '</div></div>' + aff + '<div class="tiles" id="stats"></div></div><div class="stack"><div class="card" id="tlc"><div class="hd"><h2>Timeline</h2><span class="sub">Newest first · Philippine time</span></div><div class="empty">Loading…</div></div></div></div>' +
+      '<div class="cols ev"><div class="stack"><div class="card"><div id="mm"></div><div class="cap">' + E(ring && onmap ? ring.cap : (onmap ? '' : AW.short(o.dname || o.name || o.title) + ' is outside this map; its marker sits at the edge, in its direction.')) + (track && track.length > 1 ? ' Dotted line: forecast track.' : '') + '</div></div><div id="evCam"></div>' + aff + '<div class="tiles" id="stats"></div></div><div class="stack"><div class="card" id="tlc"><div class="hd"><h2>Timeline</h2><span class="sub">Newest first · Philippine time</span></div><div class="empty">Loading…</div></div></div></div>' +
       '<footer class="foot">View only. For the full picture, open the <a href="./">dashboard</a>.</footer>';
     wire();
     AW.miniMap(AW.$('mm'), { fit: fit, pins: pins, rings: ring && onmap ? [{ x: o.x, y: o.y, km: ring.km, lat: ring.lat, cls: ring.cls }] : [], track: track, alt: 'Map of ' + o.title + ' and the airports it reaches', maxZoom: 6 });
+
+    /* live camera of the volcano (cameras.json), playing muted on its own */
+    if (k === 'volc') AW.loadOpt('webcams.json').then(function (W) {
+      var c = (((W || {}).volcanoes || {})[o.id] || []).filter(function (x) { return x.youtube; })[0], el = AW.$('evCam');
+      if (!c || !el) return;
+      el.innerHTML = '<div class="card"><div class="hd"><h2>Live camera <span class="pill normal" style="vertical-align:2px">Live</span></h2><span class="sub">' + E(c.source || 'YouTube') + '</span></div>' +
+        '<div class="camframe"><iframe src="' + E(AW.ytSrc(c.youtube)) + '" title="' + E('Live camera: ' + o.title) + '" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
+        '<p class="sub" style="margin:8px 0 0">' + E(c.title) + '. Live video, playing muted. A public camera, not an official PHIVOLCS observation.</p></div>';
+    });
 
     /* timeline: saved history, the latest official status, and news */
     var stories = ((d.news || {})[ev.key] || []).slice();

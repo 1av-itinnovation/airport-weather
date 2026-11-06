@@ -179,3 +179,25 @@ AW.monthsBack = function (ms, n) {
   return out;
 };
 AW.monthName = function (ym) { return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7) - 1, 15))); };
+
+/* ---------- nearby cameras (docs/webcams.json) ----------
+   Order of preference for the player: a YouTube live stream (real video), then a Windy webcam (the last
+   24 hours of pictures on repeat, ending with the newest). Cameras from sites that do not allow their video
+   on other websites (SkylineWebcams, EarthCam) are listed as links. */
+AW.camPick = function (W, id) {
+  W = W || {}; var out = { player: null, links: [] };
+  var yt = ((W.youtube || {})[id] || [])[0];
+  var ex = (W.extra || {})[id] || [];
+  var exyt = ex.filter(function (c) { return c.youtube; })[0];
+  var win = ((W.airports || {})[id] || []).filter(function (c) { return c.active; })[0];
+  if (yt) out.player = { kind: 'youtube', title: yt.title, by: yt.channel, src: AW.ytSrc(yt.id), link: 'https://www.youtube.com/watch?v=' + yt.id };
+  else if (exyt) out.player = { kind: 'youtube', title: exyt.title, by: exyt.source || 'YouTube', src: AW.ytSrc(exyt.youtube), link: 'https://www.youtube.com/watch?v=' + exyt.youtube };
+  else if (win) out.player = { kind: 'windy', title: AW.camName(win.title), km: win.km, src: 'https://webcams.windy.com/webcams/public/embed/player/' + encodeURIComponent(win.id) + '/day?autoplay=1&loop=1', link: win.link || 'https://www.windy.com/webcams' };
+  ex.forEach(function (c) { if (c.url) out.links.push({ title: c.title, by: c.source, url: c.url, note: c.note }); });
+  return out;
+};
+AW.ytSrc = function (v) { return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(v) + '?autoplay=1&mute=1&playsinline=1&loop=1&playlist=' + encodeURIComponent(v) + '&rel=0&modestbranding=1'; };
+AW.camName = function (t) { return String(t || '').replace(/^.*?:\s*/, '').replace(/ › /g, ', '); };
+AW.camCaption = function (p) {
+  return p.kind === 'youtube' ? 'Live video from YouTube (' + p.by + '), playing muted.' : 'The last 24 hours of pictures on repeat, ending with the newest. Webcams provided by windy.com.';
+};

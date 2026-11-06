@@ -2732,7 +2732,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
         <li><strong>Narrow it down</strong> with Today or Tomorrow, the region menu, or Find airport.</li>
         <li><strong>The triangle button</strong> at the top shows every active alert. Press an alert to go to it.</li>
         <li><strong>Full pages:</strong> under any airport or event, press the blue button for its own page, with the hour-by-hour forecast, the last 30 days, or a map and timeline. The <strong>chart button</strong> at the top opens the monthly report. These pages are for viewing only.</li>
-        <li><strong>Nearby camera:</strong> where a public webcam is close to an airport, selecting the airport plays that camera in the box at the bottom left of the map, in place of the runway close-up. The airport page shows it larger. It is someone else's camera, not an official weather report.</li>
+        <li><strong>Nearby camera:</strong> where a public webcam is close to an airport, selecting the airport plays that camera in the box at the bottom left of the map, in place of the runway close-up: live video where there is a YouTube stream, otherwise the last 24 hours of pictures on repeat. The airport page shows it too, with links to cameras on other sites. Selecting Mayon, Bulusan, Taal or Kanlaon plays that volcano's live camera in the same box. It is someone else's camera, not an official weather report.</li>
         <li><strong>Close</strong> a selection with the X, or press an empty part of the map.</li>
       </ul>
     </div>
@@ -3293,7 +3293,7 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
   if (a) {
     d.innerHTML = '<div class="detail ap">' + sceneBanner(a) +
-      (tyHit(a) ? todoBox('typhoon', tyHit(a).c.todo) : '') + todoBox(a.level, a.todo) + fltBlock(a) + camBlock(a) + nowFacts(a) + heatField(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
+      (tyHit(a) ? todoBox('typhoon', tyHit(a).c.todo) : '') + todoBox(a.level, a.todo) + fltBlock(a) + nowFacts(a) + heatField(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
       fold('out', 'Tomorrow and the week ahead', '', field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days))) +
       fold('about', 'About this reading', a.est ? 'Estimate' : 'Official report', field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src)) + '</div>';
   } else if (q) {
@@ -3934,16 +3934,16 @@ function nowFacts(a) {
 function airportInset() {
   var box = $('apInset'), a = S.sel ? byId(S.sel) : null, R = a && RWY[a.id];
   if (!box) { box = document.createElement('div'); box.id = 'apInset'; box.className = 'apinset'; box.hidden = true; $('vp').appendChild(box); }
-  // an airport with a working public webcam nearby shows the camera here instead of the runway drawing
-  var cam = a ? camFor(a.id) : null;
+  // an airport with a camera nearby plays it here instead of the runway drawing
+  var cam = a ? camPlayer(a.id) : null, vsel = (!a && S.vk && !S.qk) ? volcanoById(S.vk) : null;
+  if (!cam && vsel) { cam = volcanoCam(vsel.id); if (cam) a = { id: 'v:' + vsel.id, name: vsel.title }; }
   if (cam) {
-    var ck = a.id + ':' + cam.id;
+    var ck = a.id + ':' + cam.key;
     if (box.getAttribute('data-cam') === ck && !box.hidden) return;          // already playing: do not restart it
-    var cname = cam.title.replace(/^.*?:\s*/, '').replace(/ › /g, ', '), cu = Date.parse(cam.updated || '');
-    box.className = 'apinset camin'; box.setAttribute('data-cam', ck);
-    box.innerHTML = '<div class="aph"><b>' + (cam.live ? 'Live camera' : 'Nearby camera') + '</b><span>' + esc(a.name) + ' · ' + esc(cname) + ', about ' + Math.round(cam.km) + ' km</span></div>' +
-      '<div class="camv"><iframe src="' + esc((cam.live || cam.day) + '?autoplay=1&loop=1') + '" title="' + esc('Webcam near ' + a.name) + '" allow="autoplay; fullscreen" allowfullscreen></iframe></div>' +
-      '<div class="apf">' + (cam.live ? 'Live video' : 'Last 24 hours, playing on repeat') + (cu ? '. Latest picture ' + phTime(cu) : '') + '. Not an official weather report. Webcams provided by windy.com</div>';
+    box.className = 'apinset camin'; box.setAttribute('data-cam', ck); box.setAttribute('data-at', Date.now());
+    box.innerHTML = '<div class="aph"><b>' + (cam.vol ? 'Volcano camera' : 'Nearby camera') + '</b><span>' + (cam.vol ? esc(cam.name) : esc(a.name) + ' · ' + esc(cam.name)) + '</span></div>' +
+      '<div class="camv"><iframe src="' + esc(cam.src) + '" title="' + esc('Camera: ' + a.name) + '" allow="autoplay; encrypted-media; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
+      '<div class="apf">' + esc(cam.cap) + (cam.vol ? ' Not an official PHIVOLCS observation.' : ' Not an official weather report.') + '</div>';
     box.hidden = false; return;
   }
   if (box.getAttribute('data-cam')) { box.removeAttribute('data-cam'); box.className = 'apinset'; }
@@ -4682,9 +4682,26 @@ requestAnimationFrame(rainTick);
 var CAMS = null, CAMS_AT = 0;
 function loadCams() {
   if (Date.now() - CAMS_AT < 3600000) return; CAMS_AT = Date.now();
-  fetch('webcams.json?t=' + Math.floor(Date.now() / 3600000), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j && j.airports) { CAMS = j; if (S.sel) applyState(); } }).catch(function () {});
+  fetch('webcams.json?t=' + Math.floor(Date.now() / 3600000), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j && j.airports) { CAMS = j; if (S.sel || S.vk) applyState(); } }).catch(function () {});
 }
 function camFor(id) { var l = CAMS && CAMS.airports && CAMS.airports[id]; return l ? l.filter(function (c) { return c.active; })[0] || null : null; }
+// a volcano's live camera, from cameras.json
+function volcanoCam(vid) {
+  var c = CAMS && ((CAMS.volcanoes || {})[vid] || []).filter(function (x) { return x.youtube; })[0];
+  return c ? { vol: true, key: 'y' + c.youtube, src: 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(c.youtube) + '?autoplay=1&mute=1&playsinline=1&loop=1&playlist=' + encodeURIComponent(c.youtube) + '&rel=0&modestbranding=1', name: c.title, cap: 'Live video' + (c.source ? ' (' + c.source + ')' : '') + ', muted.' } : null;
+}
+// the camera to play in the map box: a YouTube live stream first (real video), then a Windy webcam
+function camPlayer(id) {
+  if (!CAMS) return null;
+  var yt = ((CAMS.youtube || {})[id] || [])[0], ex = ((CAMS.extra || {})[id] || []).filter(function (c) { return c.youtube; })[0], w = camFor(id);
+  var ys = function (v) { return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(v) + '?autoplay=1&mute=1&playsinline=1&loop=1&playlist=' + encodeURIComponent(v) + '&rel=0&modestbranding=1'; };
+  if (yt) return { key: 'y' + yt.id, src: ys(yt.id), name: yt.title, cap: 'Live video from YouTube (' + yt.channel + '), muted.' };
+  if (ex) return { key: 'y' + ex.youtube, src: ys(ex.youtube), name: ex.title, cap: 'Live video' + (ex.source ? ' (' + ex.source + ')' : '') + ', muted.' };
+  if (w) return { key: 'w' + w.id, src: 'https://webcams.windy.com/webcams/public/embed/player/' + encodeURIComponent(w.id) + '/day?autoplay=1&loop=1', name: w.title.replace(/^.*?:\s*/, '').replace(/ › /g, ', ') + ', about ' + Math.round(w.km) + ' km', cap: 'Last 24 hours on repeat, ending with the newest picture. Webcams provided by windy.com.' };
+  return null;
+}
+// a Windy timelapse is reloaded every 30 minutes so its last picture stays the newest
+setInterval(function () { var b = document.getElementById('apInset'), f = b && !b.hidden && b.querySelector('.camv iframe'); if (!f || f.src.indexOf('windy.com') < 0) return; if (Date.now() - (+b.getAttribute('data-at') || 0) > 1800000) { b.setAttribute('data-at', Date.now()); f.src = f.src; } }, 60000);
 function camBlock(a) {
   var c = camFor(a.id); if (!c) return '';
   return '<a class="camlink" href="airport.html?id=' + encodeURIComponent(a.id) + '#camera"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h12v9H3zM15 10.5l6-3v9l-6-3"/></svg><span><b>Nearby camera' + (c.live ? ' (live video)' : '') + '</b><span>' + esc(c.title.replace(/^.*?:\s*/, '').replace(/ › /g, ', ')) + ', about ' + Math.round(c.km) + ' km away</span></span><i aria-hidden="true">View</i></a>';
