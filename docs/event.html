@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event | Disruption Management Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%85%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="pages.css">
+<script src="pages.js"></script>
+</head>
+<body>
+<div class="wrap" id="app"><div class="loading">Loading the latest event data…</div></div>
+<script>
+(function () {
+  var E = AW.esc, app = AW.$('app'), key = AW.param('id');
+  var COLOR = { volc: 'var(--volc)', typh: 'var(--typh)', quake: 'var(--quake)' };
+  AW.load('data.json').then(function (d) {
+    var evs = AW.currentEvents(d), ev = AW.findEvent(d, key);
+    var opts = evs.length ? '<label class="vh" for="evSel">Choose an event</label><select class="sel" id="evSel">' + (ev ? '' : '<option value="">Choose an event</option>') +
+      evs.map(function (x) { return '<option value="' + E(x.key) + '"' + (ev && x.key === ev.key ? ' selected' : '') + '>' + E(x.title) + '</option>'; }).join('') + '</select>' : '';
+    if (!ev) { app.innerHTML = AW.header(['Events'], d, opts) + listView(d, evs, key); wire(); return; }
+    var o = ev.o, k = ev.kind, apById = {};
+    (d.airports || []).forEach(function (a) { apById[a.id] = a; });
+    var byName = {}; (d.airports || []).forEach(function (a) { byName[a.name] = a; });
+    document.title = o.title + ' | Disruption Management Dashboard';
+
+    /* what this event is, which airports it reaches, and how the map should look */
+    var tag, tagCls = k, lead = [], affected = [], ring = null, hkey, todo = o.todo, src = o.src, track = null, srcPt = { x: o.x, y: o.y };
+    if (k === 'volc') {
+      tag = o.level ? 'Alert Level ' + o.level : 'Volcano';
+      lead = [o.levelline, o.eruptline, o.ashline];
+      AW.nearList(o.near, d).forEach(function (n) { affected.push({ a: byName[n.name], km: n.km, note: (o.hits || []).indexOf(n.name) >= 0 ? 'Ash forecast over the airport' : 'No ash forecast' }); });
+      (o.hits || []).forEach(function (nm) { if (!affected.some(function (x) { return x.a && x.a.name === nm; }) && byName[nm]) affected.push({ a: byName[nm], km: Math.round(AW.km(o.lat, o.lon, byName[nm].lat, byName[nm].lon)), note: 'Ash forecast over the airport' }); });
+      ring = { km: d.volcano_km || 150, lat: o.lat, cls: '', cap: 'Dashed circle: ' + (d.volcano_km || 150) + ' km from the summit, the distance the dashboard watches.' };
+      hkey = 'vo:' + o.id;
+    } else if (k === 'typh') {
+      tag = o.word || 'Tropical cyclone'; tagCls = 'typh';
+      lead = [o.where, o.windline, o.reachline, o.fcline, o.cross];
+      (o.now || []).forEach(function (nm) { if (byName[nm]) affected.push({ a: byName[nm], note: 'Strong winds can reach now', lv: 'danger' }); });
+      (o.soon || []).forEach(function (nm) { if (byName[nm]) affected.push({ a: byName[nm], note: 'Strong winds can reach within 24 hours', lv: 'warning' }); });
+      affected.forEach(function (x) { x.km = Math.round(AW.km(o.lat, o.lon, x.a.lat, x.a.lon)); });
+      if (o.reach) ring = { km: o.reach, lat: o.lat, cls: 'typh', cap: 'Shaded circle: how far strong winds reach now (about ' + o.reach + ' km).' };
+      track = (o.track || []).map(function (p) { return { x: p.x, y: p.y }; });
+      if (track.length) track.unshift({ x: o.x, y: o.y });
+      hkey = 'ty:' + String(o.name || '').toLowerCase();
+    } else {
+      tag = 'Magnitude ' + (+o.mag).toFixed(1); tagCls = 'quake';
+      lead = [o.where + ' ' + o.when, o.depth, o.near, o.tsu, o.magnote, o.after];
+      (o.hits || []).forEach(function (nm) { if (byName[nm]) affected.push({ a: byName[nm], km: Math.round(AW.km(o.lat, o.lon, byName[nm].lat, byName[nm].lon)), note: 'Within 100 km: check runways and facilities' }); });
+      ring = { km: 100, lat: o.lat, cls: 'quake', cap: 'Dashed circle: 100 km from the epicentre, the distance the dashboard flags.' };
+      hkey = 'eq:' + o.ms;
+    }
+    lead = lead.filter(function (x) { return x && String(x).trim(); });
+    affected = affected.filter(function (x) { return x.a; });
+
+    var h = '<section class="card hero"><div class="t"><h1>' + E(o.title) + '</h1><span class="pill ' + tagCls + '">' + E(tag) + '</span>' +
+      '<span class="pill flag">' + (affected.length ? AW.plural(affected.length, 'airport') + ' affected' : 'No airport affected') + '</span></div>' +
+      '<p class="lead">' + lead.map(E).join(' ') + '</p>' + (src ? '<span class="srcl">' + E(src) + '</span>' : '') + '</section>';
+
+    /* map + affected airports */
+    var fit = [{ x: Math.max(-10, Math.min(110, o.x)), y: Math.max(-10, Math.min(110, o.y)) }];
+    affected.forEach(function (x) { fit.push({ x: x.a.x, y: x.a.y }); });
+    if (ring && o.x > -5 && o.x < 105 && o.y > -5 && o.y < 105) {
+      var rx = ring.km / (111.32 * Math.cos(o.lat * Math.PI / 180)) * 8.69278161, ry = ring.km / 110.57 * 5.91775171;
+      fit.push({ x: o.x - rx, y: o.y - ry }, { x: o.x + rx, y: o.y + ry });
+    }
+    if (track) track.forEach(function (p) { if (p.x > -30 && p.x < 130 && p.y > -30 && p.y < 130) fit.push(p); });
+    var onmap = o.x >= 0 && o.x <= 100 && o.y >= 0 && o.y <= 100;
+    if (!onmap && !affected.length) fit = [{ x: 0, y: 0 }, { x: 100, y: 100 }];
+    var pins = affected.map(function (x) { return { x: x.a.x, y: x.a.y, label: AW.short(x.a.name) + (x.km != null ? ', ' + x.km + ' km' : ''), color: AW.LVCOLOR[x.a.level] }; });
+    var sx = Math.max(2, Math.min(98, o.x)), sy = Math.max(2, Math.min(98, o.y));
+    pins.unshift({ x: sx, y: sy, label: AW.short(o.dname || o.name || o.title) + (onmap ? '' : ' (off the map)'), color: COLOR[k], cls: 'src' });
+
+    var aff = '<div class="card"><div class="hd"><h2>Airports affected</h2><span class="sub">Weather level now, nearest first</span></div>';
+    affected.sort(function (x, y) { return (x.km || 0) - (y.km || 0); });
+    aff += affected.length ? '<div class="rows">' + affected.map(function (x) {
+      return '<div class="row"><div class="nm"><a href="' + AW.apUrl(x.a.id) + '">' + E(x.a.name) + '</a><span>' + (x.km != null ? 'About ' + x.km + ' km · ' : '') + E(x.note) + '</span></div>' + AW.pill(x.a.level, 'Weather: ' + AW.LEVEL[x.a.level]) + '</div>';
+    }).join('') + '</div>' : '<p class="sub" style="margin:0">No Cebu Pacific or Cebgo airport is within reach of this event right now.</p>';
+    if (todo) aff += '<div class="haz ' + k + '" style="margin-top:12px"><div class="tx"><span><b>What to do:</b> ' + E(todo) + '</span></div></div>';
+    aff += '</div>';
+
+    app.innerHTML = AW.header(['Events', o.title], d, opts) + h +
+      '<div class="cols ev"><div class="stack"><div class="card"><div id="mm"></div><div class="cap">' + E(ring && onmap ? ring.cap : (onmap ? '' : AW.short(o.dname || o.name || o.title) + ' is outside this map; its marker sits at the edge, in its direction.')) + (track && track.length > 1 ? ' Dotted line: forecast track.' : '') + '</div></div>' + aff + '<div class="tiles" id="stats"></div></div><div class="stack"><div class="card" id="tlc"><div class="hd"><h2>Timeline</h2><span class="sub">Newest first · Philippine time</span></div><div class="empty">Loading…</div></div></div></div>' +
+      '<footer class="foot">View only. For the full picture, open the <a href="./">dashboard</a>.</footer>';
+    wire();
+    AW.miniMap(AW.$('mm'), { fit: fit, pins: pins, rings: ring && onmap ? [{ x: o.x, y: o.y, km: ring.km, lat: ring.lat, cls: ring.cls }] : [], track: track, alt: 'Map of ' + o.title + ' and the airports it reaches', maxZoom: 6 });
+
+    /* timeline: saved history, the latest official status, and news */
+    var stories = ((d.news || {})[ev.key] || []).slice();
+    AW.loadHistory(AW.monthsBack(d.generated_ms || Date.now(), 3)).then(function (H) {
+      var items = [], hdays = 0, flagged = {}, seen = [];
+      H.forEach(function (m) {
+        Object.keys(m.days || {}).forEach(function (day) {
+          var z = (m.days[day].haz || {})[hkey]; if (!z) return;
+          hdays++; (z.aps || []).forEach(function (i) { flagged[i] = 1; });
+          seen.push({ day: day, z: z, names: (z.aps || []).map(function (i) { return AW.short((apById[i] || {}).name || m.airports[i] || i); }) });
+        });
+      });
+      // one timeline entry for each run of days where the same airports were flagged at the same level
+      seen.sort(function (x, y) { return x.day < y.day ? -1 : 1; });
+      var runs = [];
+      seen.forEach(function (x) {
+        var r = runs[runs.length - 1], sig = x.names.join('|') + '#' + x.z.lv;
+        if (r && r.sig === sig && AW.ymdMs(x.day) - AW.ymdMs(r.last) <= 864e5 + 1) { r.last = x.day; r.n++; }
+        else runs.push({ sig: sig, first: x.day, last: x.day, n: 1, z: x.z, names: x.names });
+      });
+      var today = AW.ymd(d.generated_ms || Date.now());
+      runs.forEach(function (r) {
+        var lvw = AW.LEVEL[r.z.lv === 'possible' ? 'advisory' : r.z.lv], nm = r.names.length ? AW.plural(r.names.length, 'airport') : '';
+        var span = r.n === 1 ? '' : (r.last === today ? 'Since ' + AW.day(AW.ymdMs(r.first)) + ' (' + r.n + ' days)' : AW.day(AW.ymdMs(r.first)) + ' to ' + AW.day(AW.ymdMs(r.last)) + ' (' + r.n + ' days)');
+        items.push({ ms: r.z.first && r.n === 1 ? r.z.first : AW.ymdMs(r.first), cls: 'k-dash', t: nm ? (r.last === today ? 'Dashboard is flagging ' : 'Dashboard flagged ') + nm : 'Dashboard tracked this event',
+          s: [r.names.length ? AW.list(r.names) + '.' : '', span].filter(Boolean).join(' '), src: 'Dashboard · ' + lvw });
+      });
+      var now = d.generated_ms || Date.now();
+      if (k === 'volc') items.push({ ms: now, cls: 'k-official', t: o.level ? 'PHIVOLCS: Alert Level ' + o.level : 'Latest official status', s: o.levelline, src: 'Official · latest check' });
+      if (k === 'volc' && o.erupt_ms) items.push({ ms: o.erupt_ms, cls: 'k-official', t: 'Eruption reported', s: o.eruptline, src: 'Official' });
+      if (k === 'quake') items.push({ ms: o.ms, cls: 'k-official', t: o.title, s: o.where, src: 'Official · ' + o.src });
+      if (k === 'typh') items.push({ ms: o.ms || now, cls: 'k-official', t: 'Latest warning: ' + o.title, s: o.where, src: 'Official · RSMC Tokyo and aviation storm warnings' });
+      stories.forEach(function (s) { items.push({ ms: s.ms, cls: '', t: s.title, link: s.link, src: s.src + (s.impact ? ' · ' + AW.IMPACT[s.impact] : '') }); });
+      items.sort(function (x, y) { return y.ms - x.ms; });
+      var el = AW.$('tlc');
+      el.innerHTML = '<div class="hd"><h2>Timeline</h2><span class="sub">Newest first · Philippine time</span></div>' + (items.length ? '<div class="tl">' + items.slice(0, 40).map(function (x) {
+        return '<div class="it ' + x.cls + '"><span class="d">' + AW.day(x.ms) + '<br>' + AW.time(x.ms) + '</span><span class="dot"><i></i></span><div class="tx">' +
+          (x.link ? '<a href="' + E(x.link) + '" target="_blank" rel="noopener">' + E(x.t) + '</a>' : '<b>' + E(x.t) + '</b>') + (x.s ? '<span>' + E(x.s) + '</span>' : '') + '<small>' + E(x.src) + '</small></div></div>';
+      }).join('') + '</div>' : '<div class="empty">Nothing recorded yet.</div>') +
+        (hdays ? '' : '<p class="sub" style="margin:8px 0 0">The dashboard began keeping history in November 2026, so earlier days of this event are not in the timeline.</p>');
+      AW.$('stats').innerHTML = '<div class="tile"><span class="l">Days tracked by the dashboard</span><b>' + hdays + '</b></div><div class="tile"><span class="l">Airports flagged so far</span><b>' + Math.max(Object.keys(flagged).length, affected.length) + '</b></div><div class="tile"><span class="l">Stories and bulletins</span><b>' + stories.length + '</b></div>';
+    });
+  }).catch(function () { AW.fail(app, 'The latest data could not be loaded. Please try again in a moment.'); });
+
+  function listView(d, evs, key) {
+    var KW = { volc: 'Volcano', typh: 'Typhoon', quake: 'Earthquake' };
+    var h = '<section class="card hero"><h1>Events</h1><p class="lead">' + (key ? 'That event is no longer active. ' : '') + 'Volcanoes, typhoons and earthquakes the dashboard is watching right now. Open one for its map, affected airports and timeline.</p></section>';
+    h += '<div class="card">' + (evs.length ? '<div class="rows">' + evs.map(function (x) {
+      return '<div class="row"><div class="nm"><a href="' + AW.evUrl(x.key) + '">' + E(x.title) + '</a><span>' + E(x.sub) + (x.line ? ' · ' + E(x.line) : '') + '</span></div><span class="pill ' + x.kind + '">' + KW[x.kind] + '</span></div>';
+    }).join('') + '</div>' : '<div class="empty">No volcano, typhoon or earthquake is being watched right now.</div>') + '</div>';
+    return h;
+  }
+  function wire() { var s = AW.$('evSel'); if (s) s.addEventListener('change', function () { if (s.value) location.href = AW.evUrl(s.value); }); }
+})();
+</script>
+</body>
+</html>

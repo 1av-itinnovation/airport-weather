@@ -2021,6 +2021,18 @@ html[data-theme="dark"] .glass #pins .tfc i{border-color:#6ECDE4;background:rgba
 @media (max-width:900px){.themebtn{width:40px;height:40px}}
 @media (max-width:480px){.glass .app .themebtn,.glass .app .sndbtn,.glass .app .helpbtn{width:34px;height:34px}.glass header.top .tools{gap:4px}.glass .app .brand h1{font-size:13px;letter-spacing:-.015em}.glass .app .brand img{height:26px;padding:0 0 0 4px}.glass .app .brand{gap:8px}}
 @media (max-width:350px){.glass .app .brand h1{font-size:12.5px}.glass .app .brand img{height:22px}}
+.pagelink{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0 4px;min-height:44px;padding:0 18px;border-radius:999px;background:var(--g-accent,#4D5EE0);color:#FFFFFF !important;font-size:13.5px;font-weight:600;text-decoration:none}
+.rptbtn{display:inline-flex !important;align-items:center;justify-content:center;text-decoration:none;flex:none}.rptbtn svg{width:20px;height:20px}
+.layer #satCv{opacity:1}
+html:not([data-theme="dark"]) .layer #satCv{filter:brightness(.7) drop-shadow(0 0 1px rgba(60,80,110,.25))}
+#heatPins{pointer-events:none;z-index:6}
+.hchip{position:absolute;transform:translate(-50%,9px);font-size:10.5px;font-weight:700;line-height:1;border-radius:6px;padding:3px 4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25);font-variant-numeric:tabular-nums}
+.hchip.h-none{background:#E3E8F1;color:#33435E}.hchip.h-caution,.hk .h-caution{background:#FDE68A;color:#3D2600}.hchip.h-xcaution,.hk .h-xcaution{background:#FDBA4D;color:#3D2600}.hchip.h-danger,.hk .h-danger{background:#C2410C;color:#FFFFFF}.hchip.h-xdanger,.hk .h-xdanger{background:#7F1D1D;color:#FFFFFF}
+.lyrkey{position:static;margin:0 2px;background:rgba(255,255,255,.7);color:#33435E;border-radius:14px;padding:7px 12px;font-size:12px;line-height:1.45;display:flex;flex-direction:column;gap:4px;box-shadow:inset 0 0 0 1px rgba(120,140,180,.2)}
+.lyrkey[hidden]{display:none}
+.lyrkey b{color:#1B2B45;font-weight:600}.lyrkey .hk{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;margin-left:4px}.lyrkey .hk i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:4px}
+html[data-theme="dark"] .lyrkey{background:rgba(30,39,58,.94);color:#C9D3E5}html[data-theme="dark"] .lyrkey b{color:#E8EDF6}
+.pagelink:hover{filter:brightness(1.08)}.pagelink svg{width:16px;height:16px}
 html[data-theme="dark"]{color-scheme:dark;--ink:#E8EDF6;--muted:#9AA8BF;--line:rgba(140,160,200,.20);--panel:#1B2335;--page:#0C111B;--brand:#A9BEFF;--action:#A9BEFF;--tint:#222B40}
 html[data-theme="dark"] .glass{--muted:#9AA8BF;--g-surf:30,39,58;--g-solid:#2A3550;--g-ink:#E8EDF6;--g-muted:#9AA8BF;--g-accent:#4F5FE4;--g-accent-ink:#AEB9FF;--g-rule:rgba(140,160,200,.28)}
 html[data-theme="dark"] body.glass{background:linear-gradient(160deg,#0B1019 0%,#0E1522 45%,#101726 100%) fixed;color:var(--g-ink)}
@@ -2539,6 +2551,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
     <button class="themebtn alertbtn" id="alertBtn" hidden aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.500l9.500 16.500h-19zM12 10v4.500M12 17.300v.2"/></svg><b>0</b></button>
     <button class="themebtn" id="themeBtn" aria-label="Colour theme"></button>
     <button class="sndbtn" id="sndBtn" aria-pressed="false" aria-label="Sound alerts are off" title="Sound alerts: off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.500 2-6.500zM10 19.500a2.200 2.200 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/><path class="off" d="M4 4l16 16" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"/></svg></button>
+    <a class="helpbtn rptbtn" id="rptBtn" href="report.html" aria-label="Monthly disruption report" title="Monthly disruption report"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16v-5M12 16V7M17 16v-8"/></svg></a>
     <button class="helpbtn" id="helpBtn" aria-label="How to use this dashboard" title="How to use this dashboard"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.300 9.200a2.800 2.800 0 0 1 5.400 1c0 1.900-2.700 2.400-2.700 4M12 17.200h.010"/></svg></button>
   </div>
 </header>
@@ -2572,13 +2585,17 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
       <div class="layer" id="layer">
         <img id="wideMap" class="widemap" src="assets/map-wide.svg" alt="" aria-hidden="true">
         <div class="stage" id="stage"><img src="assets/map.svg" alt="Map of the Philippines"></div>
+        <canvas id="satCv" width="10" height="10" aria-hidden="true" hidden></canvas>
         <canvas id="rainCv" width="480" height="723" aria-hidden="true"></canvas>
         <div class="stage" id="pins"></div>
+        <div class="stage" id="heatPins" aria-hidden="true" hidden></div>
       </div>
       <div class="banner" id="banner"></div>
       <button class="lyrbtn" id="lyrBtn" aria-expanded="false" aria-controls="lyrPop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17.500l9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linejoin="round" stroke-linecap="round"/></svg>Layers</button>
       <div class="lyr" id="lyrPop" hidden>
         <label><input type="checkbox" id="lyRain" checked>Rain and thunder forecast</label>
+        <label><input type="checkbox" id="lySat">Satellite clouds</label>
+        <label><input type="checkbox" id="lyHeat">Heat index</label>
         <label><input type="checkbox" id="lyQuake" checked>Earthquakes</label>
         <label><input type="checkbox" id="lyVolc">All volcanoes</label>
         <label><input type="checkbox" id="lyNames">All airport names</label>
@@ -2593,6 +2610,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
     </div>
     <div class="selbar" id="selBar"><span class="nm" id="selName"></span><span id="selPill"></span><button class="btn" id="selGo" style="min-height:36px;padding:0 10px">Details</button></div>
     <div class="mapfoot" id="mapFoot"></div>
+    <div class="lyrkey" id="lyrKey" hidden></div>
     <div class="rainbar" id="rainBar" hidden>
       <button class="btn" id="rainPlay">Stop</button>
       <div class="info"><span class="k">Forecast rain</span><span class="v" id="rainTime"></span></div>
@@ -2704,6 +2722,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
         <li><strong>Press an airport</strong> on the map or in the list to see what is happening, what is expected, and what to do.</li>
         <li><strong>Narrow it down</strong> with Today or Tomorrow, the region menu, or Find airport.</li>
         <li><strong>The triangle button</strong> at the top shows every active alert. Press an alert to go to it.</li>
+        <li><strong>Full pages:</strong> under any airport or event, press the blue button for its own page, with the hour-by-hour forecast, the last 30 days, or a map and timeline. The <strong>chart button</strong> at the top opens the monthly report. These pages are for viewing only.</li>
         <li><strong>Close</strong> a selection with the X, or press an empty part of the map.</li>
       </ul>
     </div>
@@ -2715,6 +2734,8 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
         <li><strong>Purple rings</strong> are earthquakes. <strong>Triangles</strong> are volcanoes. <strong>A swirl</strong> is a typhoon, with its expected path.</li>
         <li><strong>Blue to red shading</strong> is the rain forecast for the next 24 hours. It plays by itself; use the slider to pick an hour.</li>
         <li><strong>Layers</strong> turns the rain, earthquakes and names on or off. Zoom with + and &minus;, or pinch.</li>
+        <li><strong>Satellite clouds</strong> (in Layers) shows the latest Himawari-9 picture: what the sky looks like now, not a forecast.</li>
+        <li><strong>Heat index</strong> (in Layers) shows how hot it will feel at each airport, with PAGASA's levels: Caution 27&ndash;32&deg;C, Extreme caution 33&ndash;41&deg;C, Danger 42&ndash;51&deg;C, Extreme danger 52&deg;C and above. At Danger, rotate ramp crews and plan water and shade breaks.</li>
       </ul>
     </div>
 
@@ -2755,7 +2776,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
 
     <details class="sec help-data hmore">
       <summary><h3>Where the data comes from</h3></summary>
-      <p>Airport weather: official PAGASA airport reports and forecasts. Typhoons: Japan Meteorological Agency, aviation storm warnings and GDACS. Earthquakes: PHIVOLCS, with USGS and EMSC as backups. Volcanoes: PHIVOLCS and the Tokyo ash advisory centre. Rain forecast: MET Norway. News: PAGASA, PHIVOLCS, national and local newsrooms, and the transport and airport authorities. Holidays: a public holiday calendar and the team's events file.</p>
+      <p>Airport weather: official PAGASA airport reports and forecasts. Typhoons: Japan Meteorological Agency, aviation storm warnings and GDACS. Earthquakes: PHIVOLCS, with USGS and EMSC as backups. Volcanoes: PHIVOLCS and the Tokyo ash advisory centre. Rain forecast: MET Norway. Heat index: worked out from MET Norway temperature and humidity, and from the airport report when there is one, using the same formula as PAGASA. Satellite clouds: Himawari-9, through NASA GIBS. News: PAGASA, PHIVOLCS, national and local newsrooms, and the transport and airport authorities. Holidays: a public holiday calendar and the team's events file.</p>
       <div class="help-data-grid">
         <div class="help-data-copy">
           <p id="hChecked"></p>
@@ -2864,7 +2885,7 @@ function arrange() {
   }
 }
 /* Map layers: what is drawn on the map. Saved on this device. */
-var LAYERS = { rain: true, quake: true, volc: false, names: false };
+var LAYERS = { rain: true, quake: true, volc: false, names: false, sat: false, heat: false };
 try { var _ly = JSON.parse(localStorage.getItem('awm-layers') || 'null'); if (_ly) { for (var _k in LAYERS) { if (typeof _ly[_k] === 'boolean') LAYERS[_k] = _ly[_k]; } } } catch (e) {}
 function applyLayers() {
   var st = $('pins'); if (!st) return;
@@ -2872,6 +2893,8 @@ function applyLayers() {
   var nw = D ? D.airports.filter(function (a) { return a.level === 'warning' && inRegion(a); }).length : 99;
   st.classList.toggle('few-labels', nw <= 5);                      // with only a few Warning airports there is room to name them
   $('lyRain').checked = LAYERS.rain; $('lyQuake').checked = LAYERS.quake; $('lyVolc').checked = LAYERS.volc; $('lyNames').checked = LAYERS.names;
+  $('lySat').checked = LAYERS.sat; $('lyHeat').checked = LAYERS.heat;
+  if (typeof satShow === 'function') { satShow(); heatDraw(); }
 }
 /* ---------- preview look: key figures, big status numbers, map callout icons ---------- */
 var G_ICON = { bolt: '<svg viewBox="0 0 24 24"><path d="M13 2L5 13.500h5.500L9.500 22 19 10h-6z" fill="currentColor"/></svg>',
@@ -3201,6 +3224,14 @@ function nowBlock(a) {
   return '<div class="f"><span class="k">Right now</span><span class="dnow">' + esc(first.replace(/^Estimate: /, '')) + '</span></div>' +
     '<div class="dfacts">' + cell('Wind', w ? w[1] + ' km/h' : '') + cell('Temperature', c ? c[1] + '\u00B0C' : '') + cell(a.est ? 'Estimate' : 'Reported', at ? at[1] : (a.est ? 'Forecast' : '')) + '</div>';
 }
+function heatField(a) {
+  var h = a.heat; if (!h || h.peak == null) return '';
+  var lv = heatLv(h.peak), nl = h.now != null ? heatLv(h.now) : null;
+  var t = (h.now != null ? 'Feels like about ' + h.now + '°C now' + (nl ? ' (' + nl[2] + ')' : '') + '. ' : '') +
+    (h.when === 'now' ? '' : 'Highest in the next 24 hours: about ' + h.peak + '°C' + (lv ? ' (' + lv[2] + ')' : '') + ', ' + h.when + (h.day === 'tomorrow' ? ' tomorrow' : '') + '. ') +
+    (lv && (lv[1] === 'danger' || lv[1] === 'xdanger') ? h.todo : '');
+  return field('Heat index (PAGASA levels)', t.trim());
+}
 function field(k, v) { return '<div class="f"><span class="k">' + k + '</span><span class="v">' + esc(v) + '</span></div>'; }
 function applyState() {
   if (!D) return;
@@ -3252,7 +3283,7 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
   if (a) {
     d.innerHTML = '<div class="detail ap">' + sceneBanner(a) +
-      (tyHit(a) ? todoBox('typhoon', tyHit(a).c.todo) : '') + todoBox(a.level, a.todo) + fltBlock(a) + nowFacts(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
+      (tyHit(a) ? todoBox('typhoon', tyHit(a).c.todo) : '') + todoBox(a.level, a.todo) + fltBlock(a) + nowFacts(a) + heatField(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
       fold('out', 'Tomorrow and the week ahead', '', field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days))) +
       fold('about', 'About this reading', a.est ? 'Estimate' : 'Official report', field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src)) + '</div>';
   } else if (q) {
@@ -3287,6 +3318,9 @@ function applyState() {
   } else {
     d.innerHTML = (typeof FLT !== 'undefined' && FLT.card && FLT.planes[FLT.card]) ? fltDetail() : '<div class="hint">Select an airport, earthquake, volcano, typhoon or plane to see its details here.</div>';
   }
+  // a link to the full page for this airport or event (view only)
+  var pgUrl = a ? 'airport.html?id=' + encodeURIComponent(a.id) : q ? 'event.html?id=q:' + encodeURIComponent(q.id) : vo ? 'event.html?id=v:' + encodeURIComponent(vo.id) : (cy && !cy.low) ? 'event.html?id=t:' + encodeURIComponent(cy.id) : '';
+  if (pgUrl && d.firstElementChild) d.firstElementChild.insertAdjacentHTML('beforeend', '<a class="pagelink" href="' + pgUrl + '">' + (a ? 'Open the full airport page' : 'Open the event page: map, airports and timeline') + '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>');
   var flagged = /^Earthquake flag/.test(D.flag || '');
   $('qDot').hidden = !flagged;
   $('vDot').hidden = !((D.vol_alerts || []).length);
@@ -3313,6 +3347,67 @@ function applyState() {
   wxUpdate();
   if (typeof fltInbound === 'function') setTimeout(fltInbound, 0);
   R.lab = -1; rainDraw();
+}
+/* ---------- satellite clouds and heat index layers ---------- */
+// Satellite: the latest Himawari-9 infrared picture from NASA GIBS (free, no key), for lon 105 to 140 and lat -2 to 30.
+// Infrared shows cloud tops as bright (cold) and the ground and sea as grey (warm), so the grey is made see-through
+// and only the clouds are drawn, in white, over the map. Refreshed every 10 minutes while the layer is on.
+var SAT_BBOX = [105, -2, 140, 30];
+var SAT_BOX = { l: (8.69278161 * SAT_BBOX[0] - 1008.33883896) / 100, t: (-5.91775171 * SAT_BBOX[3] + 125.45788502) / 100,
+  w: 8.69278161 * (SAT_BBOX[2] - SAT_BBOX[0]) / 100, h: 5.91775171 * (SAT_BBOX[3] - SAT_BBOX[1]) / 100 };
+var SAT = { busy: false, at: 0, ok: null, timer: null };
+function satUrl() {
+  var slot = Math.floor(Date.now() / 600000);       // a new picture at most every 10 minutes
+  return 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=Himawari_AHI_Band13_Clean_Infrared&STYLES=&FORMAT=image%2Fpng&TRANSPARENT=TRUE&SRS=EPSG%3A4326&BBOX=' + SAT_BBOX.join(',') + '&WIDTH=1050&HEIGHT=960&_=' + slot;
+}
+function satLoad() {
+  if (SAT.busy) return; SAT.busy = true;
+  var img = new Image(); img.crossOrigin = 'anonymous';
+  img.onload = function () {
+    SAT.busy = false;
+    try {
+      var c = $('satCv'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+      var x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0);
+      var id = x.getImageData(0, 0, c.width, c.height), d = id.data;
+      for (var i = 0; i < d.length; i += 4) {
+        var r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), sat = mx - Math.min(r, g, b);
+        var a = sat > 30 ? 0.92 : Math.max(0, Math.min(1, (r - 118) / 80)) * 0.85;      // coloured = very cold storm tops
+        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255; d[i + 3] = Math.round(a * 255 * (d[i + 3] / 255));
+      }
+      x.putImageData(id, 0, 0);
+      SAT.ok = true; SAT.at = Date.now();
+    } catch (e) { SAT.ok = false; }
+    lyrKey();
+  };
+  img.onerror = function () { SAT.busy = false; SAT.ok = false; lyrKey(); };
+  img.src = satUrl();
+}
+function satShow() {
+  var on = !!LAYERS.sat, c = $('satCv'); if (!c || !SAT) return;
+  c.hidden = !on;
+  if (on && (!SAT.at || Date.now() - SAT.at > 600000)) satLoad();
+  clearInterval(SAT.timer); SAT.timer = on ? setInterval(satLoad, 600000) : null;
+  lyrKey();
+}
+// Heat index: how hot it feels (temperature and humidity), the highest expected in the next 24 hours, with PAGASA's levels.
+var HEAT_LV = [[52, 'xdanger', 'Extreme danger'], [42, 'danger', 'Danger'], [33, 'xcaution', 'Extreme caution'], [27, 'caution', 'Caution']];
+function heatLv(v) { for (var i = 0; i < HEAT_LV.length; i++) if (v >= HEAT_LV[i][0]) return HEAT_LV[i]; return null; }
+function heatDraw() {
+  var el = $('heatPins'); if (!el) return;
+  el.hidden = !LAYERS.heat;
+  if (!LAYERS.heat || !D) { lyrKey(); return; }
+  el.innerHTML = D.airports.filter(function (a) { return a.heat && a.heat.peak != null && inRegion(a); }).map(function (a) {
+    var lv = heatLv(a.heat.peak);
+    return '<span class="hchip h-' + (lv ? lv[1] : 'none') + '" style="left:' + a.x + '%;top:' + a.y + '%" title="' + esc(a.name + ': heat index up to ' + a.heat.peak + '°C' + (a.heat.when ? ', ' + a.heat.when + (a.heat.day === 'tomorrow' ? ' tomorrow' : '') : '')) + '">' + a.heat.peak + '°</span>';
+  }).join('');
+  lyrKey();
+}
+function lyrKey() {
+  var k = $('lyrKey'); if (!k || !SAT) return;
+  var h = '';
+  if (LAYERS.sat) h += '<div><b>Satellite clouds</b> ' + (SAT.ok === false ? '<span>could not be loaded right now</span>' : SAT.ok ? '<span>Himawari-9 via NASA, latest picture (usually under an hour old), checked ' + phTime(SAT.at) + '</span>' : '<span>loading…</span>') + '</div>';
+  if (LAYERS.heat) h += '<div><b>Heat index</b>, highest in the next 24 hours <span class="hk"><i class="h-caution"></i>27–32 <i class="h-xcaution"></i>33–41 <i class="h-danger"></i>42–51 <i class="h-xdanger"></i>52+ °C</span></div>';
+  k.innerHTML = h; k.hidden = !h;
 }
 /* ---------- rain and thunder animation (Windy.com embed) ---------- */
 var WX = { open: false, layer: 'rain', follow: true, src: '' };
@@ -4307,7 +4402,7 @@ $('statsBig').addEventListener('click', function (e) { var b = e.target.closest(
 $('notice').addEventListener('click', function () { this.classList.toggle('open'); fit(); });
 $('lyrBtn').addEventListener('click', function (e) { e.stopPropagation(); var pop = $('lyrPop'); pop.hidden = !pop.hidden; this.setAttribute('aria-expanded', pop.hidden ? 'false' : 'true'); });
 document.addEventListener('click', function (e) { var pop = $('lyrPop'); if (e.isTrusted && !pop.hidden && !e.target.closest('#lyrPop') && !e.target.closest('#lyrBtn')) { pop.hidden = true; $('lyrBtn').setAttribute('aria-expanded', 'false'); } });
-[['lyRain', 'rain'], ['lyQuake', 'quake'], ['lyVolc', 'volc'], ['lyNames', 'names']].forEach(function (p2) {
+[['lyRain', 'rain'], ['lyQuake', 'quake'], ['lyVolc', 'volc'], ['lyNames', 'names'], ['lySat', 'sat'], ['lyHeat', 'heat']].forEach(function (p2) {
   $(p2[0]).addEventListener('change', function () {
     LAYERS[p2[1]] = this.checked; try { localStorage.setItem('awm-layers', JSON.stringify(LAYERS)); } catch (e) {}
     if (p2[1] === 'rain' && typeof R !== 'undefined' && R.show !== this.checked) $('rainShow').click();
@@ -4385,6 +4480,8 @@ function fit() {
   [st, $('pins')].forEach(function (el) { el.style.width = sw + 'px'; el.style.height = sh + 'px'; el.style.left = OX + 'px'; el.style.top = OY + 'px'; });
   // dots and labels are drawn for the usual view, so they keep their normal size there and shrink a little when zoomed right out
   var pn = $('pins'); pn.style.width = (sw * HOMEZ) + 'px'; pn.style.height = (sh * HOMEZ) + 'px'; pn.style.transformOrigin = '0 0'; pn.style.transform = 'scale(' + (1 / HOMEZ).toFixed(5) + ')';
+  var hp = $('heatPins'); if (hp) { hp.style.left = OX + 'px'; hp.style.top = OY + 'px'; hp.style.width = (sw * HOMEZ) + 'px'; hp.style.height = (sh * HOMEZ) + 'px'; hp.style.transformOrigin = '0 0'; hp.style.transform = 'scale(' + (1 / HOMEZ).toFixed(5) + ')'; }
+  var sc2 = $('satCv'); if (sc2 && SAT_BOX) { sc2.style.left = (OX + sw * SAT_BOX.l) + 'px'; sc2.style.top = (OY + sh * SAT_BOX.t) + 'px'; sc2.style.width = (sw * SAT_BOX.w) + 'px'; sc2.style.height = (sh * SAT_BOX.h) + 'px'; }
   // the neighbouring countries fill the space beside the Philippines on wide screens (picture only, nothing to press)
   var wm = $('wideMap'); if (wm) { wm.style.left = (OX + sw * WIDE_BOX.l) + 'px'; wm.style.top = (OY + sh * WIDE_BOX.t) + 'px'; wm.style.width = (sw * WIDE_BOX.w) + 'px'; wm.style.height = (sh * WIDE_BOX.h) + 'px'; }
   // the rain canvas covers the whole of EXT; GEO says where the map image sits inside it, in canvas pixels

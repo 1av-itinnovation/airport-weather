@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airport | Disruption Management Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%85%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="pages.css">
+<script src="pages.js"></script>
+</head>
+<body>
+<div class="wrap" id="app"><div class="loading">Loading the latest airport data…</div></div>
+<script>
+(function () {
+  var E = AW.esc, app = AW.$('app');
+  var id = AW.param('id');
+  AW.load('data.json').then(function (d) {
+    var aps = (d.airports || []).slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    var a = aps.filter(function (x) { return x.id === id; })[0] || aps.filter(function (x) { return (x.icao || '').toLowerCase() === String(id || '').toLowerCase(); })[0];
+    var opts = '<label class="vh" for="apSel">Choose an airport</label><select class="sel" id="apSel">' + (a ? '' : '<option value="">Choose an airport</option>') +
+      aps.map(function (x) { return '<option value="' + E(x.id) + '"' + (a && x.id === a.id ? ' selected' : '') + '>' + E(x.name) + '</option>'; }).join('') + '</select>';
+    if (!a) { app.innerHTML = AW.header(['Airports'], d, opts) + '<div class="card empty">Choose an airport from the list above.</div>'; wire(); return; }
+    document.title = a.name + ' | Disruption Management Dashboard';
+    var region = { luzon: 'Luzon', visayas: 'Visayas', mindanao: 'Mindanao' }[a.region] || a.region;
+    var haz = AW.hazardsFor(d, a), heat = a.heat || null;
+
+    /* hero */
+    var h = '<section class="card hero"><div class="t"><h1>' + E(a.name) + '</h1>' + AW.pill(a.level) +
+      (a.est ? '<span class="pill est">Estimate: no official airport report</span>' : '') +
+      (heat && heat.lv && heat.lv !== 'caution' ? AW.heatPill(heat.lv) : '') + '</div>' +
+      '<span class="sub">' + E(region) + (a.icao ? ' · ' + E(a.icao) : '') + '</span>';
+    if (a.what) h += '<p class="lead"><b>' + E(a.what) + '</b> ' + E(a.when) + '.</p>';
+    haz.forEach(function (z) {
+      h += '<div class="haz ' + z.kind + '"><span class="pill ' + z.kind + '">' + E(z.tag) + '</span><div class="tx"><span>' + z.line + '</span>' +
+        (z.todo && z.todo !== 'No action needed.' ? '<span><b>What to do:</b> ' + E(z.todo) + '</span>' : '') +
+        '<a href="' + AW.evUrl(z.key) + '">Open the ' + E(AW.short(z.title)) + ' event page</a></div></div>';
+    });
+    if (heat && heat.lv && (heat.lv === 'danger' || heat.lv === 'xdanger')) {
+      h += '<div class="haz heat">' + AW.heatPill(heat.lv, 'Heat: ' + heat.word) + '<div class="tx"><span><b>Heat index ' + heat.peak + '°C ' + (heat.when === 'now' ? 'now' : 'forecast ' + E(heat.when) + (heat.day === 'tomorrow' ? ' tomorrow' : '')) + '.</b></span><span><b>What to do:</b> ' + E(heat.todo) + '</span></div></div>';
+    }
+    h += '</section>';
+
+    /* today */
+    var main = '<div class="card"><div class="hd"><h2>Today</h2><span class="sub">' + E(a.upd) + '</span></div><div class="kv">' +
+      '<div><span class="k">Right now</span><span class="v">' + E(a.now) + '</span></div>' +
+      '<div><span class="k">Rest of today</span><span class="v">' + E(a.next) + '</span></div>' +
+      '<div><span class="k">What to do</span><span class="v">' + E(a.todo) + '</span></div>' +
+      '<div><span class="k">Tomorrow</span><span class="v">' + E(a.tmr) + '</span></div></div></div>';
+
+    /* hour by hour */
+    var hrs = a.hours || [];
+    if (hrs.length) {
+      var anyHi = hrs.some(function (x) { return x[6] != null; });
+      main += '<div class="card"><div class="hd"><h2>Hour by hour</h2><span class="sub">Chance of rain' + (anyHi ? ', temperature and heat index' : ' and temperature') + ' · estimate (' + E(a.estsrc || 'MET Norway') + ')</span></div><div class="hours">' +
+        hrs.map(function (x) {
+          var pc = x[5], hi = x[6], lv = hi == null ? null : hi >= 52 ? 'xdanger' : hi >= 42 ? 'danger' : hi >= 33 ? 'xcaution' : hi >= 27 ? 'caution' : null;
+          var tipTxt = AW.hour(x[0]) + ': ' + (pc == null ? 'chance of rain not available' : pc + '% chance of rain') + ', ' + x[2] + ' mm, wind ' + x[3] + ' km/h, ' + x[1] + '°C' + (hi != null ? ', heat index ' + hi + '°C' : '');
+          return '<div class="hr" title="' + E(tipTxt) + '"><span class="pc">' + (pc == null ? '–' : pc + '%') + '</span><div class="bar" aria-hidden="true"><i style="height:' + (pc || 0) + '%"></i></div>' +
+            '<span class="tm">' + AW.hour(x[0]) + '</span><span class="tp">' + x[1] + '°</span>' +
+            (hi != null ? '<span class="hi pill h-' + (lv || 'none') + '" title="Heat index">' + hi + '°</span>' : '') + '</div>';
+        }).join('') + '</div>' +
+        (anyHi ? '<div class="legend"><b>Heat index</b> (how hot it feels, PAGASA levels):<span><i class="sw" style="background:var(--h1)"></i>Caution 27–32°C</span><span><i class="sw" style="background:var(--h2)"></i>Extreme caution 33–41°C</span><span><i class="sw" style="background:var(--h3)"></i>Danger 42–51°C</span><span><i class="sw" style="background:var(--h4)"></i>Extreme danger 52°C+</span></div>' : '') + '</div>';
+    }
+
+    /* next 7 days */
+    var wk = a.week || [];
+    if (wk.length) {
+      main += '<div class="card"><div class="hd"><h2>Next 7 days</h2><span class="sub">Estimate (Open-Meteo); less certain further ahead</span></div><div class="week">' +
+        wk.map(function (w) {
+          var ms = AW.ymdMs(w[0]);
+          return '<div class="day"><b>' + new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', timeZone: AW.TZ }).format(new Date(ms)) + '</b><span>' + w[4] + '° / ' + w[5] + '°</span><span class="muted">' + (w[1] == null ? '–' : w[1] + '% rain') + '</span>' + (w[6] ? '<span class="muted">' + w[6] + ' mm</span>' : '') + '</div>';
+        }).join('') + '</div></div>';
+    }
+    main += '<div class="card" id="hist"><div class="hd"><h2>Last 30 days at this airport</h2><span class="sub">From the dashboard\'s saved history</span></div><div class="empty">Loading history…</div></div>';
+
+    /* side */
+    var side = '<div class="card"><h2 style="margin-bottom:10px">Hazards that can reach this airport</h2>';
+    if (haz.length) side += '<div class="rows">' + haz.map(function (z) {
+      return '<div class="row"><div class="nm"><a href="' + AW.evUrl(z.key) + '">' + E(z.title) + '</a><span>' + E(AW.KINDWORD[z.kind]) + ' · ' + E(AW.LEVEL[z.lv]) + '</span></div><span class="pill ' + z.kind + '">' + E(z.tag) + '</span></div>';
+    }).join('') + '</div>';
+    else side += '<p class="sub" style="margin:0">No typhoon, earthquake or volcano alert reaches this airport right now.</p>';
+    side += '</div>';
+
+    var seen = {}, stories = [];
+    [a.id].concat(haz.map(function (z) { return z.key; })).forEach(function (k) {
+      ((d.news || {})[k] || []).forEach(function (s) { if (!seen[s.link]) { seen[s.link] = 1; stories.push(s); } });
+    });
+    var groups = {};
+    stories.forEach(function (s) { var t = s.topic || 'other'; (groups[t] = groups[t] || []).push(s); });
+    var IR = { reported: 0, possible: 1, awareness: 2 };
+    var gl = Object.keys(groups).map(function (t) {
+      var g = groups[t].sort(function (x, y) { return (IR[x.impact] - IR[y.impact]) || (y.ms - x.ms); });
+      return { t: t, g: g, imp: g[0].impact || 'awareness' };
+    }).sort(function (x, y) { return (IR[x.imp] - IR[y.imp]) || (y.g[0].ms - x.g[0].ms); });
+    side += '<div class="card"><div class="hd"><h2>News for this airport</h2><span class="sub">' + (gl.length ? AW.plural(gl.length, 'topic') + ' · last ' + (d.news_hours || 24) + ' hours' : '') + '</span></div>';
+    if (gl.length) side += gl.map(function (x) {
+      return '<div class="news-g"><div class="gh"><b>' + E(AW.TOPIC[x.t] || 'Other news') + '</b><span class="imp ' + x.imp + '">' + E(AW.IMPACT[x.imp]) + '</span><span class="sub">' + AW.plural(x.g.length, 'story', 'stories') + '</span></div>' +
+        x.g.slice(0, 4).map(function (s) { return '<a class="story" href="' + E(s.link) + '" target="_blank" rel="noopener">' + E(s.title) + '<span>' + E(s.src) + ' · ' + AW.ago(s.ms) + '</span></a>'; }).join('') + '</div>';
+    }).join('');
+    else side += '<p class="sub" style="margin:0">No news about this airport or its area in the last ' + (d.news_hours || 24) + ' hours.</p>';
+    var up = (d.upcoming || []).filter(function (u) { return !u.airports || !u.airports.length || u.airports.indexOf(a.id) >= 0; }).slice(0, 4);
+    side += '<div class="news-g"><div class="gh"><b>Coming up</b></div>' + (up.length ? up.map(function (u) {
+      return '<div class="story">' + E(u.title) + '<span>' + E(u.when) + (u.scope === 'national' ? ' · nationwide' : '') + '</span></div>';
+    }).join('') : '<span class="sub">No holiday or planned event entered for the next ' + (d.upcoming_days || 7) + ' days.</span>') + '</div></div>';
+
+    side += '<div class="card"><h2 style="margin-bottom:8px">About this information</h2><p class="sub" style="margin:0 0 6px"><b>How sure:</b> ' + E(a.conf) + '</p><p class="sub" style="margin:0"><b>Source:</b> ' + E(a.src) + '</p></div>';
+
+    app.innerHTML = AW.header(['Airports', a.name], d, opts) + h + '<div class="cols"><div class="stack">' + main + '</div><aside class="stack">' + side + '</aside></div>' +
+      '<footer class="foot">View only. For the full picture, open the <a href="./">dashboard</a>.</footer>';
+    wire();
+
+    /* history: the last 30 days */
+    var months = AW.monthsBack(d.generated_ms || Date.now(), 2);
+    AW.loadHistory(months).then(function (H) {
+      var el = AW.$('hist'), days = [];
+      H.forEach(function (m) { Object.keys(m.days || {}).forEach(function (k) { days.push([k, m.days[k]]); }); });
+      days.sort(function (x, y) { return x[0] < y[0] ? -1 : 1; });
+      var since = AW.ymd((d.generated_ms || Date.now()) - 29 * 864e5);
+      days = days.filter(function (x) { return x[0] >= since; });
+      if (!days.length) { el.querySelector('.empty').textContent = 'History starts with this update. Figures for this airport appear here day by day.'; return; }
+      var adv = 0, wh = 0, dh = 0, hz = 0, hiMax = null, cells = '';
+      days.forEach(function (x) {
+        var e = (x[1].ap || {})[a.id] || {}, top = e.d ? 'danger' : e.w ? 'warning' : e.a ? 'advisory' : 'normal';
+        if (top !== 'normal') adv++; wh += AW.bits(e.w); dh += AW.bits(e.d);
+        var hzs = Object.keys(x[1].haz || {}).filter(function (k) { var z = x[1].haz[k]; return z.kind !== 'news' && (z.aps || []).indexOf(a.id) >= 0; });
+        if (hzs.length) hz++;
+        if (e.hi != null && (hiMax == null || e.hi > hiMax)) hiMax = e.hi;
+        cells += '<span title="' + E(AW.day(AW.ymdMs(x[0])) + ': ' + AW.LEVEL[top] + (hzs.length ? ', hazard in reach' : '') + (e.hi != null ? ', heat index up to ' + e.hi + '°C' : '')) + '" style="flex:1;min-width:6px;height:28px;border-radius:4px;background:' + (top === 'normal' ? 'var(--soft)' : AW.LVCOLOR[top]) + (hzs.length ? ';box-shadow:inset 0 -4px 0 var(--volc)' : '') + '"></span>';
+      });
+      var n = days.length;
+      el.innerHTML = '<div class="hd"><h2>Last 30 days at this airport</h2><span class="sub">' + (n < 30 ? 'History began ' + AW.day(AW.ymdMs(days[0][0])) + ' · ' + AW.plural(n, 'day') + ' so far' : 'Saved history') + '</span></div>' +
+        '<div class="tiles"><div class="tile"><span class="l">Days at Advisory or above</span><b>' + adv + '</b></div><div class="tile"><span class="l">Hours at Warning</span><b>' + wh + '</b></div>' +
+        '<div class="tile"><span class="l">Hours at Danger (thunderstorm)</span><b>' + dh + '</b></div><div class="tile"><span class="l">Days with a hazard in reach</span><b>' + hz + '</b></div>' +
+        '<div class="tile"><span class="l">Highest heat index</span><b>' + (hiMax == null ? '–' : hiMax + '°C') + '</b></div></div>' +
+        '<div style="display:flex;gap:3px;margin-top:14px" aria-label="Highest level each day">' + cells + '</div>' +
+        '<div class="legend"><span><i class="sw" style="background:var(--soft);box-shadow:inset 0 0 0 1px var(--rule2)"></i>Normal</span><span><i class="sw" style="background:#E0B800"></i>Advisory</span><span><i class="sw" style="background:var(--warning)"></i>Warning</span><span><i class="sw" style="background:var(--danger)"></i>Danger</span><span><i class="sw" style="background:var(--volc)"></i>Hazard in reach (underline)</span></div>';
+    });
+  }).catch(function () { AW.fail(app, 'The latest data could not be loaded. Please try again in a moment.'); });
+
+  function wire() {
+    var s = AW.$('apSel'); if (s) s.addEventListener('change', function () { if (s.value) location.href = AW.apUrl(s.value); });
+  }
+})();
+</script>
+</body>
+</html>
