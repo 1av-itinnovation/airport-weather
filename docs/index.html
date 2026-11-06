@@ -2032,6 +2032,11 @@ html:not([data-theme="dark"]) .layer #satCv{filter:brightness(.7) drop-shadow(0 
 .lyrkey[hidden]{display:none}
 .lyrkey b{color:#1B2B45;font-weight:600}.lyrkey .hk{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;margin-left:4px}.lyrkey .hk i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:4px}
 html[data-theme="dark"] .lyrkey{background:rgba(30,39,58,.94);color:#C9D3E5}html[data-theme="dark"] .lyrkey b{color:#E8EDF6}
+.camlink{display:flex;align-items:center;gap:12px;margin:10px 0;padding:10px 12px;border-radius:14px;background:rgba(77,94,224,.08);color:inherit !important;text-decoration:none}
+.camlink:hover{background:rgba(77,94,224,.14)}
+.camlink>svg{width:22px;height:22px;flex:none;color:var(--g-accent-ink,#4D5EE0)}
+.camlink>span{display:flex;flex-direction:column;min-width:0;font-size:12.5px;line-height:1.35}.camlink>span b{font-size:13.5px;font-weight:600}.camlink>span>span{color:var(--g-muted,#56657F)}
+.camlink i{margin-left:auto;font-style:normal;font-size:12.5px;font-weight:600;color:#FFFFFF;background:var(--g-accent,#4D5EE0);border-radius:999px;padding:6px 14px;flex:none}
 .pagelink:hover{filter:brightness(1.08)}.pagelink svg{width:16px;height:16px}
 html[data-theme="dark"]{color-scheme:dark;--ink:#E8EDF6;--muted:#9AA8BF;--line:rgba(140,160,200,.20);--panel:#1B2335;--page:#0C111B;--brand:#A9BEFF;--action:#A9BEFF;--tint:#222B40}
 html[data-theme="dark"] .glass{--muted:#9AA8BF;--g-surf:30,39,58;--g-solid:#2A3550;--g-ink:#E8EDF6;--g-muted:#9AA8BF;--g-accent:#4F5FE4;--g-accent-ink:#AEB9FF;--g-rule:rgba(140,160,200,.28)}
@@ -2723,6 +2728,7 @@ html[data-theme="dark"] .news .ncl.small li>a{border-top-color:#2B394C}
         <li><strong>Narrow it down</strong> with Today or Tomorrow, the region menu, or Find airport.</li>
         <li><strong>The triangle button</strong> at the top shows every active alert. Press an alert to go to it.</li>
         <li><strong>Full pages:</strong> under any airport or event, press the blue button for its own page, with the hour-by-hour forecast, the last 30 days, or a map and timeline. The <strong>chart button</strong> at the top opens the monthly report. These pages are for viewing only.</li>
+        <li><strong>Nearby camera:</strong> where a public webcam is close to an airport, the airport shows a camera button. It opens the camera on the airport page. It is someone else's camera, not an official weather report.</li>
         <li><strong>Close</strong> a selection with the X, or press an empty part of the map.</li>
       </ul>
     </div>
@@ -3283,7 +3289,7 @@ function applyState() {
   var d = $('detail'), a = S.sel ? byId(S.sel) : null, q = (!a && S.qk) ? quakeById(S.qk) : null, vo = (!a && !q && S.vk) ? volcanoById(S.vk) : null, cy = (!a && !q && !vo && S.tk) ? cycloneById(S.tk) : null;
   if (a) {
     d.innerHTML = '<div class="detail ap">' + sceneBanner(a) +
-      (tyHit(a) ? todoBox('typhoon', tyHit(a).c.todo) : '') + todoBox(a.level, a.todo) + fltBlock(a) + nowFacts(a) + heatField(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
+      (tyHit(a) ? todoBox('typhoon', tyHit(a).c.todo) : '') + todoBox(a.level, a.todo) + fltBlock(a) + camBlock(a) + nowFacts(a) + heatField(a) + field('Forecast for later today', a.next) + hoursStrip(a) +
       fold('out', 'Tomorrow and the week ahead', '', field('Tomorrow', a.tmr) + (weekList(a) || field('Days ahead', a.days))) +
       fold('about', 'About this reading', a.est ? 'Estimate' : 'Official report', field('Confidence', a.conf) + field('Updated', a.upd) + field('Source', a.src)) + '</div>';
   } else if (q) {
@@ -4655,7 +4661,19 @@ function loadRain() {
 requestAnimationFrame(rainTick);
 
 /* ---------- load and auto-refresh ---------- */
+/* nearby public webcams (Windy), refreshed by the update once a day */
+var CAMS = null, CAMS_AT = 0;
+function loadCams() {
+  if (Date.now() - CAMS_AT < 3600000) return; CAMS_AT = Date.now();
+  fetch('webcams.json?t=' + Math.floor(Date.now() / 3600000), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j && j.airports) { CAMS = j; if (S.sel) applyState(); } }).catch(function () {});
+}
+function camFor(id) { var l = CAMS && CAMS.airports && CAMS.airports[id]; return l ? l.filter(function (c) { return c.active; })[0] || null : null; }
+function camBlock(a) {
+  var c = camFor(a.id); if (!c) return '';
+  return '<a class="camlink" href="airport.html?id=' + encodeURIComponent(a.id) + '#camera"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h12v9H3zM15 10.5l6-3v9l-6-3"/></svg><span><b>Nearby camera' + (c.live ? ' (live video)' : '') + '</b><span>' + esc(c.title.replace(/^.*?:\s*/, '').replace(/ › /g, ', ')) + ', about ' + Math.round(c.km) + ' km away</span></span><i aria-hidden="true">View</i></a>';
+}
 function load() {
+  loadCams();
   fetch('data.json?t=' + Math.floor(Date.now() / 30000), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
     var first = !D;
     if (!D || j.generated_ms !== D.generated_ms) { D = j; if (S.qk && !quakeById(S.qk)) S.qk = ''; if (S.vk && !volcanoById(S.vk)) S.vk = ''; if (S.tk && !cycloneById(S.tk)) S.tk = ''; renderData(); applyState(); liveQuakes(); } else { renderNotice(); }

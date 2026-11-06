@@ -71,6 +71,7 @@
           return '<div class="day"><b>' + new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', timeZone: AW.TZ }).format(new Date(ms)) + '</b><span>' + w[4] + '° / ' + w[5] + '°</span><span class="muted">' + (w[1] == null ? '–' : w[1] + '% rain') + '</span>' + (w[6] ? '<span class="muted">' + w[6] + ' mm</span>' : '') + '</div>';
         }).join('') + '</div></div>';
     }
+    main = '<div id="camSlot"></div>' + main;
     main += '<div class="card" id="hist"><div class="hd"><h2>Last 30 days at this airport</h2><span class="sub">From the dashboard\'s saved history</span></div><div class="empty">Loading history…</div></div>';
 
     /* side */
@@ -108,6 +109,18 @@
     app.innerHTML = AW.header(['Airports', a.name], d, opts) + h + '<div class="cols"><div class="stack">' + main + '</div><aside class="stack">' + side + '</aside></div>' +
       '<footer class="foot">View only. For the full picture, open the <a href="./">dashboard</a>.</footer>';
     wire();
+
+    /* nearby public webcam (Windy): only shown when one is working */
+    AW.loadOpt('webcams.json').then(function (W) {
+      var list = ((W && W.airports) || {})[a.id] || [], c = list.filter(function (x) { return x.active; })[0], el = AW.$('camSlot');
+      if (!c || !el) return;
+      var name = c.title.replace(/^.*?:\s*/, '').replace(/ › /g, ', ');
+      var upd = c.updated ? Date.parse(c.updated) : 0;
+      el.innerHTML = '<div class="card cam" id="camera"><div class="hd"><h2>Nearby camera' + (c.live ? ' <span class="pill normal" style="vertical-align:2px">Live</span>' : '') + '</h2><span class="sub">' + E(name) + ' · about ' + Math.round(c.km) + ' km from the airport</span></div>' +
+        '<div class="camframe"><iframe src="' + E(c.live || c.day) + '" title="' + E('Webcam: ' + name) + '" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
+        '<p class="sub" style="margin:8px 0 0">' + (c.live ? 'Live video' : 'Today\'s pictures as a timelapse; press play') + (upd ? '. Latest picture ' + AW.time(upd) + ' (' + AW.ago(upd) + ')' : '') + '. A public camera near the airport, not an official weather report. Webcams provided by <a href="' + E(c.link || 'https://www.windy.com/webcams') + '" target="_blank" rel="noopener">windy.com</a>.</p></div>';
+      if (location.hash === '#camera') el.scrollIntoView({ block: 'start' });
+    });
 
     /* history: the last 30 days */
     var months = AW.monthsBack(d.generated_ms || Date.now(), 2);
