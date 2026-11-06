@@ -215,14 +215,21 @@ jobs:
           exit 1
 
       - name: Start the next refresh
-        # GitHub runs scheduled workflows only when it has spare capacity, often only once an hour or less.
+        # GitHub runs scheduled workflows only when it has spare capacity: often only once an hour, and on
+        # 6 November it started none at all for more than four hours.
         # So each refresh starts the next one itself, about 10 minutes after it began. The schedule above
         # stays as a backup that restarts the chain if it ever stops. If two chains meet, GitHub keeps only
         # one waiting run (see "concurrency"), so they merge back into one.
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
+        # Half-way through the wait it also starts the Earthquake Watch, whose own schedule GitHub skips
+        # in the same way, so earthquakes are still checked about every 5 minutes.
         run: |
-          WAIT=$(( 600 - ( $(date +%s) - ${RUN_START:-$(date +%s)} ) ))
+          START=${RUN_START:-$(date +%s)}
+          WAIT=$(( 300 - ( $(date +%s) - START ) ))
+          if [ "$WAIT" -gt 0 ]; then echo "Waiting $WAIT seconds before the earthquake check."; sleep "$WAIT"; fi
+          gh workflow run quake-watch.yml --repo "$GITHUB_REPOSITORY" --ref main && echo "Earthquake check started." || echo "Could not start the earthquake check."
+          WAIT=$(( 600 - ( $(date +%s) - START ) ))
           if [ "$WAIT" -gt 0 ]; then echo "Waiting $WAIT seconds before starting the next refresh."; sleep "$WAIT"; fi
           gh workflow run refresh.yml --repo "$GITHUB_REPOSITORY" --ref main && echo "Next refresh started." || echo "Could not start the next refresh; the schedule will pick it up."
